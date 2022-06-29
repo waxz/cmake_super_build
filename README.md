@@ -114,7 +114,7 @@ include(cmake/common.cmake)
 include(cmake/set_rpath.cmake)
 include(cmake/super_build.cmake)
 
-build_external_project(Ceres lib /home/waxz/CLionProjects/docker_demo/3rdparty/ceres-solver-2.1.0.tar.gz  -DMINIGLOG=ON -DGFLAGS=OFF )
+build_external_project(Ceres lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver-2.1.0.tar.gz  -DMINIGLOG=ON -DGFLAGS=OFF )
 find_package(Ceres  REQUIRED)
 message(Ceres_ROOT : ${Ceres_ROOT} ,CERES_LIBRARIES : ${CERES_LIBRARIES} )
 
