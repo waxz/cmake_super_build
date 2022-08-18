@@ -1,6 +1,11 @@
 #include <iostream>
 
 #include "ceres/ceres.h"
+
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui.hpp>
+
 using ceres::CENTRAL;
 using ceres::CostFunction;
 using ceres::NumericDiffCostFunction;
@@ -18,6 +23,12 @@ struct CostFunctor {
 
 
 int main() {
+
+    {
+
+        cv::Mat C = (cv::Mat_<double>(3,3) << 0, -1, 0, -1, 5, -1, 0, -1, 0);
+        std::cout << "C = " << std::endl << " " << C << std::endl ;
+    }
     // The variable to solve for with its initial value. It will be
     // mutated in place by the solver.
     double x = 0.5;

@@ -15,6 +15,12 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 # flags
 
+# fix ld: unrecognized option '--push-state--no-as-needed'
+# https://stackoverflow.com/questions/50024731/ld-unrecognized-option-push-state-no-as-needed
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
+
+
+
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to 'Debug' as none was specified.")
@@ -82,7 +88,7 @@ function(set_asan target)
     target_compile_options(${target} PUBLIC "-fno-builtin-free")
 
 
-    target_compile_options(${target} PUBLIC "-fsanitize-address-use-after-scope")
+#    target_compile_options(${target} PUBLIC "-fsanitize-address-use-after-scope")
 
     target_compile_options(${target} PUBLIC "-fsanitize=address")
     target_compile_options(${target} PUBLIC "-fno-optimize-sibling-calls")
