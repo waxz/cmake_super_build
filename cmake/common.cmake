@@ -109,12 +109,21 @@ endfunction(set_asan)
 # ---------------------------------------------------------------------------------------------------------
 
 
-
+function(print_include_dir target)
+    get_target_property(LIBA_INCLUDES ${target} INCLUDE_DIRECTORIES)
+    message(${target} INCLUDES : ${LIBA_INCLUDES})
+endfunction()
 
 # ---------------------------------------------------------------------------------------------------------
 
 
-
+function(set_omp target)
+    target_include_directories(${target} PUBLIC ${OpenMP_CXX_INCLUDE_DIRS} )
+    target_link_libraries(${target} PUBLIC
+            ${OpenMP_CXX_LIBRARIES}
+            )
+    target_compile_options(${target} PUBLIC ${OpenMP_CXX_FLAGS})
+endfunction()
 
 
 

@@ -44,3 +44,38 @@ function (build_external_project target prefix url) #FOLLOWING ARGUMENTS are the
     #            )
 endfunction()
 
+macro(install_deps __target)
+    install(TARGETS ${__target} DESTINATION bin)
+    install(CODE [[
+
+  file(GET_RUNTIME_DEPENDENCIES
+
+    EXECUTABLES ${__install_target}
+    RESOLVED_DEPENDENCIES_VAR _r_deps
+    PRE_EXCLUDE_REGEXES "usr.*"
+    POST_EXCLUDE_REGEXES "^/(usr|lib).*"
+    UNRESOLVED_DEPENDENCIES_VAR _u_deps
+    DIRECTORIES ${MY_DEPENDENCY_PATHS}
+  )
+  message("\n\nFound dependencies :")
+
+  foreach(dep_filename ${_r_deps})
+  message("-- ${dep_filename}")
+
+      if (IS_ABSOLUTE ${dep_filename})
+
+        endif()
+       file(INSTALL
+              DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+              TYPE SHARED_LIBRARY
+              FOLLOW_SYMLINK_CHAIN
+              FILES "${dep_filename}"
+            )
+  endforeach()
+  list(LENGTH _u_deps _u_length)
+  if("${_u_length}" GREATER 0)
+    message(WARNING "Unresolved dependencies detected!")
+  endif()
+]])
+endmacro()
+
