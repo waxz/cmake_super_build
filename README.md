@@ -18,7 +18,7 @@ function(set_asan target)
     target_compile_options(${target} PUBLIC "-fno-builtin-free")
 
 
-    target_compile_options(${target} PUBLIC "-fsanitize-address-use-after-scope")
+    #    target_compile_options(${target} PUBLIC "-fsanitize-address-use-after-scope")
 
     target_compile_options(${target} PUBLIC "-fsanitize=address")
     target_compile_options(${target} PUBLIC "-fno-optimize-sibling-calls")
@@ -28,6 +28,7 @@ function(set_asan target)
     target_compile_options(${target} PUBLIC "-fno-omit-frame-pointer")
 
     target_compile_options(${target} PUBLIC "-fstack-protector")
+    target_link_libraries(${target} PUBLIC  "-fuse-ld=gold")
 
     target_link_libraries(${target} PUBLIC "-fsanitize=address  -fsanitize=leak -fsanitize=undefined")
     #    target_compile_options(${target} PUBLIC "-fsanitize=memory")
@@ -36,7 +37,6 @@ function(set_asan target)
     #    target_link_libraries(${target} PUBLIC "-fsanitize=thread")
 
 endfunction(set_asan)
-
 ```
 3. set rpath , runpath
 ```cmake

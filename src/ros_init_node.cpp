@@ -30,4 +30,28 @@ int main(int argc, char** argv) {
 
     }
 
+    XmlRpc::XmlRpcValue xmlvalue;
+    getParam("f",xmlvalue);
+
+    std::cout << "xmlvalue: " << xmlvalue << std::endl;
+
+    for (int i = 0; i < xmlvalue.size(); i++) {
+
+        if (xmlvalue[i].getType() != XmlRpc::XmlRpcValue::TypeStruct) {
+
+            std::cerr
+                    << "ros getParam fail: wrong data type [vector<vector>], required std::vector<std::map<std::string, std::string>>"
+                    << std::endl;
+
+        }
+
+        for (auto it = xmlvalue[i].begin(); it != xmlvalue[i].end(); it++) {
+              std::cout << "it->first: " << it->first << "\n"
+              << static_cast<std::string>(xmlvalue[i][it->first]) << std::endl;
+        }
+
+
+    }
+
+
 }

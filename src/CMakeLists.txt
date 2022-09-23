@@ -26,15 +26,23 @@ target_link_libraries(ceres_simple_solve PUBLIC
         )
 install(TARGETS ceres_simple_solve DESTINATION bin)
 
-add_executable(ros_init_node ros_init_node.cpp)
-target_link_directories(ros_init_node PUBLIC /home/waxz/dev/roscpp_src/install_isolated/lib )
-target_link_libraries(ros_init_node PUBLIC
-        roscpp
-        )
-target_include_directories(
-        ros_init_node PUBLIC
-        /home/waxz/dev/roscpp_src/install_isolated/include
-)
+find_package(Boost 1.58 REQUIRED COMPONENTS system filesystem)
+
+
+
+#add_executable(ros_init_node ros_init_node.cpp)
+#target_link_directories(ros_init_node PUBLIC /home/waxz/dev/roscpp_src/install_isolated/lib )
+#target_link_libraries(ros_init_node PUBLIC
+#        roscpp xmlrpcpp rosconsole cpp_common rostime roscpp_serialization
+#        ${Boost_LIBRARIES}
+#
+#        )
+#target_include_directories(
+#        ros_init_node PUBLIC
+#        /home/waxz/dev/roscpp_src/install_isolated/include
+#)
+
+
 
 add_executable(fruit_greet fruit_greet.cpp)
 target_link_libraries(fruit_greet PUBLIC
@@ -193,3 +201,102 @@ target_link_libraries(tbb_hello PUBLIC TBB::tbb)
 #        )
 #target_compile_options(omp_hello PUBLIC ${OpenMP_CXX_FLAGS})
 
+add_executable(sol_hello2 sol_hello.cpp)
+target_link_libraries(sol_hello2 PUBLIC liblua ) # dl
+target_include_directories(sol_hello2 PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+add_executable(mosquitto_hello mosquitto_hello.cpp)
+target_link_libraries(mosquitto_hello PUBLIC liblua ${mosquitto_LIBRARY})
+target_include_directories(mosquitto_hello PUBLIC ${CMAKE_SOURCE_DIR}/third_party/sol ${mosquitto_INCLUDE_DIR})
+
+
+
+
+#add_executable(ros_lua ros_lua.cpp)
+#target_link_directories(ros_lua PUBLIC /home/waxz/dev/roscpp_src/install_isolated/lib )
+#target_link_libraries(ros_lua PUBLIC
+#        roscpp xmlrpcpp rosconsole cpp_common rostime roscpp_serialization
+#        liblua dl
+#        ${mosquitto_LIBRARY}
+#        )
+#target_include_directories(
+#        ros_lua PUBLIC
+#        /home/waxz/dev/roscpp_src/install_isolated/include
+#        ${CMAKE_SOURCE_DIR}/third_party/sol
+#        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+#        ${mosquitto_INCLUDE_DIR}
+#
+#)
+
+#add_executable(ros_talker ros_talker.cpp)
+#target_link_directories(ros_talker PUBLIC /home/waxz/dev/roscpp_src/install_isolated/lib )
+#target_link_libraries(ros_talker PUBLIC
+#        roscpp xmlrpcpp rosconsole cpp_common rostime roscpp_serialization
+#        liblua dl
+#        ${mosquitto_LIBRARY}
+#        )
+#target_include_directories(
+#        ros_talker PUBLIC
+#        /home/waxz/dev/roscpp_src/install_isolated/include
+#        ${CMAKE_SOURCE_DIR}/third_party/sol
+#        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+#        ${mosquitto_INCLUDE_DIR}
+#
+#)
+
+# Geographiclib installs FindGeographicLib.cmake to this non-standard location
+#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/share/cmake/geographiclib/")
+
+
+
+#add_executable(ros_listener ros_listener.cpp)
+#target_link_directories(ros_listener PUBLIC /home/waxz/dev/roscpp_src/install_isolated/lib )
+#target_link_libraries(ros_listener PUBLIC
+#        roscpp xmlrpcpp rosconsole cpp_common rostime roscpp_serialization
+#        liblua dl
+#        ${mosquitto_LIBRARY}
+#        ${Boost_LIBRARIES}
+#        ${GeographicLib_LIBRARIES}
+#        )
+#target_include_directories(
+#        ros_listener PUBLIC
+#        /home/waxz/dev/roscpp_src/install_isolated/include
+#        ${CMAKE_SOURCE_DIR}/third_party/sol
+#        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+#        ${mosquitto_INCLUDE_DIR}
+#
+#)
+#install(CODE [[ set(__install_target $<TARGET_FILE:ros_listener>) ]]  )
+#install_deps(ros_listener)
+
+
+add_executable(serial_hello  serial_hello.cpp)
+target_link_libraries(serial_hello PUBLIC ${serial_LIBRARIES} )
+target_include_directories(serial_hello PUBLIC ${serial_INCLUDE_DIRS})
+
+
+#add_library(MqttClient message/MqttClient.cpp)
+#target_include_directories(MqttClient PUBLIC ${CMAKE_SOURCE_DIR}/include ${mosquitto_INCLUDE_DIR}   ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+
+add_executable(mqtt_cient_test  mqtt_cient_test.cpp message/MqttClient.cpp )
+target_link_libraries(mqtt_cient_test  PUBLIC ${mosquitto_LIBRARY} ) # X11 pthread
+target_include_directories(mqtt_cient_test PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}  ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/include ${mosquitto_INCLUDE_DIR}   ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+print_include_dir(mqtt_cient_test)
+
+add_executable(system_command system_command.cpp md5/md5.cpp )
+target_include_directories( system_command PUBLIC ${CMAKE_SOURCE_DIR}/include )
+target_link_libraries(system_command PUBLIC  absl::strings)
+
+add_executable(test_using_catch test_catch_main.cpp test/catch2/catch_amalgamated.cpp)
+
+set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
+
+add_executable(template_test template_test.cpp
+        )
+target_include_directories(
+        template_test PUBLIC
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+
+)
+set_asan(template_test)
+set_property(TARGET template_test PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")

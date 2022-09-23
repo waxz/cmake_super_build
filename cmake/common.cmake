@@ -1,3 +1,4 @@
+cmake_policy(SET CMP0074 NEW)
 find_package(Threads REQUIRED)
 
 # ---------------------------------------------------------------------------------------------------------
@@ -17,7 +18,7 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 # fix ld: unrecognized option '--push-state--no-as-needed'
 # https://stackoverflow.com/questions/50024731/ld-unrecognized-option-push-state-no-as-needed
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
 
 
 
@@ -68,14 +69,13 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall -Wextra -pedantic -Wno-dev -Wno-unknown-pragmas -Wno-sign-compare -Woverloaded-virtual -Wwrite-strings -Wno-unused")
 #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -O0 -o -ggdb  -ggdb3 -fprofile-arcs -mstackrealign  -march=native  ")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread  -g -O0 ")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -mstackrealign  -march=native  ")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -mstackrealign  -march=native  -fstack-protector")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fsanitize=undefined   -fsanitize=address -fsanitize=leak -fno-omit-frame-pointer -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-optimize-sibling-calls  -fno-omit-frame-pointer -O1")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=leak -fno-omit-frame-pointer")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fstack-protector")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address  -fsanitize=leak")
-    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address  -fsanitize=leak")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -fno-optimize-sibling-calls -fno-omit-frame-pointer -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined   -fsanitize=address -fsanitize=leak -fsanitize=leak ")
+    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address  -fsanitize=leak")
+    #set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address  -fsanitize=leak")
 endif ()
 
 function(set_asan target)
@@ -98,6 +98,7 @@ function(set_asan target)
     target_compile_options(${target} PUBLIC "-fno-omit-frame-pointer")
 
     target_compile_options(${target} PUBLIC "-fstack-protector")
+    target_link_libraries(${target} PUBLIC  "-fuse-ld=gold")
 
     target_link_libraries(${target} PUBLIC "-fsanitize=address  -fsanitize=leak -fsanitize=undefined")
     #    target_compile_options(${target} PUBLIC "-fsanitize=memory")
@@ -118,6 +119,10 @@ endfunction()
 
 
 function(set_omp target)
+
+    find_package(OpenMP REQUIRED)
+    message( OpenMP_CXX_LIBRARIES : ${OpenMP_CXX_LIBRARIES}, OpenMP_CXX_FLAGS : ${OpenMP_CXX_FLAGS}, OpenMP_EXE_LINKER_FLAGS : ${OpenMP_EXE_LINKER_FLAGS} )
+
     target_include_directories(${target} PUBLIC ${OpenMP_CXX_INCLUDE_DIRS} )
     target_link_libraries(${target} PUBLIC
             ${OpenMP_CXX_LIBRARIES}

@@ -78,7 +78,72 @@ set(FlatBuffers_ROOT ${FLATBUFFERS_ROOT})
 find_package(FlatBuffers REQUIRED)
 
 
+include(CMakeDependentOption)
+include(CMakePackageConfigHelpers)
+
+set(LUA_VERSION "5.3.5" CACHE STRING "The version of Lua needed. Can be 5.1, 5.2, 5.3, LuaJIT, or a more specific 3-part version number for a specifc Lua (e.g., 5.3.4 or luajit-2.0.5)")
+string(TOLOWER ${LUA_VERSION} NORMALIZED_LUA_VERSION)
+#    find_package(LuaBuild REQUIRED COMPONENTS ${LUA_VERSION})
+include(ExternalProject)
+
+build_external_project_make(lua lib "https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz")
+message(lua_ROOT : ${lua_ROOT})
+set(LUA_LIBRARIES ${lua_ROOT}/lib/liblua.a)
+set(LUA_INCLUDE_DIR ${lua_ROOT}/include)
+
+add_library(liblua STATIC IMPORTED)
+set_target_properties(liblua PROPERTIES  IMPORTED_LOCATION "${LUA_LIBRARIES}")
+target_include_directories(liblua INTERFACE ${LUA_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/third_party/sol)
+target_link_libraries(liblua INTERFACE  dl )
+#ExternalProject_Add(lua
+#        URL "https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz"
+#        CONFIGURE_COMMAND ""
+#        BUILD_COMMAND make generic
+#        BUILD_ALWAYS true
+#        BUILD_IN_SOURCE true
+#        INSTALL_COMMAND ""
+#        )
+#ExternalProject_Get_property(lua SOURCE_DIR)
+#message("liblua will be found at '${SOURCE_DIR}/src'")
+#set(LUA_LIBRARIES ${SOURCE_DIR}/src/liblua.a)
+#
+#
+#
+
+build_external_project(CJSON lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cJSON-1.7.15.tar.gz -DCMAKE_BUILD_TYPE=Release)
+
+set(cJSON_DIR ${CJSON_ROOT}/lib/cmake/cJSON)
+find_package(cJSON REQUIRED)
+build_external_project(mosquitto lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mosquitto-2.0.15.tar.gz -DCMAKE_BUILD_TYPE=Release -DcJSON_DIR=${cJSON_DIR} -DDOCUMENTATION=OFF)
+set(mosquitto_LIBRARY ${mosquitto_ROOT}/lib/libmosquitto.so ${mosquitto_ROOT}/lib/libmosquittopp.so)
+set(mosquitto_INCLUDE_DIR ${mosquitto_ROOT}/include)
+
+
+
+build_external_project(GeographicLib lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/GeographicLib-2.1.1.tar.gz -DCMAKE_BUILD_TYPE=Release )
+find_package(GeographicLib REQUIRED)
+
+
+# serial-1.2.1.tar.gz
+build_external_project(serial lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/serial-1.2.1.tar.gz -DCMAKE_BUILD_TYPE=Release )
+find_package(serial REQUIRED)
+#===============
+
+#abseil-cpp-20220623.1.tar.gz
+build_external_project(absl lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/abseil-cpp-20220623.1.tar.gz -DABSL_BUILD_TESTING=OFF -DABSL_USE_GOOGLETEST_HEAD=ON -DCMAKE_CXX_STANDARD=14  -DABSL_ENABLE_INSTALL=ON)
+find_package(absl REQUIRED)
+
+
+#build_external_project(flashlight lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flashlight-0.3.2.tar.gz -DCMAKE_BUILD_TYPE=Release )
+#find_package(flashlight REQUIRED)
+
+
+include(cmake/set_ros.cmake)
+
 add_subdirectory(src)
+
+
+
 
 #include(deb)  # build/cmake/deb.cmake
 include(CPack)
