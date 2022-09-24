@@ -47,10 +47,16 @@ struct Cat {
 
 };
 
+
+namespace serialization{
+    void to_json(nlohmann::json& data,const std::string& name , const House & object );
+    void to_json(nlohmann::json& data,const std::string& name , const Cat & object );
+    void from_json(nlohmann::json& data,const std::string& name ,  House& object );
+    void from_json(nlohmann::json& data,const std::string& name ,  Cat& object );
+}
 #include "serialization_json.h"
 
-namespace {
-    using namespace serialization;
+namespace serialization{
     constexpr auto house_properties = std::make_tuple(
             property(&House::area, "area"),
             property(&House::name, "name")
@@ -69,25 +75,28 @@ namespace {
     );
 }
 
-void to_json(nlohmann::json& data,const std::string& name , const House & object ){
+namespace serialization{
+    void to_json(nlohmann::json& data,const std::string& name , const House & object ){
 //     constexpr  auto properties = house_properties;
-    serialization::to_json_unpack(data,name,object, house_properties);
-}
+        to_json_unpack(data,name,object, house_properties);
+    }
 
-void to_json(nlohmann::json& data,const std::string& name , const Cat & object ){
+    void to_json(nlohmann::json& data,const std::string& name , const Cat & object ){
 //    constexpr  auto properties = house_properties;
-    serialization::to_json_unpack(data,name,object, cat_properties);
+        to_json_unpack(data,name,object, cat_properties);
+    }
+    void from_json(nlohmann::json& data,const std::string& name ,  House& object ){
+
+        from_json_unpack(data,name,object,house_properties);
+
+    }
+    void from_json(nlohmann::json& data,const std::string& name ,  Cat& object ){
+
+        from_json_unpack(data,name,object,cat_properties);
+
+    }
 }
-void from_json(nlohmann::json& data,const std::string& name ,  House& object ){
 
-    serialization::from_json_unpack(data,name,object,house_properties);
-
-}
-void from_json(nlohmann::json& data,const std::string& name ,  Cat& object ){
-
-    serialization::from_json_unpack(data,name,object,cat_properties);
-
-}
 #if 1
 
 
@@ -105,13 +114,13 @@ bool test_serialization(){
     cat1.house.name = "tree";
 
     nlohmann::json json_data_cat1;
-    to_json(json_data_cat1, "cat1", cat1);
+    serialization::to_json(json_data_cat1, "cat1", cat1);
     std::cout << "json_data_cat1: \n" << json_data_cat1.dump() << std::endl;
 
     Cat cat2;
-    from_json(json_data_cat1, "cat1", cat2);
+    serialization::from_json(json_data_cat1, "cat1", cat2);
     nlohmann::json json_data_cat2;
-    to_json(json_data_cat2, "cat2", cat2);
+    serialization::to_json(json_data_cat2, "cat2", cat2);
     std::cout << "json_data_cat2: \n" << json_data_cat2.dump() << std::endl;
 
     std::cout << "(cat1 == cat2) = " << std::boolalpha << (cat1 == cat2) << std::endl;
