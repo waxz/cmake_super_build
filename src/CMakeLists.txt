@@ -10,13 +10,23 @@ project(cmake_super_build)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(cv_process_mat cv_process_mat.cpp)
-target_link_libraries(cv_process_mat PUBLIC
-        ${OpenCV_LIBS}
-        )
+#add_executable(Open3d_DrawWebRTC Open3d_DrawWebRTC.cpp)
+#target_link_libraries(Open3d_DrawWebRTC PRIVATE Open3D::Open3D )
+#set_target_properties(Open3d_DrawWebRTC PROPERTIES LINK_FLAGS "-Wl,--dynamic-linker=$ENV{CUSTOM_GLIBC_PATH}/lib/ld-linux-x86-64.so.2")  # set RPATH ok ok
+#target_link_options( Open3d_DrawWebRTC PRIVATE "SHELL:-Wl,-L$ENV{CUSTOM_GLIBC_PATH}/lib" )
+#target_link_directories(Open3d_DrawWebRTC PUBLIC  $ENV{CUSTOM_GLIBC_PATH}/lib )
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--dynamic-linker=$ENV{CUSTOM_GLIBC_PATH}/lib/ld-linux-x86-64.so.2")
+#message("use CUSTOM_GLIBC_PATH 1: " $ENV{CUSTOM_GLIBC_PATH} )
+#
+#set_target_rpath(Open3d_DrawWebRTC $ENV{CUSTOM_GLIBC_PATH})
 
-target_include_directories(cv_process_mat PUBLIC
-        ${OpenCV_INCLUDE_DIRS})
+#add_executable(cv_process_mat cv_process_mat.cpp)
+#target_link_libraries(cv_process_mat PUBLIC
+#        ${OpenCV_LIBS}
+#        )
+#
+#target_include_directories(cv_process_mat PUBLIC
+#        ${OpenCV_INCLUDE_DIRS})
 
 
 add_executable(ceres_simple_solve ceres_simple_solve.cpp)
@@ -269,11 +279,11 @@ target_include_directories(mosquitto_hello PUBLIC ${CMAKE_SOURCE_DIR}/third_part
 #install(CODE [[ set(__install_target $<TARGET_FILE:ros_listener>) ]]  )
 #install_deps(ros_listener)
 
-
+if(  DEFINED catkin_package)
 add_executable(serial_hello  serial_hello.cpp)
 target_link_libraries(serial_hello PUBLIC ${serial_LIBRARIES} )
 target_include_directories(serial_hello PUBLIC ${serial_INCLUDE_DIRS})
-
+endif()
 
 #add_library(MqttClient message/MqttClient.cpp)
 #target_include_directories(MqttClient PUBLIC ${CMAKE_SOURCE_DIR}/include ${mosquitto_INCLUDE_DIR}   ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
@@ -300,3 +310,22 @@ target_include_directories(
 )
 set_asan(template_test)
 set_property(TARGET template_test PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
+
+
+#add_executable(matplot_test matplot_test.cpp)
+#target_link_libraries(matplot_test  PUBLIC Matplot++::matplot)
+
+
+add_executable(transform_test  transform_test.cpp)
+target_include_directories( transform_test PUBLIC ${CMAKE_SOURCE_DIR}/include )
+target_link_libraries(transform_test PUBLIC ) #range-v3::range-v3
+set_omp(transform_test)
+
+
+add_executable(immer_test.cpp immer_test.cpp )
+target_include_directories(immer_test.cpp PUBLIC ${CMAKE_SOURCE_DIR}/third_party/immer-master ${CMAKE_SOURCE_DIR}/include )
+
+add_executable(xml_json xml_json.cpp )
+target_include_directories( xml_json PUBLIC ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+target_link_libraries(xml_json PUBLIC tinyxml2::tinyxml2)
+

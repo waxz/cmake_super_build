@@ -35,63 +35,8 @@ pair<string, int> exec(const char* cmd) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc <= 1) return 0;
-    cout << "argv[1] : " << argv[1] << '\n';
-    if(0){
-
-        char cstring[] = "Foo baz, testing.";
-        std::string str = cstring;
-
-        /* MD5 from std::string */
-        printf("md5sum: %s\n",  md5(  str ).c_str());
-
-        /* MD5 from c-string */
-        printf("md5sum: %s\n",  md5(  cstring ).c_str());
-
-        /* Short MD5 from c-string */
-        printf("md5sum6: %s\n", md5sum6( cstring ).c_str());
-
-        /* Short MD5 from std::string */
-        printf("md5sum6: %s\n", md5sum6( str ).c_str());
-
-        /* MD5 from filename */
-        printf("md5file: %s\n", md5file(argv[1]).c_str());
-
-        /* MD5 from opened file */
-        std::FILE* file = std::fopen(argv[1], "rb");
-        printf("md5file: %s\n", md5file(file).c_str());
-        std::fclose(file);
 
 
-        std::vector<std::string> cmd_args;
-        std::string cmd_string;
-
-        std::string node_name = std::string(argv[1]);
-
-
-
-        cmd_string = "rosnode ping /rosout";
-        cmd_args = absl::StrSplit(cmd_string, ' ');
-
-        std::cout << "***** 1 execute cmd: " << cmd_string << std::endl;
-
-        namespace sp = subprocess;
-        auto p0 = sp::Popen(cmd_args, sp::output{sp::PIPE});
-        std::cout << "***** 2 execute cmd done: " << cmd_string << std::endl;
-
-//        std::vector<char> buf(20);
-//        char buffer[20];
-//        int rbytes = sp::util::read_atmost_n(p0.output(), buffer,10);
-//
-//        std::string out(buffer);
-//        std::cout << "***** 3 execute out: " << out << std::endl;
-
-        p0.kill();
-
-
-        /* we're done */
-        return EXIT_SUCCESS;
-    }
 
 
 
@@ -99,25 +44,41 @@ int main(int argc, char* argv[]) {
         namespace sp = subprocess;
 
         {
-            std::string cmd =  "echo 123";
-            for(int i = 0 ; i < 4; i++){
-                std::string cmd_string = absl::Substitute("\''$0'\'", cmd);
+            std::string cmd =  "echo 123 >> /tmp/a.txt";
+            if (0){
+                for(int i = 0 ; i < 4; i++){
+                    std::string cmd_string = absl::Substitute("\''$0'\'", cmd);
 
-                auto p =  sp::Popen({"bash", "-c",  cmd_string}, sp::output{sp::PIPE},sp::defer_spawn{true});
-                p.start_process();
-            }
-            for(int i = 0 ; i < 4; i++){
-                std::string cmd_string = absl::Substitute("\''$0'\'", cmd);
+                    auto p =  sp::Popen({"bash", "-c",  cmd_string}, sp::output{sp::PIPE},sp::defer_spawn{true});
+                    p.start_process();
+                }
+                for(int i = 0 ; i < 4; i++){
+                    std::string cmd_string = absl::Substitute("\''$0'\'", cmd);
 
-                auto p =  sp::Popen({"bash", "-c",  cmd_string}, sp::shell{true},sp::defer_spawn{true});
-                p.start_process();
-            }
-            for(int i = 0 ; i < 4; i++){
-                std::string cmd_string = absl::Substitute("\''$0'\'", cmd);
-                auto p = sp::Popen(
-                        {"bash", "-c", cmd_string}, sp::output{sp::PIPE},
-                        sp::error{sp::PIPE}, sp::defer_spawn{true});
+                    auto p =  sp::Popen({"bash", "-c",  cmd_string}, sp::shell{true},sp::defer_spawn{true});
+                    p.start_process();
+                }
+                for(int i = 0 ; i < 4; i++){
+                    std::string cmd_string = absl::Substitute("\''$0'\'", cmd);
+                    auto p = sp::Popen(
+                            {"bash", "-c", cmd_string}, sp::output{sp::PIPE},
+                            sp::error{sp::PIPE}, sp::defer_spawn{true});
 //                p.start_process();
+                }
+            }
+
+
+            for(int i = 0 ; i < 4; i++){
+                cmd =  "echo 123667 >> /tmp/a.txt";
+                std::string cmd_string = absl::Substitute("\''$0'\'", cmd);
+                char msg_array[100];
+                sprintf(msg_array, R"(%s )", cmd.c_str());
+                std::string cc = std::string (msg_array);
+                std::cout << "cc: [" << cc <<"]"<<std::endl;
+                auto p = sp::Popen(
+                        {"bash", "-c",cmd }, sp::output{sp::PIPE},
+                        sp::error{sp::PIPE}, sp::defer_spawn{true});
+                p.start_process();
             }
             return 0;
 
@@ -202,9 +163,5 @@ int main(int argc, char* argv[]) {
         p.kill();
 
     }
-    return 0;
-    const auto process_ret = exec(argv[1]);
-    cout << "captured stdout : " << '\n' << process_ret.first << endl;
-    cout << "program exited with status code " << process_ret.second << endl;
     return 0;
 }

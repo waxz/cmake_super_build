@@ -25,6 +25,8 @@ struct Dog {
 struct House{
     int area;
     std::string name;
+    std::vector<std::vector<float>> points;
+
 };
 
 struct Cat {
@@ -59,7 +61,8 @@ namespace serialization{
 namespace serialization{
     constexpr auto house_properties = std::make_tuple(
             property(&House::area, "area"),
-            property(&House::name, "name")
+            property(&House::name, "name"),
+            property(&House::points, "points")
 
     );
 
@@ -112,6 +115,9 @@ bool test_serialization(){
     cat1.dicts.emplace("age", "233");
     cat1.house.area = 58;
     cat1.house.name = "tree";
+    cat1.house.points.push_back(std::vector<float>({7.0,1.0}));
+    cat1.house.points.push_back(std::vector<float>({1.0,6.0}));
+
 
     nlohmann::json json_data_cat1;
     serialization::to_json(json_data_cat1, "cat1", cat1);

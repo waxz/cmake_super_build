@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.16)
 project(cmake_super_build)
 
 include(cmake/common.cmake)
@@ -36,7 +36,7 @@ set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 build_external_project(Ceres lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver-2.1.0.tar.gz  -DMINIGLOG=ON -DGFLAGS=OFF -DSUITESPARSE=OFF -DBUILD_EXAMPLES=ON)
 find_package(Ceres  REQUIRED)
 message(Ceres_ROOT : ${Ceres_ROOT} ,CERES_LIBRARIES : ${CERES_LIBRARIES} )
-find_opencv(/home/waxz/dev/docker/docker_dev/share/opencv/install 4.6.0)
+#find_opencv(/home/waxz/dev/docker/docker_dev/share/opencv/install 4.6.0)
 
 build_external_project(Fruit lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fruit-3.6.0.tar.gz  -DFRUIT_USES_BOOST=False -DCMAKE_BUILD_TYPE=Release)
 set(FRUIT_INSTALLED_DIR ${Fruit_ROOT})
@@ -61,7 +61,7 @@ message(ZeroMQ_ROOT : ${ZeroMQ_ROOT} ,ZeroMQ_STATIC_LIBRARY : ${ZeroMQ_STATIC_LI
 find_package(ZeroMQ REQUIRED)
 
 # add cmake_policy(SET CMP0074 NEW) in cppzmq/CMakeLists.txt
-build_external_project(cppzmq lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppzmq-4.8.0.tar.gz -DCMAKE_BUILD_TYPE=Release -DZeroMQ_ROOT=${ZeroMQ_ROOT} -DZeroMQ_DIR=${ZeroMQ_ROOT})
+build_external_project(cppzmq lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppzmq-4.8.0.tar.gz -DCMAKE_BUILD_TYPE=Release -DCPPZMQ_BUILD_TESTS=OFF -DZeroMQ_ROOT=${ZeroMQ_ROOT} -DZeroMQ_DIR=${ZeroMQ_ROOT})
 
 #find cppzmq wrapper, installed by make of cppzmq
 find_package(cppzmq REQUIRED)
@@ -69,7 +69,7 @@ message(cppzmq_DIR : ${cppzmq_DIR} , cppzmq_INCLUDE_DIR : ${cppzmq_INCLUDE_DIR})
 
 
 # TBB
-build_external_project(TBB lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/oneTBB-2021.7.0-rc1.tar.gz -DCMAKE_BUILD_TYPE=Release)
+build_external_project(TBB lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/oneTBB-2021.7.0-rc1.tar.gz -DCMAKE_BUILD_TYPE=Release -DTBB_TEST=OFF)
 find_package(TBB REQUIRED)
 
 # flatbuffers FlatBuffersConfig.cmake
@@ -110,11 +110,11 @@ target_link_libraries(liblua INTERFACE  dl )
 #
 #
 
-build_external_project(CJSON lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cJSON-1.7.15.tar.gz -DCMAKE_BUILD_TYPE=Release)
+#build_external_project(CJSON lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cJSON-1.7.15.tar.gz -DCMAKE_BUILD_TYPE=Release)
+#set(cJSON_DIR ${CJSON_ROOT}/lib/cmake/cJSON)
+#find_package(cJSON REQUIRED)
 
-set(cJSON_DIR ${CJSON_ROOT}/lib/cmake/cJSON)
-find_package(cJSON REQUIRED)
-build_external_project(mosquitto lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mosquitto-2.0.15.tar.gz -DCMAKE_BUILD_TYPE=Release -DcJSON_DIR=${cJSON_DIR} -DDOCUMENTATION=OFF)
+build_external_project(mosquitto lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mosquitto-2.0.15.tar.gz -DCMAKE_BUILD_TYPE=Release  -DDOCUMENTATION=OFF) #-DcJSON_DIR=${cJSON_DIR}
 set(mosquitto_LIBRARY ${mosquitto_ROOT}/lib/libmosquitto.so ${mosquitto_ROOT}/lib/libmosquittopp.so)
 set(mosquitto_INCLUDE_DIR ${mosquitto_ROOT}/include)
 
@@ -123,10 +123,11 @@ set(mosquitto_INCLUDE_DIR ${mosquitto_ROOT}/include)
 build_external_project(GeographicLib lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/GeographicLib-2.1.1.tar.gz -DCMAKE_BUILD_TYPE=Release )
 find_package(GeographicLib REQUIRED)
 
-
+if(  DEFINED catkin_package)
 # serial-1.2.1.tar.gz
 build_external_project(serial lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/serial-1.2.1.tar.gz -DCMAKE_BUILD_TYPE=Release )
 find_package(serial REQUIRED)
+endif()
 #===============
 
 #abseil-cpp-20220623.1.tar.gz
@@ -136,6 +137,25 @@ find_package(absl REQUIRED)
 
 #build_external_project(flashlight lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flashlight-0.3.2.tar.gz -DCMAKE_BUILD_TYPE=Release )
 #find_package(flashlight REQUIRED)
+
+#set(Open3D_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/third_party/open3d-devel-linux-x86_64-pre-cxx11-abi-0.15.1)
+
+#Open3D-0.15.1.tar.gz
+#build_external_project(Open3D lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Open3D-0.15.1.tar.gz -DBUILD_FILAMENT_FROM_SOURCE=OFF -DGLIBCXX_USE_CXX11_ABI=OFF -DBUILD_GUI=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_CACHED_CUDA_MANAGER=OFF -DBUILD_EXAMPLES=OFF -DBUILD_PYTHON_MODULE=OFF )
+#
+#find_package(Open3D REQUIRED)
+
+#matplotplusplus-1.1.0.tar.gz
+#build_external_project(Matplot++ lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/matplotplusplus-1.1.0.tar.gz  -DBUILD_EXAMPLES=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON)
+#find_package(Matplot++ REQUIRED)
+
+# range-v3-0.12.0.tar.gz
+#build_external_project(range-v3 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/range-v3-0.12.0.tar.gz   -DCMAKE_BUILD_TYPE=Release  )
+#find_package(range-v3 REQUIRED)
+
+
+build_external_project(tinyxml2 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinyxml2-9.0.0.tar.gz  -DCMAKE_BUILD_TYPE=Release  )
+find_package(tinyxml2 REQUIRED)
 
 
 include(cmake/set_ros.cmake)
