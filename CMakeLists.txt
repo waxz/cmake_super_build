@@ -33,7 +33,7 @@ set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 
 
 
-build_external_project(Ceres lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver-2.1.0.tar.gz  -DMINIGLOG=ON -DGFLAGS=OFF -DSUITESPARSE=OFF -DBUILD_EXAMPLES=ON)
+build_external_project(Ceres lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver-2.1.0.tar.gz   -DCMAKE_BUILD_TYPE=Debug -DMINIGLOG=ON -DGFLAGS=OFF -DSUITESPARSE=OFF -DBUILD_EXAMPLES=ON)
 find_package(Ceres  REQUIRED)
 message(Ceres_ROOT : ${Ceres_ROOT} ,CERES_LIBRARIES : ${CERES_LIBRARIES} )
 #find_opencv(/home/waxz/dev/docker/docker_dev/share/opencv/install 4.6.0)
@@ -156,6 +156,11 @@ find_package(absl REQUIRED)
 
 build_external_project(tinyxml2 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinyxml2-9.0.0.tar.gz  -DCMAKE_BUILD_TYPE=Release  )
 find_package(tinyxml2 REQUIRED)
+
+
+#build_external_project(mv-lm-icp lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mv-lm-icp-master-all.zip  -DCMAKE_BUILD_TYPE=Release  )
+#find_package(mv-lm-icp REQUIRED)
+
 
 
 include(cmake/set_ros.cmake)

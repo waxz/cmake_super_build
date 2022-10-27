@@ -250,6 +250,41 @@ struct Transform2d{
 
     }
 
+    Transform2d operator*(const Transform2d& rhv )const{
+        Transform2d transform;
+        auto & mat  =this->matrix;
+        auto & mat_rhv  =rhv.matrix;
+        auto & mat_mul  =transform.matrix;
+        for(int i = 0; i < 3; i++){
+            for(int j = 0; j < 3; j++)
+                mat_mul[i][j] += mat[i][j] * mat_rhv[j][i] ;
+        }
+
+        return transform;
+
+    }
+    Transform2d inverse() const{
+        Transform2d transform_inv;
+        float determinant = 0;
+
+        auto & mat  =this->matrix;
+        //finding determinant
+        for(int i = 0; i < 3; i++)
+            determinant += (mat[0][i] * (mat[1][(i+1)%3] * mat[2][(i+2)%3] - mat[1][(i+2)%3] * mat[2][(i+1)%3]));
+
+        auto & mat_inv  =transform_inv.matrix;
+        float determinant_inv = 1.0f/determinant;
+
+        for(int i = 0; i < 3; i++){
+            for(int j = 0; j < 3; j++)
+                mat_inv[i][j]= ((mat[(j+1)%3][(i+1)%3] * mat[(j+2)%3][(i+2)%3]) - (mat[(j+1)%3][(i+2)%3] * mat[(j+2)%3][(i+1)%3]))* determinant_inv ;
+
+        }
+
+        return transform_inv;
+
+    }
+
 
 };
 std::ostream& operator <<(std::ostream& out,const Transform2d& rhv ){
@@ -378,13 +413,16 @@ void check_size_expand(Args...args){
 
 int main (int argc, char** argv){
 
+
+
+
 #ifdef _OPENMP
     std::cout << "use _OPENMP" <<std::endl;
 
 #endif
 
 
-    auto t = Transform2d(1,0.0,0.0);
+    auto t = Transform2d(1,0.0,0.4);
     auto t2 = Transform2d(1,0.0,0.0);
 
     auto t3 = t*t2;
@@ -392,6 +430,21 @@ int main (int argc, char** argv){
     std::cout << t << std::endl;
     std::cout << t2 << std::endl;
     std::cout << t3 << std::endl;
+
+    auto t4 = t.inverse();
+    auto t5 = t4*t;
+
+    std::cout <<"t: " << t << std::endl;
+
+    std::cout <<"t4: " << t4 << std::endl;
+
+    std::cout <<"t5: " << t5 << std::endl;
+
+    return 0;
+
+
+
+
 
 
     int N= 50000;

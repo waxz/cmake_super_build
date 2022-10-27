@@ -34,6 +34,9 @@ add_executable(ceres_simple_solve ceres_simple_solve.cpp)
 target_link_libraries(ceres_simple_solve PUBLIC
         ${CERES_LIBRARIES}
         )
+target_include_directories(ceres_simple_solve PUBLIC  ${CMAKE_SOURCE_DIR}/include)
+#set_asan(ceres_simple_solve)
+
 install(TARGETS ceres_simple_solve DESTINATION bin)
 
 find_package(Boost 1.58 REQUIRED COMPONENTS system filesystem)
@@ -329,3 +332,5 @@ add_executable(xml_json xml_json.cpp )
 target_include_directories( xml_json PUBLIC ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
 target_link_libraries(xml_json PUBLIC tinyxml2::tinyxml2)
 
+add_executable(stl_test  stl_test.cpp)
+target_include_directories( stl_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)

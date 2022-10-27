@@ -178,6 +178,12 @@ namespace common {
                 .count();
     }
 
+    // Returns the given duration in seconds.
+    double ToMicroSeconds(Duration duration){
+        return std::chrono::duration_cast<std::chrono::microseconds>(duration)
+                .count();
+    }
+
 // Creates a time from a Universal Time Scale.
     Time FromUniversal(int64 ticks) { return Time(Duration(ticks)); }
 

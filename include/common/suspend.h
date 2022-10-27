@@ -21,8 +21,8 @@ namespace common{
         Suspend():locker(mtx){
 
         }
-        void sleep(int ms){
-            cv.wait_for(locker, std::chrono::duration<int, std::ratio<1, 1000>> (ms), [] {  return false;  });
+        void sleep(float ms){
+            cv.wait_for(locker, std::chrono::duration<float, std::ratio<1, 1000>> (ms), [] {  return false;  });
 
         }
     };
