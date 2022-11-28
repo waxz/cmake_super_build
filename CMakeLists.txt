@@ -146,8 +146,8 @@ find_package(absl REQUIRED)
 #find_package(Open3D REQUIRED)
 
 #matplotplusplus-1.1.0.tar.gz
-#build_external_project(Matplot++ lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/matplotplusplus-1.1.0.tar.gz  -DBUILD_EXAMPLES=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON)
-#find_package(Matplot++ REQUIRED)
+build_external_project(Matplot++ lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/matplotplusplus-1.1.0.tar.gz  -DBUILD_EXAMPLES=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON)
+find_package(Matplot++ REQUIRED)
 
 # range-v3-0.12.0.tar.gz
 #build_external_project(range-v3 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/range-v3-0.12.0.tar.gz   -DCMAKE_BUILD_TYPE=Release  )
@@ -161,7 +161,21 @@ find_package(tinyxml2 REQUIRED)
 #build_external_project(mv-lm-icp lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mv-lm-icp-master-all.zip  -DCMAKE_BUILD_TYPE=Release  )
 #find_package(mv-lm-icp REQUIRED)
 
+build_external_project(PCL lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pcl-pcl-1.12.1.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_examples=OFF -DBUILD_apps=OFF -DBUILD_global_tests=OFF -DBUILD_simulation=OFF)
+find_package(PCL REQUIRED)
 
+#octomap-1.9.6.tar.gz
+build_external_project(octomap lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/octomap-1.9.6.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_OCTOVIS_SUBPROJECT=OFF -DBUILD_DYNAMICETD3D_SUBPROJECT=OFF)
+find_package(octomap REQUIRED)
+
+# libnabo-master.zip
+build_external_project(libnabo lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libnabo-master.zip  -DCMAKE_BUILD_TYPE=Release -DBUILD_TYPE=cmake -Dcatkin_DIR=/opt/ros/noetic/share/catkin/cmake )
+find_package(libnabo REQUIRED)
+
+# libpointmatcher-master.zip
+build_external_project(libpointmatcher lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpointmatcher-master.zip -DBUILD_TYPE=cmake -DCMAKE_BUILD_TYPE=Release -Dlibnabo_ROOT=${libnabo_ROOT}  )
+
+find_package(libpointmatcher REQUIRED)
 
 include(cmake/set_ros.cmake)
 

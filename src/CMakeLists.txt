@@ -39,7 +39,7 @@ target_include_directories(ceres_simple_solve PUBLIC  ${CMAKE_SOURCE_DIR}/includ
 
 install(TARGETS ceres_simple_solve DESTINATION bin)
 
-find_package(Boost 1.58 REQUIRED COMPONENTS system filesystem)
+find_package(Boost 1.58 REQUIRED COMPONENTS system filesystem thread program_options chrono)
 
 
 
@@ -334,3 +334,23 @@ target_link_libraries(xml_json PUBLIC tinyxml2::tinyxml2)
 
 add_executable(stl_test  stl_test.cpp)
 target_include_directories( stl_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+
+# Boost Package ############################################################
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+
+find_package (Eigen3 REQUIRED NO_MODULE)
+
+add_library(pcl_norm_2d icp/PCA2D.cpp icp/Normal2dEstimation.cpp)
+target_include_directories( pcl_norm_2d PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+
+
+add_executable(pcl_test pcl_test.cpp  )
+target_include_directories( pcl_test PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+target_link_libraries(pcl_test PUBLIC pcl_norm_2d Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
+
+
+add_executable(libpointmatcher_test  libpointmatcher_test.cpp)
+target_include_directories( libpointmatcher_test PUBLIC  ${libpointmatcher_INCLUDE_DIRS}  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+target_link_libraries(libpointmatcher_test PUBLIC ${Boost_LIBRARIES} ${libpointmatcher_LIBRARIES} pcl_norm_2d Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )

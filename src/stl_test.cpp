@@ -28,7 +28,7 @@
 
 #include "common/clock_time.h"
 #include "common/suspend.h"
-
+#include "common/mio.hpp"
 
 #if defined(__cplusplus) && __cplusplus >= 201703L && defined(__has_include)
 #if __has_include(<filesystem>)
@@ -276,8 +276,8 @@ struct ThreadPool_V2 {
     }
 
 
-    void addTask(const std::function<int()> &task) {
-        task_queue.push(task);
+    void addTask(  std::function<int()> &&task) {
+        task_queue.push(std::forward<std::function<int()> &&>(task));
 
     }
 
@@ -559,6 +559,74 @@ void preciseSleep(double seconds) {
     while ((high_resolution_clock::now() - start).count() / 1e9 < seconds);
 }
 
+
+
+struct TaskManager{
+    struct Task{
+        bool valid = true;
+        common::Time time;
+        double delay_ms = 100;
+        std::function<bool()> func;
+        Task(const std::function<bool()>& func_,float delay_ms_ = 100):time(common::FromUnixNow()),delay_ms(delay_ms_),func(func_){
+        }
+        Task(const Task& rhv){
+            valid = rhv.valid;
+            time = rhv.time;
+            delay_ms = rhv.delay_ms;
+            func = std::move(rhv.func);
+        }
+
+    };
+    std::vector<Task> task_queue;
+
+    TaskManager(){}
+
+    /*
+     const std::function<bool()>& func
+     return true, keep running at given rate
+     return false, run once
+     */
+    void addTask(const std::function<bool()>& func,float delay_ms = 100){
+        task_queue.emplace_back(func,delay_ms);
+
+    }
+    bool call(){
+        common::Time now = common::FromUnixNow();
+
+        bool run = false;
+
+        if (!task_queue.empty()) {
+
+            for(auto& task_opt: task_queue)
+            {
+                if(common::ToMillSeconds(now - task_opt.time) >= task_opt.delay_ms){
+                    run = true;
+                    std::cout << "run TaskManager time " << common::getCurrentDateTime();
+                    task_opt.valid = task_opt.func();
+                    if(task_opt.valid){
+                        task_opt.time = now;
+                    }
+                }
+
+            }
+            if(run){
+
+                auto it  = std::remove_if(task_queue.begin(),task_queue.end(),[](auto& e){
+                    return !e.valid;
+                });
+
+                task_queue.erase(it, task_queue.end());
+            }
+
+
+        }
+
+        return !task_queue.empty();
+
+    }
+
+};
+
 void test_clock(){
 
     common::Time  time = common::FromUnixNow();
@@ -567,12 +635,138 @@ void test_clock(){
 
     while (true){
 
-        preciseSleep(0.0167);
+        preciseSleep(1);
 //        sleep2.sleep(16.7);
 
         std::cout << common::ToMicroSeconds(common::FromUnixNow() - time) << "\n";
         time = common::FromUnixNow();
     }
+}
+
+
+int handle_error(const std::error_code& error)
+{
+    const auto& errmsg = error.message();
+    std::printf("error mapping file: %s, exiting...\n", errmsg.c_str());
+    return error.value();
+}
+
+void allocate_file(const std::string& path, const int size)
+{
+    std::ofstream file(path);
+    std::string s(size, '0');
+    file << s;
+}
+
+
+void test_delay_task(){
+
+    TaskManager td;
+
+    td.addTask([&]{
+        std::cout << "hello 1" << std::endl;
+        return false;
+    },120);
+
+    td.addTask([&]{
+        std::cout << "hello 2" << std::endl;
+        return true;
+    },1200);
+
+    common::Time  time = common::FromUnixNow();
+    std::cout << "run main time " << common::getCurrentDateTime();
+
+    while (true){
+        if(!td.call()){
+            break;
+        }
+    }
+
+
+
+}
+
+struct Test{
+    Test(){
+    std::cout << "construct test"<<std::endl;
+    }
+    Test(Test&& rhv){
+        std::cout << "move construct test"<<std::endl;
+
+    }
+    Test(const Test&  rhv){
+        std::cout << "copy move construct test"<<std::endl;
+
+    }
+    ~Test(){
+        std::cout << "deconstruct test"<<std::endl;
+
+    }
+
+};
+
+int mm_test()
+{
+    const auto path = "file.txt";
+
+    // NOTE: mio does *not* create the file for you if it doesn't exist! You
+    // must ensure that the file exists before establishing a mapping. It
+    // must also be non-empty. So for illustrative purposes the file is
+    // created now.
+    allocate_file(path, 155);
+
+
+    // Read-write memory map the whole file by using `map_entire_file` where the
+    // length of the mapping is otherwise expected, with the factory method.
+    std::error_code error;
+    mio::mmap_sink rw_mmap = mio::make_mmap_sink(
+            path, 0, mio::map_entire_file, error);
+    if (error) { return handle_error(error); }
+
+    // You can use any iterator based function.
+    std::fill(rw_mmap.begin(), rw_mmap.end(), 'a');
+
+
+
+
+    // Or manually iterate through the mapped region just as if it were any other
+    // container, and change each byte's value (since this is a read-write mapping).
+    for (auto& b : rw_mmap) {
+        b += 10;
+    }
+
+    // Or just change one value with the subscript operator.
+    const int answer_index = rw_mmap.size() / 2;
+    rw_mmap[answer_index] = 42;
+
+    float* num = reinterpret_cast<float*>(rw_mmap.data());
+    *num = 12.3;
+
+    // Don't forget to flush changes to disk before unmapping. However, if
+    // `rw_mmap` were to go out of scope at this point, the destructor would also
+    // automatically invoke `sync` before `unmap`.
+    rw_mmap.sync(error);
+    if (error) { return handle_error(error); }
+
+    // We can then remove the mapping, after which rw_mmap will be in a default
+    // constructed state, i.e. this and the above call to `sync` have the same
+    // effect as if the destructor had been invoked.
+    rw_mmap.unmap();
+
+    // Now create the same mapping, but in read-only mode. Note that calling the
+    // overload without the offset and file length parameters maps the entire
+    // file.
+    mio::mmap_source ro_mmap;
+    ro_mmap.map(path, error);
+    if (error) { return handle_error(error); }
+
+    const float* num2 = reinterpret_cast<const float*>(ro_mmap.data());
+    std::cout << "get float from mm file: " << *num2 << std::endl;
+
+    const int the_answer_to_everything = ro_mmap[answer_index];
+    assert(the_answer_to_everything == 42);
+
+    return 0;
 }
 
 int main(int argc, char **argv) {
@@ -583,7 +777,7 @@ int main(int argc, char **argv) {
 //    test_string();
 //    test_random();
 
-test_clock();
+//test_clock();
 
-
+    mm_test();
 }
