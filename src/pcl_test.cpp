@@ -40,9 +40,61 @@
 #include "icp/Normal2dEstimation.h"
 
 namespace pcl{
+    /*
+             pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+        pcl::search::KdTree<pcl::PointXYZ> kdtree_2;
+        pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree (resolution);
+
+     */
+
+    template<typename PointT>
+    void createTree(typename pcl::PointCloud<PointT>::ConstPtr t_input_cloud, pcl::KdTreeFLANN<PointT>& t_tree){
+        t_tree.setInputCloud(t_input_cloud);
+    }
+
+    template<typename PointT>
+    void createTree(typename pcl::PointCloud<PointT>::ConstPtr t_input_cloud, pcl::search::KdTree<PointT>& t_tree){
+        t_tree.setInputCloud(t_input_cloud);
+    }
+
+    template<typename PointT>
+    void createTree(typename pcl::PointCloud<PointT>::ConstPtr t_input_cloud, pcl::octree::OctreePointCloudSearch<PointT>& t_tree){
+        t_tree.setInputCloud(t_input_cloud);
+        t_tree.addPointsFromInputCloud ();
+    }
+
+
+    template<typename PointT, typename TreeType>
     class Normal2dEstimation{
 
     public:
+        using PointCloud = pcl::PointCloud<PointT>;
+        using PointCloudPtr = typename PointCloud::Ptr;
+        using PointCloudConstPtr = typename PointCloud::ConstPtr;
+        using Scalar = float;
+
+    private:
+        const TreeType& m_tree;
+        float m_query_radius = 0.1;
+        PointCloudConstPtr m_input_cloud;
+
+        std::vector<int> m_query_indices;
+        std::vector<float> m_query_distance;
+
+    public:
+        Normal2dEstimation(const TreeType& t_tree, float radius = 0.1, int num = 20):
+        m_tree(t_tree),
+        m_query_radius(radius),
+        m_query_indices(num),
+        m_query_distance(num){
+
+        }
+
+        inline void
+        setInputCloud(const PointCloudConstPtr& t_input_cloud)
+        {
+            m_input_cloud = t_input_cloud;
+        }
         void setRadius(){
 
         }
@@ -53,7 +105,124 @@ namespace pcl{
 
         }
 
-        void compute(){
+        void compute( const pcl::PointCloud<pcl::PointNormal>::Ptr&  output){
+
+            int input_point_num = m_input_cloud->points.size();
+            output->points.resize(input_point_num,pcl::PointNormal(0.0,0.0,0.0,0.0,0.0,0.0));
+            output->height = m_input_cloud->height;
+            output->width = m_input_cloud->width;
+            output->is_dense = true;
+
+            int rt = 0;
+            Eigen::Matrix<Scalar, 1, 5, Eigen::RowMajor> accu = Eigen::Matrix<Scalar, 1, 5, Eigen::RowMajor>::Zero ();
+            Eigen::Matrix<Scalar, 2, 1> K(0.0, 0.0);
+            Eigen::Matrix<Scalar, 4, 1> centroid;
+            Eigen::Matrix<Scalar, 2, 2> covariance_matrix;
+            Eigen::SelfAdjointEigenSolver<Eigen::Matrix2f> eig_solver(2);
+
+            for(int i = 0 ; i < input_point_num;i++){
+
+
+                auto& query_point = m_input_cloud->at(i);
+                rt = m_tree.radiusSearch (query_point, m_query_radius, m_query_indices, m_query_distance);
+
+                std::size_t point_count;
+                point_count = m_query_indices.size ();
+                if(point_count <=3){
+                    output->points[i].normal_x  = output->points[i].normal_y  = output->points[i].normal_z  = output->points[i].curvature = std::numeric_limits<float>::quiet_NaN ();
+                    continue;
+                }
+
+
+                K.x() = m_input_cloud->at(m_query_indices[0]).x;
+                K.y() = m_input_cloud->at(m_query_indices[0]).y;
+
+
+                for (const auto &index : m_query_indices)
+                {
+                    Scalar x = m_input_cloud->at(index).x - K.x(), y = m_input_cloud->at(index).y - K.y();
+                    accu [0] += x * x;
+                    accu [1] += x * y;
+                    accu [2] += y * y;
+                    accu [3] += x;
+                    accu [4] += y;
+                }
+
+
+                {
+                    accu /= static_cast<Scalar> (point_count);
+                    centroid[0] = accu[3] + K.x(); centroid[1] = accu[4] + K.y(); centroid[2] = 0.0;
+                    centroid[3] = 1;
+                    covariance_matrix.coeffRef (0) = accu [0] - accu [3] * accu [3];//xx
+                    covariance_matrix.coeffRef (1) = accu [1] - accu [3] * accu [4];//xy
+                    covariance_matrix.coeffRef (3) = accu [2] - accu [4] * accu [4];//yy
+                    covariance_matrix.coeffRef (2) = covariance_matrix.coeff (1);//yx
+
+
+
+                    eig_solver.compute(covariance_matrix);
+#if 0
+                    {
+                        Eigen::MatrixX2f m(m_query_indices.size(),2);
+                        int index = 0;
+                        for(int j :  m_query_indices){
+                            m(index,0) = m_input_cloud->at(j).x ;
+                            m(index,1) = m_input_cloud->at(j).y ;
+                            index++;
+                        }
+
+                        Eigen::VectorXf mean_vector = m.colwise().mean();
+
+                        Eigen::MatrixXf centered = m.rowwise() - mean_vector.transpose();
+
+                        Eigen::MatrixXf cov = (centered.adjoint() * centered) / ( m.rows() - 1 ) ;
+                        eig_solver.compute(cov);
+
+                    }
+#endif
+
+
+
+
+
+
+                    auto& eigen_values = eig_solver.eigenvalues();
+                    auto& eigen_vectors = eig_solver.eigenvectors() ;
+                    auto& nx =  output->points[i].normal_x;
+                    auto& ny =  output->points[i].normal_y;
+                    auto& nz =  output->points[i].normal_z;
+                    nx = eigen_vectors(0,0);
+                    ny = eigen_vectors(1,0);
+#if 0
+                    if(std::abs(eigen_values(0)) < std::abs(eigen_values(1))){
+                        nx = eigen_vectors(0,0);
+                        ny = eigen_vectors(1,0);
+                    }else{
+                        nx = eigen_vectors(0,1);
+                        ny = eigen_vectors(1,1);
+                    }
+#endif
+                    nz = 0.0;
+
+                    Eigen::Matrix <float, 2, 1> normal (nx, ny);
+                    Eigen::Matrix <float, 2, 1> vp ( - query_point.x, - query_point.y);
+
+                    // Dot product between the (viewpoint - point) and the plane normal
+                    float cos_theta = vp.dot (normal);
+                    // Flip the plane normal
+                    if (cos_theta < 0)
+                    {
+                        nx *= -1;
+                        ny *= -1;
+                    }
+
+
+//                    std::cout << __LINE__ << "eigenvalues:\n" << eigen_values << std::endl;
+//                    std::cout << __LINE__ << "eigenvectors:\n" << eigen_vectors << std::endl;
+                }
+
+
+            }
 
         }
 
@@ -69,9 +238,10 @@ pcl_run ( )
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::Normal>::Ptr  norm_cloud(new pcl::PointCloud<pcl::Normal>);
+    pcl::PointCloud<pcl::PointNormal>::Ptr  point_norm_cloud(new pcl::PointCloud<pcl::PointNormal>);
 
     // Fill in the cloud data
-    cloud->width  = 500;
+    cloud->width  = 1500;
     cloud->height = 1;
     cloud->resize (cloud->width * cloud->height);
 
@@ -171,6 +341,8 @@ pcl_run ( )
 
     }else if(mode == 5){
 
+
+
         int point_num = cloud->size();
 
 
@@ -186,16 +358,78 @@ pcl_run ( )
 
 #endif
 
+        common::Time  t1 = common::FromUnixNow() ,t2= common::FromUnixNow();
 
         pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
         pcl::search::KdTree<pcl::PointXYZ> kdtree_2;
         pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree (resolution);
 
-        octree.setInputCloud (cloud);
-        octree.addPointsFromInputCloud ();
 
-        kdtree.setInputCloud (cloud);
-        kdtree_2.setInputCloud (cloud);
+
+
+        pcl::copyPointCloud(*cloud, *point_norm_cloud);
+
+        t1 = common::FromUnixNow();
+        pcl::createTree(cloud, kdtree);
+        pcl::Normal2dEstimation<pcl::PointXYZ, pcl::KdTreeFLANN<pcl::PointXYZ>> N2d_1(kdtree);
+        N2d_1.setInputCloud(cloud);
+        N2d_1.compute(point_norm_cloud);
+        t2= common::FromUnixNow();
+        std::cout << "N2d_1 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+
+
+
+        t1 = common::FromUnixNow();
+        pcl::createTree(cloud, octree);
+        pcl::Normal2dEstimation<pcl::PointXYZ, pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>> N2d_3(octree);
+        N2d_3.setInputCloud(cloud);
+        N2d_3.compute(point_norm_cloud);
+        t2= common::FromUnixNow();
+        std::cout << "N2d_3 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+
+        t1 = common::FromUnixNow();
+        pcl::createTree(cloud, kdtree_2);
+        pcl::Normal2dEstimation<pcl::PointXYZ, pcl::search::KdTree<pcl::PointXYZ>> N2d_2(kdtree_2);
+        N2d_2.setInputCloud(cloud);
+        N2d_2.compute(point_norm_cloud);
+        t2= common::FromUnixNow();
+        std::cout << "N2d_2 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+        {
+            using namespace matplot;
+            vector_2d x(cloud->size(), std::vector<double>(1,0.0));
+            vector_2d y(cloud->size(), std::vector<double>(1,0.0));
+            vector_2d u(cloud->size(), std::vector<double>(1,0.0));
+            vector_2d v(cloud->size(), std::vector<double>(1,0.0));
+            std::vector<double> x2(cloud->size());
+            std::vector<double> y2(cloud->size());
+
+            std::cout << "PLOT:\n";
+
+            sample_angle = 0.0;
+            for(int i = 0 ; i < cloud->size(); i++){
+                x[i][0] =   cloud->points[i].x;
+                y[i][0] =   cloud->points[i].y;
+                u[i][0] = 0.1;//point_norm_cloud->points[i].normal_x;
+                v[i][0] = 0.1;//point_norm_cloud->points[i].normal_y;
+                x2[i]  =   cloud->points[i].x;
+                y2[i]  =   cloud->points[i].y;
+                auto a1 = sample_angle;
+                auto a2 = std::atan2(point_norm_cloud->points[i].normal_y,point_norm_cloud->points[i].normal_x);
+
+                std::cout << i << ": "<< point_norm_cloud->points[i].normal_x  <<", " << point_norm_cloud->points[i].normal_y << ", "<< a1  << ", "<<  a2 << ", " << (a1-a2)/M_PI   << " \n";
+                sample_angle += sample_angle_inc;
+//                arrow(cloud->points[i].x, cloud->points[i].y, cloud->points[i].x + point_norm_cloud->points[i].normal_x, cloud->points[i].y + point_norm_cloud->points[i].normal_y);
+            }
+            std::cout << "PLOT:\n";
+
+//            scatter(x2, y2);
+
+//            quiver(x, y, u, v);
+//            colormap(palette::jet());
+
+//            show();
+        }
+
 
 
 
@@ -214,9 +448,11 @@ pcl_run ( )
 
         int rt = 0;
 
-        common::Time  t1 = common::FromUnixNow() ,t2= common::FromUnixNow();
+#if 0
 
         t1 = common::FromUnixNow();
+        octree.setInputCloud (cloud);
+        octree.addPointsFromInputCloud ();
         for(int i = 0 ; i < point_num; i++){
             searchPoint = cloud->at(i);
             rt = octree.radiusSearch (searchPoint, radius, indices, pointRadiusSquaredDistance);
@@ -226,7 +462,9 @@ pcl_run ( )
 
 
         t1 = common::FromUnixNow();
-        for(int i = 0 ; i < point_num; i++){
+        kdtree.setInputCloud (cloud);
+        for(int i = 0 ; i < point_num; i++)
+        {
             searchPoint = cloud->at(i);
             rt = kdtree.radiusSearch (searchPoint, radius, indices, pointRadiusSquaredDistance);
 
@@ -236,14 +474,16 @@ pcl_run ( )
 
 
         t1 = common::FromUnixNow();
+        kdtree_2.setInputCloud (cloud);
         for(int i = 0 ; i < point_num; i++){
             searchPoint = cloud->at(i);
-            rt = kdtree.radiusSearch (searchPoint, radius, indices, pointRadiusSquaredDistance);
+            rt = kdtree_2.radiusSearch (searchPoint, radius, indices, pointRadiusSquaredDistance);
 
         }
         t2= common::FromUnixNow();
         std::cout << "kdtree_2 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
 
+#endif
 
 
         t1 = common::FromUnixNow();
@@ -253,7 +493,9 @@ pcl_run ( )
 
 
 
-        for(int i = 0 ; i < point_num; i++){
+        std::cout << "check 1312 to 1313" << std::endl;
+
+        for(int i = 1312 ; i < 1314; i++){
             searchPoint = cloud->at( i);
 
             Eigen::Matrix<Scalar, 2, 2> covariance_matrix;
@@ -309,8 +551,8 @@ pcl_run ( )
 
                     Eigen::Vector2f eigen_values = eig_solver.eigenvalues();
                     Eigen::Matrix2f eigen_vectors = eig_solver.eigenvectors() ;
-//                    std::cout << __LINE__ << "eigenvalues:\n" << eigen_values << std::endl;
-//                    std::cout << __LINE__ << "eigenvectors:\n" << eigen_vectors << std::endl;
+                    std::cout << __LINE__ << "eigenvalues:\n" << eigen_values << std::endl;
+                    std::cout << __LINE__ << "eigenvectors:\n" << eigen_vectors << std::endl;
 
                     Eigen::MatrixX2f m(indices.size(),2);
                     int index = 0;
@@ -335,8 +577,8 @@ pcl_run ( )
                     eig_solver.compute(cov);
                     eigen_values = eig_solver.eigenvalues();
                     eigen_vectors = eig_solver.eigenvectors() ;
-//                    std::cout << __LINE__ << "eigenvalues:\n" << eigen_values << std::endl;
-//                    std::cout << __LINE__ << "eigenvectors:\n" << eigen_vectors << std::endl;
+                    std::cout << __LINE__ << "eigenvalues:\n" << eigen_values << std::endl;
+                    std::cout << __LINE__ << "eigenvectors:\n" << eigen_vectors << std::endl;
                 }
             }
 
@@ -462,6 +704,8 @@ firstprivate(nn_indices, nn_dists)
 
 
     }
+    return (0);
+
     std::cout << "Cloud before filtering: " << std::endl;
     for (const auto& point: *cloud)
         std::cout << "    " << point.x << " "
@@ -521,6 +765,20 @@ int plot_scatter7() {
     show();
     return 0;
 }
+int plt_vector_1() {
+    using namespace matplot;
+    auto [x, y] = meshgrid(iota(0, 0.2, 2), iota(0, 0.2, 2));
+    vector_2d u =
+            transform(x, y, [](double x, double y) { return cos(x) * 1; });
+    vector_2d v =
+            transform(x, y, [](double x, double y) { return sin(x) * 1; });
+
+    quiver(x, y, u, v);
+
+    show();
+    return 0;
+}
+
 int
 main (int argc, char** argv)
 {
@@ -532,6 +790,7 @@ main (int argc, char** argv)
 
 
     pcl_run( );
+    plt_vector_1();
 
     return 1;
 //    plot_scatter7();
