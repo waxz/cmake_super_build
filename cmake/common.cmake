@@ -1,5 +1,6 @@
 cmake_policy(SET CMP0074 NEW)
 find_package(Threads REQUIRED)
+# target_link_libraries( target PUBLIC Threads::Threads)
 
 # ---------------------------------------------------------------------------------------------------------
 # Handle C++ standard version.

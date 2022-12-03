@@ -189,6 +189,7 @@ target_link_libraries(zmq_hello PUBLIC
         ${ZeroMQ_LIBRARY}
 
         )
+target_link_libraries( zmq_hello PUBLIC Threads::Threads)
 
 add_executable(zmq_tcp_test  zmq_tcp_test.cpp)
 target_include_directories(zmq_tcp_test PUBLIC
@@ -217,6 +218,7 @@ target_link_libraries(tbb_hello PUBLIC TBB::tbb)
 add_executable(sol_hello2 sol_hello.cpp)
 target_link_libraries(sol_hello2 PUBLIC liblua ) # dl
 target_include_directories(sol_hello2 PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries( sol_hello2 PUBLIC Threads::Threads)
 
 add_executable(mosquitto_hello mosquitto_hello.cpp)
 target_link_libraries(mosquitto_hello PUBLIC liblua ${mosquitto_LIBRARY})
@@ -334,7 +336,7 @@ target_link_libraries(xml_json PUBLIC tinyxml2::tinyxml2)
 
 add_executable(stl_test  stl_test.cpp)
 target_include_directories( stl_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
-
+target_link_libraries( stl_test PUBLIC Threads::Threads)
 # Boost Package ############################################################
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -349,6 +351,10 @@ target_include_directories( pcl_norm_2d PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SO
 add_executable(pcl_test pcl_test.cpp  )
 target_include_directories( pcl_test PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
 target_link_libraries(pcl_test PUBLIC pcl_norm_2d Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
+
+
+set_omp(pcl_test)
+
 
 
 add_executable(libpointmatcher_test  libpointmatcher_test.cpp)
