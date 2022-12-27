@@ -25,6 +25,39 @@ sol::object fancy_func(sol::object a, sol::object b, sol::this_state s) {
     return sol::make_object(lua, sol::nil);
 }
 
+struct Player {
+    int player_id_;
+
+    Player() : player_id_(1) {}
+
+    Player(int player_id) : player_id_(player_id) {}
+
+    void hello() {
+        std::cout << "hello player " << player_id_ << std::endl;
+    }
+
+    void f1(int i){
+        std::cout << "hello int " << i << std::endl;
+
+    }
+
+    void f2(float i){
+        std::cout << "hello float " << i << std::endl;
+
+    }
+    void f3(double i){
+        std::cout << "hello double " << i << std::endl;
+
+    }
+
+    int operator[](int index){
+        std::cout << "hello index " << index << std::endl;
+
+        return index;
+    }
+};
+
+
 int main(int argc, char** argv) {
 
     std::cout << "LUA"<<std::endl;
@@ -92,6 +125,81 @@ os.execute([[ echo test > "/tmp/xyz.txt" ]])
     double result3 = lua["result3"];
     // result3 == 16.5
     c_assert(result3 == 16.5);
+
+    sol::function transferred_into;
+    lua["f2"] = [&lua, &transferred_into](sol::object t, sol::this_state this_L) {
+        std::cout << "state of main     : " << (void *) lua.lua_state() << std::endl;
+        std::cout << "state of function : " << (void *) this_L.lua_state() << std::endl;
+        // pass original lua_State* (or sol::state/sol::state_view)
+        // transfers ownership from the state of "t",
+        // to the "lua" sol::state
+        transferred_into = sol::function(lua, t);
+    };
+
+
+
+
+
+        lua.new_usertype<Player>("Player",
+                                 sol::constructors<Player(), Player(int)>(),
+                // bind as variable
+                                 "player_id", &Player::player_id_,
+                // bind as function
+                                 "hello", sol::as_function(&Player::hello),
+                                 "f", sol::overload(&Player::f1, &Player::f2, &Player::f3),
+                                 sol::meta_function::index, [](Player& player,const int& index){
+
+            std::cout << "get PP index"<< std::endl;
+                    return index;
+        },
+                                 sol::meta_function::new_index, [](Player& player,const int& index, int v){
+
+                    std::cout << "set PP index"<< std::endl;
+                }
+        );
+
+    Player b;
+    lua.set("P1", &b);
+    lua["P2"] = Player(2);
+    lua.script(R"(
+P1:hello();
+P2:hello();
+P1:f(1);
+P2:f(1.2);
+a = {};
+a[0] = 3;
+P1[1] = 3;
+print(P1[1]);
+
+
+	)");
+
+
+
+    // make usertype metatable
+    // "bark" namespacing in Lua
+    // namespacing is just putting things in a table
+    sol::table bark = lua.create_named_table("bark");
+
+
+    bark.new_usertype<std::vector<float>>("vector_float",
+                                          sol::constructors<std::vector<float>(int)>(),
+                                          "size", &std::vector<float>::size,
+
+
+                                          sol::meta_function::index, [](std::vector<float> &ns, int i) -> float & {
+                return ns[i]; // treat like a container, despite is_container specialization
+            },
+                                          sol::meta_function::new_index, [](std::vector<float> &ns, int i, float v)   {
+                ns[i] = v; // treat like a container, despite is_container specialization
+            },
+                                          "iterable", [](std::vector<float> &ns) {
+                return sol::as_container(ns); // treat like a container, despite is_container specialization
+            }
+    );
+
+
+
 
     std::cout << "=== any_return ===" << std::endl;
     std::cout << "result : " << result << std::endl;

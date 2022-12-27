@@ -66,7 +66,6 @@ const auto& nullopt = tl::nullopt;
 #endif
 
 
-
 struct SimpleThread {
 
     std::thread run_thread;
@@ -261,7 +260,13 @@ struct ThreadPool_V2 {
                         using namespace std::chrono_literals;
                         auto task_opt = task_queue.pop(10ms);
                         if(task_opt){
-                            (*task_opt)();
+                            try {
+                                (*task_opt)();
+                            } catch (const std::exception &e) {
+                                std::cerr<< e.what()<<std::endl;
+                            } catch (...) {
+                                std::cerr<< "Unknown error" <<std::endl;
+                            }
                         }
 
                     } else {
@@ -428,7 +433,6 @@ void test_random(){
 void test_thread() {
 
     int i = 9;
-    std::cout << "i = " << i << ", i-- = " << (i--) << ", i = " << i << std::endl;
 
 
     auto st1 = SimpleThread([] {
@@ -769,15 +773,45 @@ int mm_test()
     return 0;
 }
 
+//https://stackoverflow.com/questions/1001307/detecting-endianness-programmatically-in-a-c-program
+//https://stackoverflow.com/a/56191401
+enum class endianness
+{
+    little = 0,
+    big = 1,
+};
+
+//c++14
+inline endianness get_system_endianness()
+{
+    const int value { 0x01 };
+    const void * address = static_cast<const void *>(&value);
+    const unsigned char * least_significant_address = static_cast<const unsigned char *>(address);
+    return (*least_significant_address == 0x01) ? endianness::little : endianness::big;
+}
+
+//c++11
+inline bool is_system_little_endian()
+{
+    const int value { 0x01 };
+    const void * address = static_cast<const void *>(&value);
+    const unsigned char * least_significant_address = static_cast<const unsigned char *>(address);
+    return (*least_significant_address == 0x01);
+}
+
+
 int main(int argc, char **argv) {
 
     std::cout << "std::thread::hardware_concurrency() = " << std::thread::hardware_concurrency() << std::endl;
+
+    std::cout << "get_system_endianness: " << ( (get_system_endianness()  == endianness::little) ?   "little" : "big" )<< std::endl;
+    std::cout << "is_system_little_endian: " << ( (is_system_little_endian()) ?   "little" : "big" )<< std::endl;
 
 //    test_thread();
 //    test_string();
 //    test_random();
 
-//test_clock();
 
-    mm_test();
+
+//    mm_test();
 }

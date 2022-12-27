@@ -10,8 +10,8 @@ project(cmake_super_build)
 
 set(CMAKE_CXX_STANDARD 14)
 
-#add_executable(Open3d_DrawWebRTC Open3d_DrawWebRTC.cpp)
-#target_link_libraries(Open3d_DrawWebRTC PRIVATE Open3D::Open3D )
+#add_executable(o3d_test o3d_test.cpp)
+#target_link_libraries(o3d_test PRIVATE Open3D::Open3D )
 #set_target_properties(Open3d_DrawWebRTC PROPERTIES LINK_FLAGS "-Wl,--dynamic-linker=$ENV{CUSTOM_GLIBC_PATH}/lib/ld-linux-x86-64.so.2")  # set RPATH ok ok
 #target_link_options( Open3d_DrawWebRTC PRIVATE "SHELL:-Wl,-L$ENV{CUSTOM_GLIBC_PATH}/lib" )
 #target_link_directories(Open3d_DrawWebRTC PUBLIC  $ENV{CUSTOM_GLIBC_PATH}/lib )
@@ -215,10 +215,10 @@ target_link_libraries(tbb_hello PUBLIC TBB::tbb)
 #        )
 #target_compile_options(omp_hello PUBLIC ${OpenMP_CXX_FLAGS})
 
-add_executable(sol_hello2 sol_hello.cpp)
-target_link_libraries(sol_hello2 PUBLIC liblua ) # dl
-target_include_directories(sol_hello2 PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries( sol_hello2 PUBLIC Threads::Threads)
+add_executable(sol_hello sol_hello.cpp)
+target_link_libraries(sol_hello PUBLIC liblua ) # dl
+target_include_directories(sol_hello PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries( sol_hello PUBLIC Threads::Threads)
 
 add_executable(mosquitto_hello mosquitto_hello.cpp)
 target_link_libraries(mosquitto_hello PUBLIC liblua ${mosquitto_LIBRARY})
@@ -336,7 +336,7 @@ target_link_libraries(xml_json PUBLIC tinyxml2::tinyxml2)
 
 add_executable(stl_test  stl_test.cpp)
 target_include_directories( stl_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
-target_link_libraries( stl_test PUBLIC Threads::Threads)
+target_link_libraries( stl_test PUBLIC Threads::Threads dl)
 # Boost Package ############################################################
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -360,3 +360,24 @@ set_omp(pcl_test)
 add_executable(libpointmatcher_test  libpointmatcher_test.cpp)
 target_include_directories( libpointmatcher_test PUBLIC  ${libpointmatcher_INCLUDE_DIRS}  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
 target_link_libraries(libpointmatcher_test PUBLIC ${Boost_LIBRARIES} ${libpointmatcher_LIBRARIES} pcl_norm_2d Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
+
+
+add_library(log_test_lib log_test_lib.cpp)
+target_include_directories( log_test_lib PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+target_link_libraries( log_test_lib PUBLIC Threads::Threads dl)
+
+
+add_executable(log_test log_test.cpp)
+target_include_directories( log_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+target_link_libraries( log_test PUBLIC Threads::Threads log_test_lib)
+
+
+
+add_executable(taskflow_test taskflow_test.cpp)
+target_include_directories( taskflow_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+target_link_libraries( taskflow_test PUBLIC Threads::Threads  Taskflow::Taskflow )
+
+
+add_executable(std_test std_test.cpp)
+target_include_directories( std_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+target_link_libraries( std_test PUBLIC Threads::Threads )

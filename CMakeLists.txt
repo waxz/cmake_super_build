@@ -138,7 +138,7 @@ find_package(absl REQUIRED)
 #build_external_project(flashlight lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flashlight-0.3.2.tar.gz -DCMAKE_BUILD_TYPE=Release )
 #find_package(flashlight REQUIRED)
 
-#set(Open3D_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/third_party/open3d-devel-linux-x86_64-pre-cxx11-abi-0.15.1)
+#set(Open3D_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/third_party/open3d-devel-linux-x86_64-pre-cxx11-abi-0.16.1+9ca1c11)
 
 #Open3D-0.15.1.tar.gz
 #build_external_project(Open3D lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Open3D-0.15.1.tar.gz -DBUILD_FILAMENT_FROM_SOURCE=OFF -DGLIBCXX_USE_CXX11_ABI=OFF -DBUILD_GUI=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_CACHED_CUDA_MANAGER=OFF -DBUILD_EXAMPLES=OFF -DBUILD_PYTHON_MODULE=OFF )
@@ -176,6 +176,12 @@ find_package(libnabo REQUIRED)
 build_external_project(libpointmatcher lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpointmatcher-master.zip -DBUILD_TYPE=cmake -DCMAKE_BUILD_TYPE=Release -Dlibnabo_ROOT=${libnabo_ROOT}  )
 
 find_package(libpointmatcher REQUIRED)
+
+# taskflow-3.4.0.tar.gz
+build_external_project(Taskflow lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/taskflow-3.4.0.tar.gz -DBUILD_TYPE=cmake -DCMAKE_BUILD_TYPE=Release -DTF_BUILD_EXAMPLES=OFF -DTF_BUILD_TESTS=OFF -DTF_BUILD_PROFILER=OFF -DTF_BUILD_BENCHMARKS=OFF  )
+
+find_package(Taskflow REQUIRED)
+
 
 include(cmake/set_ros.cmake)
 
