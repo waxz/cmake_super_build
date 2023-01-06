@@ -198,8 +198,9 @@ find_package(autodiff REQUIRED)
 build_external_project_command(optim lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/optim.zip "EIGEN_INCLUDE_PATH=${EIGEN3_INCLUDE_DIRS} ./configure -i ./install -l eigen -p" "make && mkdir -p ./install/lib" "make install"  -DCMAKE_BUILD_TYPE=Release  -DAUTODIFF_BUILD_TESTS=OFF -DAUTODIFF_BUILD_PYTHON=OFF -DAUTODIFF_BUILD_EXAMPLES=OFF -DAUTODIFF_BUILD_DOCS=OFF)
 #find_package(optim REQUIRED)
 message(optim_BUILD_DIR ${optim_BUILD_DIR})
-set(optim_INCLUDE_DIR ${optim_BUILD_DIR}/optim/install/include/optim)
-set(optim_LIBRARY ${optim_BUILD_DIR}/optim/install/lib/liboptim.so)
+set(optim_ROOT ${optim_BUILD_DIR}/optim/install)
+set(optim_INCLUDE_DIR ${optim_ROOT}/include/optim)
+set(optim_LIBRARY ${optim_ROOT}/lib/liboptim.so)
 
 message(optim_INCLUDE_DIR ${optim_INCLUDE_DIR})
 message(optim_LIBRARY ${optim_LIBRARY})
@@ -211,7 +212,7 @@ set_target_properties(liboptim PROPERTIES
         )
 
 set_property(TARGET liboptim PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${optim_INCLUDE_DIR}  ${EIGEN3_INCLUDE_DIRS})
-
+set_property(TARGET liboptim PROPERTY INTERFACE_LINK_LIBRARIES autodiff::autodiff )
 
 
 print_include_dir(liboptim)

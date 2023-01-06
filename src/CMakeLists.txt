@@ -385,5 +385,5 @@ target_link_libraries( std_test PUBLIC Threads::Threads )
 
 add_executable(optimlib_test optimlib_test.cpp)
 target_include_directories(optimlib_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
-target_link_libraries(optimlib_test PUBLIC autodiff::autodiff liboptim)
+target_link_libraries(optimlib_test PUBLIC liboptim)
 print_include_dir(optimlib_test)
