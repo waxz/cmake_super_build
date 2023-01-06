@@ -32,8 +32,16 @@ set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 #set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6), libc6 (<< 3)")
 
 
+# Eigen3
+build_external_project(Eigen3 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen-3.4.0.zip  -DCMAKE_BUILD_TYPE=Release )
+message(Eigen3_ROOT : ${Eigen3_ROOT} )
 
-build_external_project(Ceres lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver-2.1.0.tar.gz   -DCMAKE_BUILD_TYPE=Debug -DMINIGLOG=ON -DGFLAGS=OFF -DSUITESPARSE=OFF -DBUILD_EXAMPLES=ON)
+set(Eigen3_ROOT ${Eigen3_ROOT}/share/eigen3/cmake)
+find_package(Eigen3 3.4.0 REQUIRED HINTS ${Eigen3_ROOT})
+message(new eigen: EIGEN3_INCLUDE_DIRS : ${EIGEN3_INCLUDE_DIRS} )
+
+
+build_external_project(Ceres lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver-2.1.0.tar.gz  -DEigen3_ROOT=${Eigen3_ROOT} -DCMAKE_BUILD_TYPE=Debug -DMINIGLOG=ON -DGFLAGS=OFF -DSUITESPARSE=OFF -DBUILD_EXAMPLES=OFF)
 find_package(Ceres  REQUIRED)
 message(Ceres_ROOT : ${Ceres_ROOT} ,CERES_LIBRARIES : ${CERES_LIBRARIES} )
 #find_opencv(/home/waxz/dev/docker/docker_dev/share/opencv/install 4.6.0)
@@ -182,6 +190,31 @@ build_external_project(Taskflow lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/task
 
 find_package(Taskflow REQUIRED)
 
+
+
+build_external_project(autodiff lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/autodiff-0.6.12.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DAUTODIFF_BUILD_TESTS=OFF -DAUTODIFF_BUILD_PYTHON=OFF -DAUTODIFF_BUILD_EXAMPLES=OFF -DAUTODIFF_BUILD_DOCS=OFF)
+find_package(autodiff REQUIRED)
+
+build_external_project_command(optim lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/optim.zip "EIGEN_INCLUDE_PATH=${EIGEN3_INCLUDE_DIRS} ./configure -i ./install -l eigen -p" "make && mkdir -p ./install/lib" "make install"  -DCMAKE_BUILD_TYPE=Release  -DAUTODIFF_BUILD_TESTS=OFF -DAUTODIFF_BUILD_PYTHON=OFF -DAUTODIFF_BUILD_EXAMPLES=OFF -DAUTODIFF_BUILD_DOCS=OFF)
+#find_package(optim REQUIRED)
+message(optim_BUILD_DIR ${optim_BUILD_DIR})
+set(optim_INCLUDE_DIR ${optim_BUILD_DIR}/optim/install/include/optim)
+set(optim_LIBRARY ${optim_BUILD_DIR}/optim/install/lib/liboptim.so)
+
+message(optim_INCLUDE_DIR ${optim_INCLUDE_DIR})
+message(optim_LIBRARY ${optim_LIBRARY})
+
+add_library(liboptim SHARED IMPORTED GLOBAL)
+set_target_properties(liboptim PROPERTIES
+        IMPORTED_LOCATION_RELEASE ${optim_LIBRARY}
+        IMPORTED_LOCATION_DEBUG ${optim_LIBRARY}
+        )
+
+set_property(TARGET liboptim PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${optim_INCLUDE_DIR}  ${EIGEN3_INCLUDE_DIRS})
+
+
+
+print_include_dir(liboptim)
 
 include(cmake/set_ros.cmake)
 
