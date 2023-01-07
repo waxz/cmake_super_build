@@ -4,6 +4,8 @@
 
 
 //https://github.com/kthohr/optim#installation-method-2-header-only-library
+//https://optimlib.readthedocs.io/en/latest/settings.html
+#include <chrono>
 
 #define OPTIM_ENABLE_EIGEN_WRAPPERS
 
@@ -54,7 +56,10 @@ circle_opt_fnd(const autodiff::ArrayXvar& x, const std::vector<Point>& points,in
 
     for(int i = 0 ; i < point_num ;i++){
         t = (x(0) - points[i].x)*(x(0) - points[i].x) + (x(1) - points[i].y)*(x(1) - points[i].y) - radius_2;
+        // square error is fast than absolute error
         r += t*t;
+//        r += abs(t);
+
     }
     return r;
 }
@@ -124,14 +129,45 @@ void test_2(){
 
     CircleCostFunction opt_fn_obj(points,point_num, sample_radius) ;
 
-    bool success = optim::bfgs(x, opt_fn_obj, nullptr);
 
+
+    // run Adam-based optim
+
+//    optim::algo_settings_t settings;
+//    optim::bfgs_settings_t settings;
+    optim::algo_settings_t settings;
+    settings.iter_max = 20;
+    settings.bfgs_settings.wolfe_cons_1 = 1e-4;
+    settings.bfgs_settings.wolfe_cons_2 = 0.8;
+
+    settings.print_level = 1;
+
+    settings.vals_bound = true;
+
+    settings.lower_bounds = optim::ColVec_t::Zero(2);
+    settings.lower_bounds(0) = 0.0;
+    settings.lower_bounds(1) = 0.0;
+
+    settings.upper_bounds = optim::ColVec_t::Zero(2);
+    settings.upper_bounds(0) = 0.15;
+    settings.upper_bounds(1) = 0.15;
+
+    std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+
+
+    start = std::chrono::system_clock::now();
+    bool success = optim::bfgs(x, opt_fn_obj, nullptr,settings);
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end-start;
     if (success) {
         std::cout << "bfgs: reverse-mode autodiff test completed successfully.\n" << std::endl;
     } else {
         std::cout << "bfgs: reverse-mode autodiff test completed unsuccessfully.\n" << std::endl;
     }
 
+    std::cout << "elapsed time: " << elapsed_seconds.count() << std::endl;
     std::cout << "solution: x = \n" << x << std::endl;
 
 }
