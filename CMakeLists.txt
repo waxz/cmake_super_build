@@ -217,6 +217,12 @@ set_property(TARGET liboptim PROPERTY INTERFACE_LINK_LIBRARIES autodiff::autodif
 
 print_include_dir(liboptim)
 
+# https://github.com/openresty/luajit2
+build_external_project_command(luajit lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/luajit2-2.1-20230119.tar.gz "mkdir -p ${CMAKE_BINARY_DIR}/force_luajit/install/bin/luajit-2.1.0-beta3" "make PREFIX=${CMAKE_BINARY_DIR}/force_luajit/install" "make install PREFIX=${CMAKE_BINARY_DIR}/force_luajit/install")
+set(LUA_LIBRARIES ${luajit_ROOT}/lib/libluajit-5.1.a)
+set(LUA_INCLUDE_DIR ${luajit_ROOT}/include)
+
+
 include(cmake/set_ros.cmake)
 
 add_subdirectory(src)
