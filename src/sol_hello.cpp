@@ -79,12 +79,144 @@ int main(int argc, char** argv) {
     std::cout << "=== opening a state ===" << std::endl;
 
     // open some common libraries
-    lua.open_libraries(sol::lib::base, sol::lib::package,sol::lib::os);
+    lua.open_libraries(sol::lib::base, sol::lib::package,sol::lib::os, sol::lib::table, sol::lib::jit,sol::lib::coroutine);
+
+
 
     lua.script(R"(
-os.execute([[ echo test > "/tmp/xyz.txt" ]])
+function loop()
+	while counter ~= 30
+	do
+		coroutine.yield(counter);
+		counter = counter + 1;
+	end
+	return counter
+end
+
 )");
 
+
+    {
+
+        sol::coroutine loop_coroutine_1 = lua["loop"];
+        sol::coroutine loop_coroutine_2 = lua["loop"];
+
+        lua["counter"] = 20;
+
+        // example of using and re-using coroutine
+        // you do not have to use coroutines in a loop,
+        // this is just the example
+
+        // we start from 0;
+        // we want 10 values, and we only want to
+        // run if the coroutine "loop_coroutine" is valid
+        for (int counter = 0; counter < 20 && loop_coroutine_1 && loop_coroutine_2; ++counter) {
+            // Alternative: counter < 10 && cr.valid()
+
+            // Call the coroutine, does the computation and then suspends
+            // once it returns, we get the value back from the return
+            // and then can use it
+            // we can either leave the coroutine like that can come to it later,
+            // or loop back around
+            int value_1 = loop_coroutine_1();
+            std::cout << "no thread value_1 is " << value_1 << std::endl;
+            int value_2 = loop_coroutine_2();
+            std::cout << "no thread value_2 is " << value_2 << std::endl;
+        }
+    }
+    {
+
+        sol::thread runner_1 = sol::thread::create(lua.lua_state());
+        sol::state_view runnerstate_1 = runner_1.state();
+        sol::coroutine loop_coroutine_1 = runnerstate_1["loop"];
+        sol::thread runner_2 = sol::thread::create(lua.lua_state());
+        sol::state_view runnerstate_2 = runner_2.state();
+        sol::coroutine loop_coroutine_2 = runnerstate_2["loop"];
+
+        lua["counter"] = 20;
+
+        for (int counter = 0; counter < 20 && loop_coroutine_1 && loop_coroutine_2; ++counter) {
+            // Call the coroutine, does the computation and then suspends
+            int value_1 = loop_coroutine_1();
+            std::cout << "value_1 is " << value_1 << std::endl;
+            int value_2 = loop_coroutine_2();
+            std::cout << "value_2 is " << value_2 << std::endl;
+
+
+        }
+    }
+
+
+
+
+    lua.script(R"(
+
+print("luajit coroutine")
+co = coroutine.create(
+    function(i)
+        print(i);
+    end
+)
+
+coroutine.resume(co, 1)   -- 1
+print(coroutine.status(co))  -- dead
+
+print("----------")
+
+co = coroutine.wrap(
+    function(i)
+        print(i);
+    end
+)
+
+co(1)
+
+print("----------")
+
+co2 = coroutine.create(
+    function()
+        for i=1,10 do
+            print(i)
+            if i == 3 then
+                print(coroutine.status(co2))  --running
+                print(coroutine.running()) --thread:XXXXXX
+            end
+            coroutine.yield()
+        end
+    end
+)
+
+coroutine.resume(co2) --1
+coroutine.resume(co2) --2
+coroutine.resume(co2) --3
+
+print(coroutine.status(co2))   -- suspended
+print(coroutine.running())
+
+print("----------")
+
+)");
+
+    lua.script(R"(
+os.execute([[
+
+echo $ROS_DISTRO >> ./xyz.txt
+source /opt/ros/$ROS_DISTRO/setup.sh
+rosnode list >> ./xyz.txt 2>&1
+]])
+)");
+
+    lua.script(R"(
+print("test luajit api : table.isempty")
+
+local isempty = require "table.isempty"
+
+print(isempty({}))  -- true
+print(isempty({nil, dog = nil}))  -- true
+print(isempty({"a", "b"}))  -- false
+print(isempty({nil, 3}))  -- false
+print(isempty({cat = 3}))  -- false
+)");
 
     lua.script("print('bark bark bark!')");
 
