@@ -39,6 +39,9 @@
 
 #include "icp/Normal2dEstimation.h"
 
+#define CHECK_IS_SAME_TYPE(T1, T2) typename std::enable_if_t< std::is_same<T1, T2>::value, bool> = true
+
+
 namespace pcl{
     /*
              pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
@@ -64,6 +67,82 @@ namespace pcl{
     }
 
 
+
+    struct NormalEst2d{
+        using Scalar = float;
+        Eigen::Matrix<Scalar, 1, 5, Eigen::RowMajor> accu = Eigen::Matrix<Scalar, 1, 5, Eigen::RowMajor>::Zero ();
+        Eigen::Matrix<Scalar, 2, 1> K{0.0, 0.0};
+        Eigen::Matrix<Scalar, 4, 1> centroid;
+        Eigen::Matrix<Scalar, 2, 2> covariance_matrix;
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix2f> eig_solver{2};
+        Eigen::Matrix<Scalar, 2, 1> view_point{0.0, 0.0};
+
+        int point_count = 0;
+
+        void reset(){
+            point_count = 0;
+            accu = Eigen::Matrix<Scalar, 1, 5, Eigen::RowMajor>::Zero ();
+        }
+
+        void addCenter(float x, float y){
+
+            K.x() = x;
+            K.y() = y;
+        }
+        void addPoints(float x, float y){
+            x -= K.x();
+            y -= K.y();
+
+            accu [0] += x * x;
+            accu [1] += x * y;
+            accu [2] += y * y;
+            accu [3] += x;
+            accu [4] += y;
+            point_count ++;
+        }
+
+        void compute(float& normal_x,float& normal_y,float& normal_z,float& curvature ){
+
+            if(point_count <=3){
+                normal_x  = normal_y  = normal_z  =  curvature = std::numeric_limits<float>::quiet_NaN ();
+
+                return;
+            }
+            accu /= static_cast<Scalar> (point_count);
+            centroid[0] = accu[3] + K.x(); centroid[1] = accu[4] + K.y(); centroid[2] = 0.0;
+            centroid[3] = 1;
+            covariance_matrix.coeffRef (0) = accu [0] - accu [3] * accu [3];//xx
+            covariance_matrix.coeffRef (1) = accu [1] - accu [3] * accu [4];//xy
+            covariance_matrix.coeffRef (3) = accu [2] - accu [4] * accu [4];//yy
+            covariance_matrix.coeffRef (2) = covariance_matrix.coeff (1);//yx
+
+            eig_solver.compute(covariance_matrix);
+
+            auto& eigen_values = eig_solver.eigenvalues();
+            auto& eigen_vectors = eig_solver.eigenvectors() ;
+
+            normal_x = eigen_vectors(0,0);
+            normal_y = eigen_vectors(1,0);
+            normal_z = 0.0;
+
+            Eigen::Matrix <float, 2, 1> normal (normal_x, normal_y);
+            Eigen::Matrix <float, 2, 1> vp ( view_point.x() - K.x(), view_point.y() - K.y());
+
+            // Dot product between the (viewpoint - point) and the plane normal
+            float cos_theta = vp.dot (normal);
+            // Flip the plane normal
+            if (cos_theta < 0)
+            {
+                normal_x *= -1;
+                normal_y *= -1;
+            }
+
+
+        }
+
+
+    };
+
     template<typename PointT, typename TreeType>
     class Normal2dEstimation{
 
@@ -74,12 +153,13 @@ namespace pcl{
         using Scalar = float;
 
     private:
-        const TreeType& m_tree;
+        TreeType m_tree;
         float m_query_radius = 0.1;
         PointCloudConstPtr m_input_cloud;
 
         std::vector<int> m_query_indices;
         std::vector<float> m_query_distance;
+        NormalEst2d m_NormalEst2d;
 
     public:
         Normal2dEstimation(const TreeType& t_tree, float radius = 0.1, int num = 20):
@@ -90,11 +170,12 @@ namespace pcl{
 
         }
 
-        inline void
-        setInputCloud(const PointCloudConstPtr& t_input_cloud)
+        void setInputCloud(const PointCloudConstPtr& t_input_cloud)
         {
             m_input_cloud = t_input_cloud;
+            createTree(m_input_cloud,m_tree );
         }
+
         void setRadius(){
 
         }
@@ -104,6 +185,7 @@ namespace pcl{
         void setInputCloud(){
 
         }
+
 
         void compute( const pcl::PointCloud<pcl::PointNormal>::Ptr&  output){
 
@@ -221,6 +303,78 @@ namespace pcl{
 //                    std::cout << __LINE__ << "eigenvectors:\n" << eigen_vectors << std::endl;
                 }
 
+
+            }
+
+        }
+
+        void compute_v2( const pcl::PointCloud<pcl::PointNormal>::Ptr&  output){
+
+            int input_point_num = m_input_cloud->points.size();
+            output->points.resize(input_point_num,pcl::PointNormal(0.0,0.0,0.0,0.0,0.0,0.0));
+            output->height = m_input_cloud->height;
+            output->width = m_input_cloud->width;
+            output->is_dense = true;
+
+            int rt = 0;
+
+            for(int i = 0 ; i < input_point_num;i++){
+
+
+                auto& query_point = m_input_cloud->at(i);
+                rt = m_tree.radiusSearch (query_point, m_query_radius, m_query_indices, m_query_distance);
+
+                std::size_t point_count;
+                point_count = m_query_indices.size ();
+                m_NormalEst2d.reset();
+
+                m_NormalEst2d.addCenter(m_input_cloud->at(m_query_indices[0]).x,m_input_cloud->at(m_query_indices[0]).y);
+
+                for (const auto &index : m_query_indices)
+                {
+                    Scalar x = m_input_cloud->at(index).x , y = m_input_cloud->at(index).y ;
+                    m_NormalEst2d.addPoints(x,y);
+                }
+
+                m_NormalEst2d.compute(output->points[i].normal_x,output->points[i].normal_y,output->points[i].normal_z,output->points[i].curvature);
+
+            }
+
+        }
+
+        void compute_v3( const pcl::PointCloud<pcl::PointNormal>::Ptr&  output){
+
+            int input_point_num = m_input_cloud->points.size();
+            output->points.resize(input_point_num,pcl::PointNormal(0.0,0.0,0.0,0.0,0.0,0.0));
+            output->height = m_input_cloud->height;
+            output->width = m_input_cloud->width;
+            output->is_dense = true;
+
+            int rt = 0;
+            std::vector<int> query_indices;
+            std::vector<float> query_distance;
+#pragma omp parallel for \
+firstprivate(m_NormalEst2d,query_indices,query_distance)
+            for(int i = 0 ; i < input_point_num;i++){
+
+
+
+                auto& query_point = m_input_cloud->at(i);
+                rt = m_tree.radiusSearch (query_point, m_query_radius, query_indices, query_distance);
+
+                std::size_t point_count;
+                point_count = query_indices.size ();
+                m_NormalEst2d.reset();
+
+                m_NormalEst2d.addCenter(m_input_cloud->at(query_indices[0]).x,m_input_cloud->at(query_indices[0]).y);
+
+                for (const auto &index : query_indices)
+                {
+                    Scalar x = m_input_cloud->at(index).x  , y = m_input_cloud->at(index).y ;
+                    m_NormalEst2d.addPoints(x,y);
+                }
+
+                m_NormalEst2d.compute(output->points[i].normal_x,output->points[i].normal_y,output->points[i].normal_z,output->points[i].curvature);
 
             }
 
@@ -389,31 +543,132 @@ pcl_run ( )
 
         pcl::copyPointCloud(*cloud, *point_norm_cloud);
 
-        t1 = common::FromUnixNow();
-        pcl::createTree(cloud, kdtree);
-        pcl::Normal2dEstimation<pcl::PointXYZ, pcl::KdTreeFLANN<pcl::PointXYZ>> N2d_1(kdtree);
-        N2d_1.setInputCloud(cloud);
-        N2d_1.compute(point_norm_cloud);
-        t2= common::FromUnixNow();
-        std::cout << "N2d_1 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+        {
+
+            t1 = common::FromUnixNow();
+//            pcl::createTree(cloud, kdtree);
+            pcl::Normal2dEstimation<pcl::PointXYZ, pcl::KdTreeFLANN<pcl::PointXYZ>> N2d_1(kdtree);
+            N2d_1.setInputCloud(cloud);
+            N2d_1.compute(point_norm_cloud);
+            t2= common::FromUnixNow();
+            std::cout << "N2d_1 v1 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+
+        }
+
+        {
+
+            t1 = common::FromUnixNow();
+//            pcl::createTree(cloud, kdtree);
+            pcl::Normal2dEstimation<pcl::PointXYZ, pcl::KdTreeFLANN<pcl::PointXYZ>> N2d_1(kdtree);
+            N2d_1.setInputCloud(cloud);
+            N2d_1.compute_v2(point_norm_cloud);
+            t2= common::FromUnixNow();
+            std::cout << "N2d_1 v2 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+
+
+        }
+
+        {
+            t1 = common::FromUnixNow();
+//            pcl::createTree(cloud, kdtree);
+            pcl::Normal2dEstimation<pcl::PointXYZ, pcl::KdTreeFLANN<pcl::PointXYZ>> N2d_1(kdtree);
+            N2d_1.setInputCloud(cloud);
+            N2d_1.compute_v3(point_norm_cloud);
+            t2= common::FromUnixNow();
+            std::cout << "N2d_1 v3 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+        }
+
+        {
+
+            t1 = common::FromUnixNow();
+//            pcl::createTree(cloud, kdtree_2);
+            pcl::Normal2dEstimation<pcl::PointXYZ, pcl::search::KdTree<pcl::PointXYZ>> N2d_2(kdtree_2);
+            N2d_2.setInputCloud(cloud);
+            N2d_2.compute(point_norm_cloud);
+            t2= common::FromUnixNow();
+            std::cout << "N2d_2 v1 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+
+        }
+
+        {
+
+            t1 = common::FromUnixNow();
+//            pcl::createTree(cloud, kdtree_2);
+            pcl::Normal2dEstimation<pcl::PointXYZ, pcl::search::KdTree<pcl::PointXYZ>> N2d_2(kdtree_2);
+            N2d_2.setInputCloud(cloud);
+            N2d_2.compute_v2(point_norm_cloud);
+            t2= common::FromUnixNow();
+            std::cout << "N2d_2 v2 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+
+        }
 
 
 
-        t1 = common::FromUnixNow();
-        pcl::createTree(cloud, octree);
-        pcl::Normal2dEstimation<pcl::PointXYZ, pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>> N2d_3(octree);
-        N2d_3.setInputCloud(cloud);
-        N2d_3.compute(point_norm_cloud);
-        t2= common::FromUnixNow();
-        std::cout << "N2d_3 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+        {
 
-        t1 = common::FromUnixNow();
-        pcl::createTree(cloud, kdtree_2);
-        pcl::Normal2dEstimation<pcl::PointXYZ, pcl::search::KdTree<pcl::PointXYZ>> N2d_2(kdtree_2);
-        N2d_2.setInputCloud(cloud);
-        N2d_2.compute(point_norm_cloud);
-        t2= common::FromUnixNow();
-        std::cout << "N2d_2 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+            t1 = common::FromUnixNow();
+//            pcl::createTree(cloud, kdtree_2);
+            pcl::Normal2dEstimation<pcl::PointXYZ, pcl::search::KdTree<pcl::PointXYZ>> N2d_2(kdtree_2);
+            N2d_2.setInputCloud(cloud);
+            N2d_2.compute_v3(point_norm_cloud);
+            t2= common::FromUnixNow();
+            std::cout << "N2d_2 v3 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+
+        }
+
+        std::cout << "check normal\n";
+        sample_angle = 0.0;
+        for(int i = 0 ; i < cloud->size(); i++){
+            auto a1 = sample_angle;
+
+            auto a2 = std::atan2(point_norm_cloud->points[i].normal_y,point_norm_cloud->points[i].normal_x);
+
+            std::cout << i << ": "<< point_norm_cloud->points[i].normal_x  <<", " << point_norm_cloud->points[i].normal_y << ", "<< a1  << ", "<<  a2 << ", " << (a1-a2)/M_PI   << " \n";
+            sample_angle += sample_angle_inc;
+        }
+
+
+
+        {
+
+            t1 = common::FromUnixNow();
+//            pcl::createTree(cloud, octree);
+            pcl::Normal2dEstimation<pcl::PointXYZ, pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>> N2d_3(octree);
+            N2d_3.setInputCloud(cloud);
+            N2d_3.compute(point_norm_cloud);
+            t2= common::FromUnixNow();
+            std::cout << "N2d_3 v1 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+
+        }
+
+        {
+
+            t1 = common::FromUnixNow();
+//            pcl::createTree(cloud, octree);
+            pcl::Normal2dEstimation<pcl::PointXYZ, pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>> N2d_3(octree);
+            N2d_3.setInputCloud(cloud);
+            N2d_3.compute_v2(point_norm_cloud);
+            t2= common::FromUnixNow();
+            std::cout << "N2d_3 v2 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+
+        }
+
+        if(0){
+
+            // crash
+
+
+            t1 = common::FromUnixNow();
+//            pcl::createTree(cloud, octree);
+            pcl::Normal2dEstimation<pcl::PointXYZ, pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>> N2d_3(octree);
+            N2d_3.setInputCloud(cloud);
+            N2d_3.compute_v3(point_norm_cloud);
+            t2= common::FromUnixNow();
+            std::cout << "N2d_3 v3 use time " << common::ToMicroSeconds(t2- t1) << " micro second" << std::endl;
+
+        }
+
+
         {
             using namespace matplot;
             vector_2d x(cloud->size(), std::vector<double>(1,0.0));
@@ -512,8 +767,6 @@ pcl_run ( )
         auto& input_cloud = *cloud;
 
 
-
-        std::cout << "check 1312 to 1313" << std::endl;
 
         for(int i = 0 ; i < cloud->size(); i++){
             searchPoint = cloud->at( i);
@@ -712,7 +965,7 @@ firstprivate(nn_indices, nn_dists)
 
 
 
-        if (rt> 0)
+        if (0)
         {
             for (std::size_t i = 0; i < indices.size (); ++i)
                 std::cout << "    "  <<   (*cloud)[ indices[i] ].x
