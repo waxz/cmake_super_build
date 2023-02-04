@@ -231,6 +231,25 @@ namespace pcl{
 
 
 
+
+template<typename PointT,typename TreeType>
+void test_tree_type(typename pcl::PointCloud<PointT>::Ptr t_input_cloud, TreeType& t_tree){
+
+
+    if  constexpr(std::is_same<TreeType, pcl::KdTreeFLANN<PointT>>::value){
+        t_tree.setInputCloud(t_input_cloud);
+
+    }
+    if  constexpr(std::is_same<TreeType,pcl::octree::OctreePointCloudSearch<PointT>>::value){
+        t_tree.setInputCloud(t_input_cloud);
+        t_tree.addPointsFromInputCloud ();
+    }
+
+}
+
+
+
+
 int
 pcl_run ( )
 {
@@ -365,7 +384,8 @@ pcl_run ( )
         pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree (resolution);
 
 
-
+        test_tree_type<pcl::PointXYZ>(cloud,kdtree);
+        test_tree_type<pcl::PointXYZ>(cloud,octree);
 
         pcl::copyPointCloud(*cloud, *point_norm_cloud);
 
@@ -403,7 +423,7 @@ pcl_run ( )
             std::vector<double> x2(cloud->size());
             std::vector<double> y2(cloud->size());
 
-            std::cout << "PLOT:\n";
+//            std::cout << "PLOT:\n";
 
             sample_angle = 0.0;
             for(int i = 0 ; i < cloud->size(); i++){
@@ -416,11 +436,11 @@ pcl_run ( )
                 auto a1 = sample_angle;
                 auto a2 = std::atan2(point_norm_cloud->points[i].normal_y,point_norm_cloud->points[i].normal_x);
 
-                std::cout << i << ": "<< point_norm_cloud->points[i].normal_x  <<", " << point_norm_cloud->points[i].normal_y << ", "<< a1  << ", "<<  a2 << ", " << (a1-a2)/M_PI   << " \n";
+//                std::cout << i << ": "<< point_norm_cloud->points[i].normal_x  <<", " << point_norm_cloud->points[i].normal_y << ", "<< a1  << ", "<<  a2 << ", " << (a1-a2)/M_PI   << " \n";
                 sample_angle += sample_angle_inc;
 //                arrow(cloud->points[i].x, cloud->points[i].y, cloud->points[i].x + point_norm_cloud->points[i].normal_x, cloud->points[i].y + point_norm_cloud->points[i].normal_y);
             }
-            std::cout << "PLOT:\n";
+//            std::cout << "PLOT:\n";
 
 //            scatter(x2, y2);
 
@@ -495,7 +515,7 @@ pcl_run ( )
 
         std::cout << "check 1312 to 1313" << std::endl;
 
-        for(int i = 1312 ; i < 1314; i++){
+        for(int i = 0 ; i < cloud->size(); i++){
             searchPoint = cloud->at( i);
 
             Eigen::Matrix<Scalar, 2, 2> covariance_matrix;
@@ -551,8 +571,8 @@ pcl_run ( )
 
                     Eigen::Vector2f eigen_values = eig_solver.eigenvalues();
                     Eigen::Matrix2f eigen_vectors = eig_solver.eigenvectors() ;
-                    std::cout << __LINE__ << "eigenvalues:\n" << eigen_values << std::endl;
-                    std::cout << __LINE__ << "eigenvectors:\n" << eigen_vectors << std::endl;
+//                    std::cout << __LINE__ << "eigenvalues:\n" << eigen_values << std::endl;
+//                    std::cout << __LINE__ << "eigenvectors:\n" << eigen_vectors << std::endl;
 
                     Eigen::MatrixX2f m(indices.size(),2);
                     int index = 0;
@@ -577,8 +597,8 @@ pcl_run ( )
                     eig_solver.compute(cov);
                     eigen_values = eig_solver.eigenvalues();
                     eigen_vectors = eig_solver.eigenvectors() ;
-                    std::cout << __LINE__ << "eigenvalues:\n" << eigen_values << std::endl;
-                    std::cout << __LINE__ << "eigenvectors:\n" << eigen_vectors << std::endl;
+//                    std::cout << __LINE__ << "eigenvalues:\n" << eigen_values << std::endl;
+//                    std::cout << __LINE__ << "eigenvectors:\n" << eigen_vectors << std::endl;
                 }
             }
 
@@ -790,7 +810,7 @@ main (int argc, char** argv)
 
 
     pcl_run( );
-    plt_vector_1();
+//    plt_vector_1();
 
     return 1;
 //    plot_scatter7();

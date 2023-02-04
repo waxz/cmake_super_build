@@ -58,6 +58,36 @@ struct Player {
 };
 
 
+//https://sol2.readthedocs.io/en/v2.20.6/exceptions.html#lua-handlers
+
+int my_exception_handler(lua_State* L, sol::optional<const std::exception&> maybe_exception, sol::string_view description) {
+    // L is the lua state, which you can wrap in a state_view if necessary
+    // maybe_exception will contain exception, if it exists
+    // description will either be the what() of the exception or a description saying that we hit the general-case catch(...)
+    std::cout << "An exception occurred in a function, here's what it says ";
+    if (maybe_exception) {
+        std::cout << "(straight from the exception): ";
+        const std::exception& ex = *maybe_exception;
+        std::cout << ex.what() << std::endl;
+    }
+    else {
+        std::cout << "(from the description parameter): ";
+        std::cout.write(description.data(), description.size());
+        std::cout << std::endl;
+    }
+
+    // you must push 1 element onto the stack to be
+    // transported through as the error object in Lua
+    // note that Lua -- and 99.5% of all Lua users and libraries -- expects a string
+    // so we push a single string (in our case, the description of the error)
+    return sol::stack::push(L, description);
+}
+
+void will_throw() {
+    throw std::runtime_error("oh no not an exception!!!");
+}
+
+
 int main(int argc, char** argv) {
 
     std::cout << "LUA"<<std::endl;
@@ -81,6 +111,126 @@ int main(int argc, char** argv) {
     // open some common libraries
     lua.open_libraries(sol::lib::base, sol::lib::package,sol::lib::os, sol::lib::table, sol::lib::jit,sol::lib::coroutine);
 
+    lua.set_exception_handler(&my_exception_handler);
+
+
+
+    {
+        lua.script(R"(
+			function handler (message)
+				return "Handled this message: " .. message
+			end
+
+			function f (a)
+				if a < 0 then
+					error("negative number detected")
+				end
+				return a + 5
+			end
+		)");
+
+        // Get a protected function out of Lua
+        sol::protected_function f(lua["f"], lua["handler"]);
+
+        sol::protected_function_result result = f(-500);
+        if (result.valid()) {
+            // Call succeeded
+            int x = result;
+            std::cout << "call succeeded, result is " << x << std::endl;
+        }
+        else {
+            // Call failed
+            sol::error err = result;
+            std::string what = err.what();
+            std::cout << "call failed, sol::error::what() is " << what << std::endl;
+            // 'what' Should read
+            // "Handled this message: negative number detected"
+        }
+
+        std::cout << std::endl;
+
+    }
+    if(1){
+
+        lua.script(
+                R"(
+function handler ( message )
+    return "handler " .. message .. debug.traceback()
+end
+)"
+        );
+
+        sol::function luahandler = lua[ "handler" ];
+
+        // Make sure handler works
+        luahandler();
+        // Set it
+
+        // Some function; just using a lambda to be cheap
+        auto doom = []() {
+            // Bypasses handler function: puts information directly into lua error
+            throw std::logic_error( "dun goofed, little man" );
+//        std::cout << "domm1" << std::endl;
+        };
+        auto luadoom = [&lua]() {
+            // Does not bypass error function, will call it
+            lua_error( lua.lua_state() );
+        };
+
+
+        lua.set_function( "doom", doom );
+        lua.set_function( "luadoom", luadoom );
+
+        sol::function func = lua[ "doom" ];
+        sol::function luafunc = lua[ "luadoom" ];
+
+        try{
+            std::cout << "try result 1";
+
+            sol::function_result result1 = func();
+            std::cout << "result 1";
+
+        }catch (sol::error & e){
+            std::cout << "result1 error:\n" << e.what() << '\n';
+
+        }catch (...){
+            std::cout << "result1 error 0  \n";
+
+        }
+        try{
+            std::cout << "try result 2";
+
+            // Appropriately scoped
+            luafunc.error_handler = luahandler;
+            sol::function_result result2 = luafunc();
+            std::cout << "result2 success";
+
+        }catch (sol::error & e){
+            std::cout << "result2 error:\n" << e.what() << '\n';
+
+        }catch (...){
+            std::cout << "result2 error 0  \n";
+
+        }
+
+        std::cout << "=== error_handler ===" << std::endl;
+    }
+
+    lua.script(R"(
+ a = 123;
+a.1= 2;
+
+)",[](lua_State*, sol::protected_function_result pfr) {
+
+        std::cout << "script error"<< std::endl;
+
+        // pfr will contain things that went wrong, for either loading or executing the script
+        // Can throw your own custom error
+        // You can also just return it, and let the call-site handle the error if necessary.
+        return pfr;
+    });
+
+    std::cout << "=== end "<< std::endl;
 
 
     lua.script(R"(

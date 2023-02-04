@@ -18,6 +18,9 @@ struct Dog {
     bool operator==(const Dog& rhs) const {
         return std::tie(barkType, color, weight) == std::tie(rhs.barkType, rhs.color, rhs.weight);
     }
+    void wang()const{
+        std::cout << "wang!!" <<std::endl;
+    }
 };
 
 
@@ -46,7 +49,10 @@ struct Cat {
 
     }
 
+    void miao()const {
+        std::cout << "miao!!" <<std::endl;
 
+    }
 };
 
 
@@ -135,9 +141,180 @@ bool test_serialization(){
 
 
 }
+
+//https://blog.csdn.net/TH_NUM/article/details/95323440
+
+
+
+//c++17 feature
+template <typename T>
+void test_if_(const T& v){
+    if constexpr(std::is_same<T, Dog>::value){
+
+        v.wang();
+    }
+    if constexpr(std::is_same<T, Cat>::value){
+
+        v.miao();
+    }
+
+}
+
+
+
+
+#define DEF_IS(check_type, return_type) \
+    template<typename T> \
+    typename std::enable_if<std::is_same<T, check_type>::value, return_type>::type
+
+DEF_IS(Dog, void)
+test_if_2(const T& v){
+    v.wang();
+
+}
+DEF_IS(Cat, void)
+test_if_2(const T& v){
+    v.miao();
+
+}
+
+template<typename T> \
+    typename std::enable_if<std::is_same<T, int>::value, void>::type
+test_if_3(const T& v){
+
+}
+template<typename T> \
+    typename std::enable_if<std::is_same<T, Cat>::value, void>::type
+test_if_3(const T& v){
+
+}
+
+
+
+
+template<typename T,
+        std::enable_if_t< std::is_same<T, Cat>::value, bool> = true
+        >
+        void test_if_4(const T& v){
+
+}
+
+
+template<typename T,
+        std::enable_if_t< std::is_same<T, Dog>::value, bool> = true
+>
+void test_if_4(const T& v){
+
+}
+
+
+template<typename T, std::enable_if_t< std::is_same<T, int>::value, bool> = true>
+void test_if_4(const T& v){
+
+}
+
+
+#define CHECK_IS_SAME(T1, T2) template<typename T1, typename std::enable_if_t< std::is_same<T1, T2>::value, bool> = true>
+
+
+CHECK_IS_SAME(T, Dog)
+void test_if_5(const T& v){
+
+}
+
+
+CHECK_IS_SAME(T, Cat)
+void test_if_5(const T& v){
+
+}
+CHECK_IS_SAME(T, int)
+void test_if_5(const T& v){
+
+}
+
+#define CHECK_IS_SAME_TYPE(T1, T2) typename std::enable_if_t< std::is_same<T1, T2>::value, bool> = true
+template<typename T, CHECK_IS_SAME_TYPE(T,Dog)>
+void test_if_6(const T& v){
+
+}
+
+template<typename T, CHECK_IS_SAME_TYPE(T,Cat)>
+void test_if_6(const T& v){
+
+}
+template<typename T, CHECK_IS_SAME_TYPE(T,int)>
+void test_if_6(const T& v){
+
+}
+
+template<typename T1,typename T2, CHECK_IS_SAME_TYPE(T1,Cat),CHECK_IS_SAME_TYPE(T2,Dog)>
+void test_if_6_1(const T1& v, const T2 & v2){
+
+}
+
+template<typename T,
+        typename std::enable_if<
+                !std::is_trivially_destructible<T>{} &&
+                (std::is_class<T>{} || std::is_union<T>{}),
+                bool>::type = true>
+void destroy(T* t)
+{
+    std::cout << "destroying non-trivially destructible T\n";
+}
+
+
+#define HAS_MEM_FUNC(func, name)                                        \
+    template<typename T, typename Sign>                                 \
+    struct name {                                                       \
+        typedef char yes[1];                                            \
+        typedef char no [2];                                            \
+        template <typename U, U> struct type_check;                     \
+        template <typename _1> static yes &chk(type_check<Sign, &_1::func > *); \
+        template <typename   > static no  &chk(...);                    \
+        static bool const value = sizeof(chk<T>(0)) == sizeof(yes);     \
+    }
+
+
+HAS_MEM_FUNC(miao, has_maio);
+
+template<typename T> void
+doMiao(const T& v) {
+    if(has_maio<T, std::string(T::*)()>::value) {
+        v.miao();
+    } else {
+    }
+}
+
 int main(int argc, char** argv){
 
     test_serialization();
+
+    Dog dog;
+    Cat cat;
+    test_if_(dog);
+    test_if_(cat);
+    test_if_2(dog);
+    test_if_2(cat);
+    test_if_3(1);
+    test_if_3(cat);
+
+    test_if_4(dog);
+    test_if_4(cat);
+    test_if_4(1);
+
+    test_if_5(dog);
+    test_if_5(cat);
+    test_if_5(1);
+
+    test_if_6(dog);
+    test_if_6(cat);
+    test_if_6(1);
+
+    test_if_6_1(cat,dog);
+
+    std::cout << "doMiao "<< std::endl;
+    doMiao(cat);
+
 
 }
 #endif
