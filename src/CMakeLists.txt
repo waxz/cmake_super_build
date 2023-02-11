@@ -390,3 +390,12 @@ print_include_dir(optimlib_test)
 
 
 add_executable(function_overload_test function_overload_test.cpp)
+
+add_executable(ifm3d_test  ifm3d_test.cpp)
+target_link_libraries(ifm3d_test PUBLIC
+        xmlrpc-c::xmlrpc_client++
+        ifm3d::camera
+        ifm3d::framegrabber
+        ifm3d::stlimage
+        )
+#target_link_directories(ifm3d_test PUBLIC  ${ifm3d_ROOT}/lib )

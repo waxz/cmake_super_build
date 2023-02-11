@@ -169,6 +169,29 @@ find_package(tinyxml2 REQUIRED)
 build_external_project(PCL lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pcl-pcl-1.12.1.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_examples=OFF -DBUILD_apps=OFF -DBUILD_global_tests=OFF -DBUILD_simulation=OFF)
 find_package(PCL REQUIRED)
 
+#ifm3d-0.93.0.zip
+build_external_project(ifm3d lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ifm3d-0.93.0.zip -DBUILD_SHARED_LIBS=OFF  -DCMAKE_BUILD_TYPE=Release  -DPCL_ROOT=${PCL_ROOT} -DBUILD_TESTS=OFF)
+
+set(glog_ROOT ${ifm3d_ROOT}/lib/cmake/glog )
+
+find_package(glog REQUIRED)
+set(CURL_ROOT ${ifm3d_ROOT}/lib/cmake/CURL )
+
+find_package(CURL REQUIRED)
+
+
+set(xmlrpc-c_ROOT ${ifm3d_ROOT}/lib/cmake/xmlrpc-c )
+find_package(
+        xmlrpc-c CONFIG
+        REQUIRED COMPONENTS xmlrpc xmlrpc_client xmlrpc++ xmlrpc_client++
+)
+
+
+find_package(ifm3d REQUIRED COMPONENTS
+        camera
+        framegrabber
+        stlimage
+        )
 #octomap-1.9.6.tar.gz
 build_external_project(octomap lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/octomap-1.9.6.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_OCTOVIS_SUBPROJECT=OFF -DBUILD_DYNAMICETD3D_SUBPROJECT=OFF)
 find_package(octomap REQUIRED)

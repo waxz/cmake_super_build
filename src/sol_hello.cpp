@@ -5,6 +5,9 @@
 
 #include <thread>
 
+
+#include "common/string_logger.h"
+
 #include "assert.hpp"
 
 #include "lyra/lyra.hpp"
@@ -83,10 +86,138 @@ int my_exception_handler(lua_State* L, sol::optional<const std::exception&> mayb
     return sol::stack::push(L, description);
 }
 
+sol::protected_function_result simple_handler (lua_State*, sol::protected_function_result result) {
+            // You can just pass it through to let the
+            // call-site handle it
+    // Call failed
+    sol::error err = result;
+    std::string what = err.what();
+    std::cout << "call failed, sol::error::what() is " << what << std::endl;
+    MLOGW("%s", what.c_str());
+    return result;
+}
+
 void will_throw() {
     throw std::runtime_error("oh no not an exception!!!");
 }
 
+void test_error_handler(lua_State* L){
+    sol::state_view lua(L);
+    lua.script("print('pass lua state to function, test error handler')");
+    //
+    {
+        auto result = lua.script(
+                "print('hello hello again, world') \n return 24",
+                simple_handler);
+        if (result.valid()) {
+            std::cout << "the third script worked, and a "
+                         "double-hello statement should "
+                         "appear above this one!"
+                      << std::endl;
+            int value = result;
+        }
+        else {
+            std::cout << "the third script failed, check the "
+                         "result type for more information!"
+                      << std::endl;
+        }
+    }
+
+    {
+        auto result
+                = lua.script("does.not.exist", simple_handler);
+        if (result.valid()) {
+            std::cout << "the fourth script worked, which it "
+                         "wasn't supposed to! Panic!"
+                      << std::endl;
+            int value = result;
+        }
+        else {
+            sol::error err = result;
+            std::cout << "the fourth script failed, which "
+                         "was intentional!\t\nError: "
+                      << err.what() << std::endl;
+        }
+    }
+}
+
+void some_function() {
+    std::cout << "some function!" << std::endl;
+}
+
+void some_other_function() {
+    std::cout << "some other function!" << std::endl;
+}
+
+struct some_class {
+    int variable = 30;
+
+    double member_function() {
+        return 24.5;
+    }
+
+    void hello(){
+        MLOGI("%s", "some_class say hello");
+
+    }
+};
+
+void test_binding_class(lua_State* L){
+    sol::state_view lua(L);
+    lua.script("print('test_binding_class')");
+
+    // put an instance of "some_class" into lua
+    // (we'll go into more detail about this later
+    // just know here that it works and is
+    // put into lua as a userdata
+    lua.set("sc1", some_class());
+    lua["sc2"] = some_class{};
+    some_class sc;
+    lua["sc"] = sc;
+
+    // binds a plain function
+    lua["f1"] = some_function;
+    lua.set_function("f2", &some_other_function);
+
+    // binds just the member function
+    lua["m1"] = &some_class::member_function;
+
+    // binds the class to the type
+    lua.set_function(
+            "m2", &some_class::member_function, some_class {});
+
+    // binds just the member variable as a function
+    lua["v1"] = &some_class::variable;
+
+    // binds class with member variable as function
+    lua.set_function(
+            "v2", &some_class::variable, some_class {});
+
+    lua.script(R"(
+	f1() -- some function!
+	f2() -- some other function!
+
+	-- need class instance if you don't bind it with the function
+	print(m1(sc)) -- 24.5
+	-- does not need class instance: was bound to lua with one
+	print(m2()) -- 24.5
+
+	-- need class instance if you
+	-- don't bind it with the function
+	print(v1(sc)) -- 30
+	-- does not need class instance:
+	-- it was bound with one
+	print(v2()) -- 30
+	-- can set, still
+	-- requires instance
+	v1(sc, 212)
+	-- can set, does not need
+	-- class instance: was bound with one
+	v2(254)
+	print(v1(sc)) -- 212
+	print(v2()) -- 254
+	)",simple_handler);
+}
 
 int main(int argc, char** argv) {
 
@@ -104,14 +235,37 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
+    lua_State* L = luaL_newstate();
+    sol::state_view lua(L);
+    lua.script("print('hello lua!')", simple_handler);
 
-    sol::state lua;
-    std::cout << "=== opening a state ===" << std::endl;
-
-    // open some common libraries
     lua.open_libraries(sol::lib::base, sol::lib::package,sol::lib::os, sol::lib::table, sol::lib::jit,sol::lib::coroutine);
 
     lua.set_exception_handler(&my_exception_handler);
+    // call lua code, and check to make sure it has loaded and
+    // run properly:
+    auto handler = &sol::script_default_on_error;
+    lua.script("print('hello again, world')", handler);
+
+    // Use a custom error handler if you need it
+    // This gets called when the result is bad
+    auto simple_handler_lambda =
+            [](lua_State*, sol::protected_function_result result) {
+                // You can just pass it through to let the
+                // call-site handle it
+                return result;
+            };
+    // the above lambda is identical to sol::simple_on_error,
+    // but it's shown here to show you can write whatever you
+    // like
+
+
+    test_error_handler(lua);
+    test_binding_class(lua);
+
+    std::cout << "c++ main exit" << std::endl;
+
+    return 0;
 
 
 

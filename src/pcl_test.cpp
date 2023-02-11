@@ -127,6 +127,8 @@ namespace pcl{
 
             Eigen::Matrix <float, 2, 1> normal (normal_x, normal_y);
             Eigen::Matrix <float, 2, 1> vp ( view_point.x() - K.x(), view_point.y() - K.y());
+            normal.normalize();
+            vp.normalize();
 
             // Dot product between the (viewpoint - point) and the plane normal
             float cos_theta = vp.dot (normal);
@@ -136,6 +138,12 @@ namespace pcl{
                 normal_x *= -1;
                 normal_y *= -1;
             }
+//            std::cout <<__FILE__ <<  __LINE__  << " normal_x: " << normal_x  << " normal_y: " << normal_y
+//            << " cos_theta: " << cos_theta << std::endl;
+
+            curvature = std:: acos(std::abs(cos_theta));
+
+//            std::cout <<__FILE__ <<  __LINE__  << " curvature: " << curvature << std::endl;
 
 
         }
@@ -653,7 +661,7 @@ pcl_run ( )
 
         }
 
-        if(0){
+        {
 
             // crash
 
