@@ -37,6 +37,20 @@
 #include <pcl/octree/octree_pointcloud_occupancy.h>
 
 
+#include <pcl/console/parse.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/sample_consensus/ransac.h>
+#include <pcl/sample_consensus/sac_model_plane.h>
+#include <pcl/sample_consensus/sac_model_sphere.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/sample_consensus/sac_model_circle.h>
+
+
+
+
+
 #include "icp/Normal2dEstimation.h"
 
 #define CHECK_IS_SAME_TYPE(T1, T2) typename std::enable_if_t< std::is_same<T1, T2>::value, bool> = true
@@ -1060,6 +1074,76 @@ int plt_vector_1() {
     return 0;
 }
 
+struct RansacCircle{
+    const std::vector<float>& input_data;
+    std::array<float,3> model;
+
+
+
+
+    void compute(){
+
+    }
+
+};
+
+void find_circle(){
+    // initialize PointClouds
+    pcl::PointCloud<pcl::PointXYZ>::Ptr init_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr final_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+
+
+    float x_data[] = { 0.373606, 0.371867, 0.376897, 0.380235, 0.382097, 0.382402, 0.382985, 0.385293, 0.382493, 0.383328, 0.385298, 0.384259, 0.385049, 0.388407, 0.388446, 0.389492, 0.389958, 0.390829, 0.388589, 0.389913, 0.39164, 0.39168, 0.391999, 0.391031, 0.392903, 0.390998, 0.391, 0.393198, 0.391693, 0.387503, 0.391477, 0.394486, 0.393778, 0.393045, 0.39488, 0.394857, 0.394964, 0.389849, 0.38746, 0.39506, 0.393987, 0.395124, 0.395882, 0.394779, 0.395712, 0.393609, 0.3938, 0.39562, 0.39465, 0.3969, 0.393376, 0.397223, 0.394307, 0.390089, 0.392817, 0.39349, 0.393888, 0.399991, 0.394044, 0.399644, 0.400935, 0.39219, 0.401321, 0.397465, 0.397329, 0.401899, 0.398752, 0.401907, 0.402857, 0.39854, 0.398883, 0.404396, 0.404746, 0.399927, 0.402682, 0.401688, 0.397711, 0.40607, 0.399775, 0.406791, 0.399544, 0.408024, 0.407709, 0.407507, 0.407783, 0.407679, 0.403067, 0.400339, 0.409545, 0.401084, 0.408858, 0.41038, 0.410419, 0.411611, 0.403056, 0.402078, 0.411926, 0.406987, 0.405837, 0.403791, 0.413918, 0.414865, 0.413631, 0.407392, 0.407807, 0.407728, 0.409324, 0.419915, 0.419846, 0.421421, 0.4208, 0.412571, 0.423441, 0.413916, 0.413698, 0.424452, 0.425382, 0.41423, 0.425346, 0.427078, 0.428354, 0.428359, 0.429265, 0.432472, 0.424633, 0.435151, 0.425932, 0.43697, 0.439466, 0.439669, 0.443415, 0.446216, 0.454775 };
+
+
+    float y_data[] = { -0.0260311, -0.0537758, -0.0220142, -0.00255934, -0.0163005, -0.0111581, -0.00343732, 4.3921e-07, -0.0491919, -0.0466783, -0.0399133, -0.0511732, -0.0477649, -0.00610115, 0.00348722, -0.0174917, -0.0131305, 0.00701734, -0.0455501, -0.0324478, -0.0123073, -0.0158289, -0.000879199, -0.0298916, -0.00176291, -0.0396172, -0.0467224, -0.0256234, -0.0441328, -0.0739197, -0.0494546, 0.0115116, -0.0292129, -0.0389337, -0.00974872, -0.0106348, -0.00531766, -0.0644387, -0.0775222, 0.00975406, -0.035459, -0.0248586, -0.00444152, -0.0310694, -0.0151025, -0.0434543, -0.0416874, -0.0320289, -0.0426731, 0.00890836, -0.0541851, 0.0160538, -0.0534121, -0.078959, -0.0640241, -0.0614175, -0.0696553, 0.00269323, -0.0687712, -0.0206442, -0.00719789, -0.0867408, -0.021634, -0.0602119, -0.0611036, -0.00901964, -0.0521928, 0.0252863, 0.00180849, -0.0594601, -0.0640943, 0.00816873, -0.00817488, -0.0633418, -0.0462862, -0.0562488, -0.0823616, -0.0145853, -0.0753313, 0.0210144, -0.0818066, 0.00549441, 0.0183107, 0.0228856, 0.0284133, 0.0320855, -0.0694143, -0.0847814, 0.0193141, -0.0868216, -0.0358727, 0.017508, 0.0202785, 0.00646657, -0.084412, -0.0898746, 0.0110955, -0.0691495, -0.0793063, -0.093116, -0.0204504, 0.0139701, -0.0390992, -0.0872307, -0.0892354, -0.0920986, -0.093425, 0.0302056, 0.0311478, 0.0151377, 0.0350191, -0.0980704, 0.0323701, -0.0964296, -0.0973581, 0.0362823, 0.022932, -0.0994473, 0.028678, 0.0345767, 0.0375843, 0.0424329, 0.038635, 0.0408811, -0.102953, 0.0500194, -0.106309, 0.0462584, 0.0425375, 0.0405663, 0.0479471, 0.0462249, 0.0502082 };
+
+
+
+    // populate our PointCloud with points
+    init_cloud->width    = 133;
+    init_cloud->height   = 1;
+    init_cloud->is_dense = true;
+    init_cloud->points.resize (init_cloud->width * init_cloud->height);
+
+    for (pcl::index_t i = 0; i < init_cloud->size (); ++i){
+        (*init_cloud)[i].x = x_data[i];
+        (*init_cloud)[i].y = y_data[i];
+    }
+
+    std::vector<int> inliers;
+    // created RandomSampleConsensus object and compute the appropriated model
+    pcl::SampleConsensusModelCircle2D<pcl::PointXYZ>::Ptr
+            model_circle(new pcl::SampleConsensusModelCircle2D<pcl::PointXYZ> (init_cloud));
+
+    model_circle->setRadiusLimits(0.09,0.11);
+    model_circle->setModelConstraints([](auto& x){
+
+        if(x(0) < 0.5){
+            return false;
+        }else{
+            return true;
+        }
+        return true;
+
+    });
+
+    pcl::RandomSampleConsensus<pcl::PointXYZ> ransac (model_circle);
+    ransac.setDistanceThreshold (.04);
+
+    ransac.computeModel();
+    ransac.getInliers(inliers);
+    Eigen::VectorXf model_coefficients;
+
+    ransac.getModelCoefficients(model_coefficients);
+    std::cout << "model_coefficients " << model_coefficients << std::endl;
+
+    ransac.refineModel();
+    ransac.getModelCoefficients(model_coefficients);
+    std::cout << "refineModel model_coefficients " << model_coefficients << std::endl;
+
+}
+
 int
 main (int argc, char** argv)
 {
@@ -1070,8 +1154,9 @@ main (int argc, char** argv)
 
 
 
-    pcl_run( );
+//    pcl_run( );
 //    plt_vector_1();
+    find_circle();
 
     return 1;
 //    plot_scatter7();

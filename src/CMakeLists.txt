@@ -397,5 +397,12 @@ target_link_libraries(ifm3d_test PUBLIC
         ifm3d::camera
         ifm3d::framegrabber
         ifm3d::stlimage
+        ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES}
         )
+target_include_directories( ifm3d_test PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/ifm_tools/simpleimage/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/ifm_tools/ppm-io-master/include
+        ${PCL_INCLUDE_DIRS}
+        )
+
 #target_link_directories(ifm3d_test PUBLIC  ${ifm3d_ROOT}/lib )
