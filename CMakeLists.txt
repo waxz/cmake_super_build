@@ -247,6 +247,45 @@ set_target_properties(liblua PROPERTIES  IMPORTED_LOCATION "${LUA_LIBRARIES}")
 target_include_directories(liblua INTERFACE ${LUA_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/third_party/sol)
 target_link_libraries(liblua INTERFACE  dl )
 
+
+
+
+#third_party/Fast-DDS-2.9.1.zip
+build_external_project(foonathan_memory lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/foonathan_memory_vendor-1.3.0.zip  -DCMAKE_BUILD_TYPE=Release  -DBUILD_SHARED_LIBS=ON)
+find_package(foonathan_memory REQUIRED)
+
+build_external_project(fastcdr lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-CDR-1.0.26.zip  -DCMAKE_BUILD_TYPE=Release )
+#message(1fastcdf_ROOT ${fastcdf_ROOT})
+
+# fastcdr-config.cmake
+#set(fastcdr_ROOT ${fastcdr_ROOT}/lib/cmake/fastcdr)
+#message(1fastcdf_ROOT ${fastcdf_ROOT})
+find_package(fastcdr REQUIRED)
+
+
+#fastrtps-config.cmake
+build_external_project(fastrtps lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-DDS-2.9.1.zip  -DCMAKE_BUILD_TYPE=Release -Dfoonathan_memory_ROOT=${foonathan_memory_ROOT} -Dfastcdr_ROOT=${fastcdr_ROOT} -DFASTDDS_STATIC=OFF)
+find_package(fastrtps REQUIRED)
+
+#iceoryx-2.0.3.zip
+build_external_project_command(iceoryx lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/iceoryx-2.0.3.zip  "cmake -Bbuild -Hiceoryx_meta -DBUILD_DOC=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/force_iceoryx/install" "cmake --build build" " cmake --build build --target install" )
+set(iceoryx_binding_c_ROOT ${iceoryx_ROOT})
+find_package(iceoryx_binding_c REQUIRED)
+
+#cyclonedds-0.10.2.zip
+build_external_project(CycloneDDS lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-0.10.2.zip -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT} -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
+find_package(CycloneDDS REQUIRED)
+
+#cyclonedds-cxx-0.10.2.zip
+#
+build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.2.zip -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
+find_package(CycloneDDS-CXX REQUIRED)
+
+#ecal-5.11.2.zip
+#cmake .. -DCMAKE_BUILD_TYPE=Release -DECAL_THIRDPARTY_BUILD_PROTOBUF=OFF -DECAL_THIRDPARTY_BUILD_CURL=OFF -DECAL_THIRDPARTY_BUILD_HDF5=OFF -DECAL_THIRDPARTY_BUILD_QWT=OFF
+#build_external_project(ecal lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ecal-5.11.2.zip  -DCMAKE_BUILD_TYPE=Release -DECAL_THIRDPARTY_BUILD_PROTOBUF=OFF -DECAL_THIRDPARTY_BUILD_CURL=OFF -DECAL_THIRDPARTY_BUILD_HDF5=OFF -DECAL_THIRDPARTY_BUILD_QWT=OFF)
+#find_package(ecal REQUIRED)
+
 include(cmake/set_ros.cmake)
 
 add_subdirectory(src)

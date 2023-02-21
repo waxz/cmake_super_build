@@ -342,7 +342,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-find_package (Eigen3 REQUIRED NO_MODULE)
+#find_package (Eigen3 REQUIRED NO_MODULE)
 
 add_library(pcl_norm_2d icp/PCA2D.cpp icp/Normal2dEstimation.cpp)
 target_include_directories( pcl_norm_2d PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
@@ -403,6 +403,36 @@ target_include_directories( ifm3d_test PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/ifm_tools/simpleimage/include
         ${CMAKE_CURRENT_SOURCE_DIR}/ifm_tools/ppm-io-master/include
         ${PCL_INCLUDE_DIRS}
+        ${CMAKE_SOURCE_DIR}/include
         )
 
 #target_link_directories(ifm3d_test PUBLIC  ${ifm3d_ROOT}/lib )
+
+if(NOT TARGET CycloneDDS-CXX::ddscxx)
+    find_package(CycloneDDS-CXX REQUIRED)
+endif()
+
+idlcxx_generate(TARGET helloworlddata FILES dds/HelloWorldData.idl WARNINGS no-implicit-extensibility)
+
+add_executable(ddscxxHelloworldPublisher dds/publisher.cpp)
+add_executable(ddscxxHelloworldSubscriber dds/subscriber.cpp)
+# Link both executables to idl data type library and ddscxx.
+target_link_libraries(ddscxxHelloworldPublisher CycloneDDS-CXX::ddscxx helloworlddata)
+target_link_libraries(ddscxxHelloworldSubscriber CycloneDDS-CXX::ddscxx helloworlddata)
+
+# Disable the static analyzer in GCC to avoid crashing the GNU C++ compiler
+# on Azure Pipelines
+if(DEFINED ENV{SYSTEM_TEAMFOUNDATIONSERVERURI})
+    if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND ANALYZER STREQUAL "on")
+        target_compile_options(ddscxxHelloworldPublisher PRIVATE -fno-analyzer)
+        target_compile_options(ddscxxHelloworldSubscriber PRIVATE -fno-analyzer)
+    endif()
+endif()
+
+set_property(TARGET ddscxxHelloworldPublisher PROPERTY CXX_STANDARD ${cyclonedds_cpp_std_to_use})
+set_property(TARGET ddscxxHelloworldSubscriber PROPERTY CXX_STANDARD ${cyclonedds_cpp_std_to_use})
+
+add_executable(eigen_test eigen_test.cpp)
+target_include_directories(eigen_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
+target_link_libraries(eigen_test PUBLIC liboptim)
+print_include_dir(eigen_test)

@@ -22,7 +22,7 @@
 
 #include <pcl/io/pcd_io.h>
 
-
+#include "common/string_logger.h"
 
 //Utility function to format the timestamp
 std::string formatTimestamp(ifm3d::TimePointT timestamp)
@@ -113,7 +113,15 @@ void findMinAndMax(ifm3d::SimpleImageBuffer::Img &input, ifm3d::SimpleImageBuffe
     }
 }
 
+void sigintHandler(int sig)
+{
+
+}
+
+
 int main(){
+
+
 
 
     {
@@ -137,11 +145,20 @@ int main(){
         bool retval = false;
 
 
+
+        MLOGW("%s","try create cam");
+        std::cout << std::endl;
         //this->cam_ = ifm3d::CameraBase::MakeShared();
         auto cam_ = ifm3d::CameraBase::MakeShared(camera_ip_, xmlrpc_port_);
+        MLOGW("%s","try create cam done");
+        std::cout << std::endl;
+
+//        cam_->FromJSON()
+
         // this->cam_ = std::make_shared<ifm3d::CameraBase>(this->camera_ip_, this->xmlrpc_port_);
 
 //        std::uint16_t mask =ifm3d::IMG_AMP | ifm3d::IMG_CART | ifm3d::IMG_RDIS;
+
         std::uint16_t mask =ifm3d::IMG_AMP | ifm3d::INTR_CAL | ifm3d::IMG_RDIS | ifm3d::IMG_CART;
 
         //ifm3dpy.IMG_AMP | ifm3dpy.INTR_CAL | ifm3dpy.IMG_RDIS | ifm3dpy.IMG_CART
@@ -150,21 +167,112 @@ int main(){
 
 
         std::this_thread::sleep_for(1s);
+        MLOGW("%s", "start set param");
+        std::cout << std::endl;
 
-        // get the JSON configuration data from the camera
-        auto jsonConfig = cam_->ToJSON();
+        {
 
-        // print out the MAC address
-        std::cout << "The MAC address of the camera: "
-                  << jsonConfig["ifm3d"]["Net"]["MACAddress"]
-                  << std::endl;
-        std::cout << "The App config: "
-                  << jsonConfig["ifm3d"]["Apps"]
-                  << std::endl;
+            try{
+                auto j = R"(
+          {
+            "Time":
+             {
+               "NTPServers":"169.254.165.112",
+               "SynchronizationActivated": "false"
+             }
+          }
+         )";
 
+                cam_->FromJSONStr(j);
+                std::this_thread::sleep_for(1s);
+
+            }catch (ifm3d::error_t& e){
+
+                MLOGW("get error %s",e.what());
+                std::cout << std::endl;
+            }
+            try{
+
+                char json_str[500];
+
+                sprintf(json_str,R"(
+          {
+            "Time":
+             {
+               "NTPServers":"%s",
+               "SynchronizationActivated": "true"
+             }
+          }
+         )","aa");
+
+                cam_->FromJSONStr(json_str);
+                std::this_thread::sleep_for(1s);
+
+            }catch (ifm3d::error_t& e){
+
+                MLOGW("get error %s",e.what());
+                std::cout << std::endl;
+            }
+
+
+            try{
+                std::static_pointer_cast<ifm3d::Camera>(cam_)->SetCurrentTime(1569331809);
+                std::this_thread::sleep_for(1s);
+
+            }catch (ifm3d::error_t& e){
+
+                MLOGW("get error %s",e.what());
+                std::cout << std::endl;
+            }
+
+
+            std::this_thread::sleep_for(1s);
+
+
+
+            MLOGW("%s","try get json");
+            std::cout << std::endl;
+            try{
+                // get the JSON configuration data from the camera
+                auto jsonConfig = cam_->ToJSON();
+                std::cout << "The jsonConfig: "
+                          << jsonConfig.dump(2)
+                          << std::endl;
+                // print out the MAC address
+                std::cout << "The MAC address of the camera: "
+                          << jsonConfig["ifm3d"]["Net"]["MACAddress"]
+                          << std::endl;
+                std::cout << "The App config: "
+                          << jsonConfig["ifm3d"]["Apps"]
+                          << std::endl;
+
+
+
+
+            }catch (ifm3d::error_t& e){
+                MLOGW("get error %s",e.what());
+                std::cout << std::endl;
+            }
+
+        }
+
+
+        MLOGW("%s","try create fg_");
+        std::cout << std::endl;
+
+        {
+
+            try{
+                auto fg_ = std::make_shared<ifm3d::FrameGrabber>(cam_, mask, pcic_port_);
+            }catch (ifm3d::error_t& e){
+                MLOGW("get error %s",e.what());
+                std::cout << std::endl;
+            }
+        }
 
         auto fg_ = std::make_shared<ifm3d::FrameGrabber>(cam_, mask, pcic_port_);
-
+        MLOGW("%s","try create fg_ done");
+        std::cout << std::endl;
         auto im_ = std::make_shared<ifm3d::StlImageBuffer>();
 
         ifm3d::SimpleImageBuffer::Ptr img = std::make_shared<ifm3d::SimpleImageBuffer>();
@@ -178,8 +286,25 @@ int main(){
 
 
 
+        MLOGW("%s","test");
+        std::cout << std::endl;
 
         fg_->SWTrigger();
+        for(int i = 0 ; i < 10;i++){
+            retval = fg_->WaitForFrame(img.get(),timeout_millis_);
+            if(retval){
+                std::cout << "get data"<<std::endl;
+                ifm3d::TimePointT timestamp = img->TimeStamp();
+                std::cout << "got camera("<<camera_ip_<<") frame, timestamp"
+                          << std::setw(2) << std::setfill('0')
+                          << ": " << formatTimestamp(timestamp)
+                          << std::endl;
+            }{
+                MLOGW("%s","fail to get data");
+                std::cout << std::endl;
+
+            }
+        }
         retval = fg_->WaitForFrame(img.get(),timeout_millis_);
 
         if(retval){
@@ -301,8 +426,9 @@ int main(){
 
             printf("extrinsics:[%.3f,%.3f,%.3f,%.3f,%.3f,%.3f]",extrinsics[0],extrinsics[1],extrinsics[2],extrinsics[3],extrinsics[4],extrinsics[5]);
         }else{
-            std::cout << "no data"<<std::endl;
+            MLOGW("%s","fail to get data");
 
+            std::cout << std::endl;
         }
 
         return 0;
