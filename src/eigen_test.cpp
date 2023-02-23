@@ -170,7 +170,6 @@ void test_1(){
     std::cout << "T2: \n" << T2.matrix()  << "\n";
     std::cout << "T3: \n" << T3.matrix()  << "\n";
 
-    return;
 
 
     q1.setIdentity();
@@ -196,6 +195,23 @@ void test_1(){
         std::cout << "(Q1 - Q2) diff = " << computeQuaternionDiff(Q1,Q2) << std::endl;
 
     }
+
+
+    Eigen::Vector3d pose(0.1,0.2,0.0);
+    Eigen::Vector3d next_pose = T3*pose;
+    Eigen::Vector3d normal_pose(0.9,0.1,0.0);
+    Eigen::Vector3d pose_end = pose + normal_pose;
+    Eigen::Vector3d next_pose_end = T3*pose_end;
+    Eigen::Vector3d next_normal_pose= T3*normal_pose;
+
+    Eigen::Vector3d normal_pose2 = next_pose_end - next_pose;
+
+    std::cout << "pose:\n" << pose << "\n";
+    std::cout << "next_pose:\n" << next_pose  << "\n";
+    std::cout << "normal_pose:\n" << normal_pose  << "\n norm: " << normal_pose.norm() << "\n";
+    std::cout << "next_normal_pose:\n" << next_normal_pose  << "\n norm: " << next_normal_pose.norm() << "\n";
+    std::cout << "normal_pose2:\n" << normal_pose2  << "\n norm: " << normal_pose2.norm() << "\n";
+
 
 
 }

@@ -11,7 +11,7 @@
 
 namespace transform{
     struct Transform2d{
-        float matrix[3][3] = {};
+        std::array<std::array<float, 3>,3> matrix;
         Transform2d(float x=0.0, float y=0.0,float yaw=0.0){
             set(x,y,yaw);
         }

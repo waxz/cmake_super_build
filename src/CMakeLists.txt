@@ -436,3 +436,6 @@ add_executable(eigen_test eigen_test.cpp)
 target_include_directories(eigen_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
 target_link_libraries(eigen_test PUBLIC liboptim)
 print_include_dir(eigen_test)
+
+add_executable(json_test json_test.cpp)
+target_include_directories(json_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
