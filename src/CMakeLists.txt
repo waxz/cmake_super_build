@@ -439,3 +439,8 @@ print_include_dir(eigen_test)
 
 add_executable(json_test json_test.cpp)
 target_include_directories(json_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
+
+
+add_executable(pcl_crop_to_hull pcl_crophull_segment_test.cpp)
+target_include_directories( pcl_crop_to_hull PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+target_link_libraries(pcl_crop_to_hull PUBLIC  Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
