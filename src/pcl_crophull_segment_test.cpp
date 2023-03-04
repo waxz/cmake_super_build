@@ -51,6 +51,14 @@
 #include <pcl/filters/voxel_grid.h> // for VoxelGrid
 
 
+#include <pcl/registration/transformation_estimation_point_to_plane.h>
+#include <pcl/console/parse.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/registration/icp.h>
+#include <pcl/registration/icp_nl.h>
+#include <pcl/registration/transformation_estimation_lm.h>
+#include <pcl/registration/warp_point_rigid_3d.h>
 
 using namespace pcl;
 using namespace pcl::io;
@@ -363,6 +371,33 @@ main (int argc, char** argv)
 
     }
 
+    {
+#if 0
+        using PointType = pcl::PointXYZ;
+
+        pcl::IterativeClosestPointNonLinear<PointType, PointType> icp;
+
+        pcl::registration::WarpPointRigid3D<PointType, PointType>::Ptr warp_fcn
+                (new pcl::registration::WarpPointRigid3D<PointType, PointType>);
+
+        // Create a TransformationEstimationLM object, and set the warp to it
+        pcl::registration::TransformationEstimationLM<PointType, PointType>::Ptr te (new pcl::registration::TransformationEstimationLM<PointType, PointType>);
+        te->setWarpFunction (warp_fcn);
+
+        // Pass the TransformationEstimation objec to the ICP algorithm
+        icp.setTransformationEstimation (te);
+
+        icp.setInputTarget (model);
+
+        icp.setInputSource (data);
+
+        CloudPtr tmp (new Cloud);
+        icp.align (*tmp);
+#endif
+
+
+
+    }
 
 
   return (0);

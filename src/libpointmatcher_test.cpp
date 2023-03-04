@@ -14,20 +14,119 @@ void validateArgs(int argc, char *argv[], bool& isCSV);
 int main(int argc, char *argv[])
 {
     bool isCSV = true;
-    validateArgs(argc, argv, isCSV);
 
     typedef PointMatcher<float> PM;
     typedef PM::DataPoints DP;
 
+    char * filename1 = "cloud.pcd";
+    char * filename2 = "cloud2.pcd";
+
     // Load point clouds
-    const DP ref(DP::load(argv[1]));
-    const DP data(DP::load(argv[2]));
+    const DP data(DP::load(filename1));
+    const DP ref(DP::load(filename2));
+
+    return 0;
+
 
     // Create the default ICP algorithm
     PM::ICP icp;
+    PointMatcherSupport::Parametrizable::Parameters params;
+    std::string name;
+
+    // Prepare reading filters
+    name = "MinDistDataPointsFilter";
+    params["minDist"] = "1.0";
+    std::shared_ptr<PM::DataPointsFilter> minDist_read =
+            PM::get().DataPointsFilterRegistrar.create(name, params);
+    params.clear();
+
+    name = "RandomSamplingDataPointsFilter";
+    params["prob"] = "0.05";
+    std::shared_ptr<PM::DataPointsFilter> rand_read =
+            PM::get().DataPointsFilterRegistrar.create(name, params);
+    params.clear();
+
+    // Prepare reference filters
+    name = "MinDistDataPointsFilter";
+    params["minDist"] = "1.0";
+    std::shared_ptr<PM::DataPointsFilter> minDist_ref =
+            PM::get().DataPointsFilterRegistrar.create(name, params);
+    params.clear();
+
+    name = "RandomSamplingDataPointsFilter";
+    params["prob"] = "0.05";
+    std::shared_ptr<PM::DataPointsFilter> rand_ref =
+            PM::get().DataPointsFilterRegistrar.create(name, params);
+    params.clear();
+
+    // Prepare matching function
+    name = "KDTreeMatcher";
+    params["knn"] = "1";
+    params["epsilon"] = "3.16";
+    std::shared_ptr<PM::Matcher> kdtree =
+            PM::get().MatcherRegistrar.create(name, params);
+    params.clear();
+
+    // Prepare outlier filters
+    name = "TrimmedDistOutlierFilter";
+    params["ratio"] = "0.75";
+    std::shared_ptr<PM::OutlierFilter> trim =
+            PM::get().OutlierFilterRegistrar.create(name, params);
+    params.clear();
+
+    // Prepare error minimization
+    name = "PointToPointErrorMinimizer";
+    std::shared_ptr<PM::ErrorMinimizer> pointToPoint =
+            PM::get().ErrorMinimizerRegistrar.create(name);
+
+    // Prepare transformation checker filters
+    name = "CounterTransformationChecker";
+    params["maxIterationCount"] = "150";
+    std::shared_ptr<PM::TransformationChecker> maxIter =
+            PM::get().TransformationCheckerRegistrar.create(name, params);
+    params.clear();
+
+    name = "DifferentialTransformationChecker";
+    params["minDiffRotErr"] = "0.001";
+    params["minDiffTransErr"] = "0.01";
+    params["smoothLength"] = "4";
+    std::shared_ptr<PM::TransformationChecker> diff =
+            PM::get().TransformationCheckerRegistrar.create(name, params);
+    params.clear();
+
+    // Prepare inspector
+    std::shared_ptr<PM::Inspector> nullInspect =
+            PM::get().InspectorRegistrar.create("NullInspector");
+
+
+// Prepare transformation
+    std::shared_ptr<PM::Transformation> rigidTrans =
+            PM::get().TransformationRegistrar.create("RigidTransformation");
+
+    // Build ICP solution
+    icp.readingDataPointsFilters.push_back(minDist_read);
+    icp.readingDataPointsFilters.push_back(rand_read);
+
+    icp.referenceDataPointsFilters.push_back(minDist_ref);
+    icp.referenceDataPointsFilters.push_back(rand_ref);
+
+    icp.matcher = kdtree;
+
+    icp.outlierFilters.push_back(trim);
+
+    icp.errorMinimizer = pointToPoint;
+
+    icp.transformationCheckers.push_back(maxIter);
+    icp.transformationCheckers.push_back(diff);
+
+    // toggle to write vtk files per iteration
+    icp.inspector = nullInspect;
+    //icp.inspector = vtkInspect;
+
+    icp.transformations.push_back(rigidTrans);
 
     // See the implementation of setDefault() to create a custom ICP algorithm
-    icp.setDefault();
+//    icp.setDefault();
 
     // Compute the transformation to express data in ref
     PM::TransformationParameters T = icp(data, ref);

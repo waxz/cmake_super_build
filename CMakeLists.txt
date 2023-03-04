@@ -41,7 +41,7 @@ find_package(Eigen3 3.4.0 REQUIRED HINTS ${Eigen3_ROOT})
 message(new eigen: EIGEN3_INCLUDE_DIRS : ${EIGEN3_INCLUDE_DIRS} )
 
 
-build_external_project(Ceres lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver-2.1.0.tar.gz  -DEigen3_ROOT=${Eigen3_ROOT} -DCMAKE_BUILD_TYPE=Debug -DMINIGLOG=ON -DGFLAGS=OFF -DSUITESPARSE=OFF -DBUILD_EXAMPLES=OFF)
+build_external_project(Ceres lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver-2.1.0.tar.gz  -DEigen3_ROOT=${Eigen3_ROOT} -DCMAKE_BUILD_TYPE=Release -DMINIGLOG=ON -DGFLAGS=OFF -DSUITESPARSE=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCUMENTATION=OFF)
 find_package(Ceres  REQUIRED)
 message(Ceres_ROOT : ${Ceres_ROOT} ,CERES_LIBRARIES : ${CERES_LIBRARIES} )
 #find_opencv(/home/waxz/dev/docker/docker_dev/share/opencv/install 4.6.0)
@@ -77,7 +77,7 @@ message(cppzmq_DIR : ${cppzmq_DIR} , cppzmq_INCLUDE_DIR : ${cppzmq_INCLUDE_DIR})
 
 
 # TBB
-build_external_project(TBB lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/oneTBB-2021.7.0-rc1.tar.gz -DCMAKE_BUILD_TYPE=Release -DTBB_TEST=OFF)
+build_external_project(TBB lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/oneTBB-2021.8.0.tar.gz -DCMAKE_BUILD_TYPE=Release -DTBB_TEST=OFF -DTBB_USE_DEBUG=0)
 find_package(TBB REQUIRED)
 
 # flatbuffers FlatBuffersConfig.cmake
@@ -166,7 +166,7 @@ find_package(tinyxml2 REQUIRED)
 #build_external_project(mv-lm-icp lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mv-lm-icp-master-all.zip  -DCMAKE_BUILD_TYPE=Release  )
 #find_package(mv-lm-icp REQUIRED)
 
-build_external_project(PCL lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pcl-pcl-1.12.1.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_examples=OFF -DBUILD_apps=OFF -DBUILD_global_tests=OFF -DBUILD_simulation=OFF)
+build_external_project(PCL lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pcl-pcl-1.12.1.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_examples=OFF -DBUILD_apps=OFF -DBUILD_global_tests=OFF -DBUILD_simulation=OFF -DBUILD_tools=OFF)
 find_package(PCL REQUIRED)
 
 #ifm3d-0.93.0.zip
@@ -200,8 +200,8 @@ find_package(octomap REQUIRED)
 build_external_project(libnabo lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libnabo-master.zip  -DCMAKE_BUILD_TYPE=Release -DBUILD_TYPE=cmake -Dcatkin_DIR=/opt/ros/noetic/share/catkin/cmake )
 find_package(libnabo REQUIRED)
 
-# libpointmatcher-master.zip
-build_external_project(libpointmatcher lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpointmatcher-master.zip -DBUILD_TYPE=cmake -DCMAKE_BUILD_TYPE=Release -Dlibnabo_ROOT=${libnabo_ROOT}  )
+# libpointmatcher-master.zip -DEIGEN_INCLUDE_DIR=${EIGEN3_INCLUDE_DIRS}
+build_external_project(libpointmatcher lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpointmatcher-master.zip -DBUILD_TYPE=cmake -DCMAKE_BUILD_TYPE=Release -Dlibnabo_ROOT=${libnabo_ROOT} -DSHARED_LIBS=OFF )
 
 find_package(libpointmatcher REQUIRED)
 
@@ -285,6 +285,11 @@ find_package(CycloneDDS-CXX REQUIRED)
 #cmake .. -DCMAKE_BUILD_TYPE=Release -DECAL_THIRDPARTY_BUILD_PROTOBUF=OFF -DECAL_THIRDPARTY_BUILD_CURL=OFF -DECAL_THIRDPARTY_BUILD_HDF5=OFF -DECAL_THIRDPARTY_BUILD_QWT=OFF
 #build_external_project(ecal lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ecal-5.11.2.zip  -DCMAKE_BUILD_TYPE=Release -DECAL_THIRDPARTY_BUILD_PROTOBUF=OFF -DECAL_THIRDPARTY_BUILD_CURL=OFF -DECAL_THIRDPARTY_BUILD_HDF5=OFF -DECAL_THIRDPARTY_BUILD_QWT=OFF)
 #find_package(ecal REQUIRED)
+
+#PLplot-plplot-5.13.0.tar.gz
+build_external_project(plplot lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/PLplot-plplot-5.13.0.tar.gz -DCMAKE_BUILD_TYPE=Release)
+find_package(plplot REQUIRED)
+
 
 include(cmake/set_ros.cmake)
 

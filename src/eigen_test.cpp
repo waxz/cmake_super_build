@@ -62,6 +62,20 @@ Eigen::Transform<FloatType,3,Eigen::Isometry> createSe3(FloatType tx, FloatType 
 
 }
 
+template<typename FloatType>
+void extractSe3(const Eigen::Transform<FloatType,3,Eigen::Isometry>& transform, FloatType& tx, FloatType& ty, FloatType& tz, FloatType& qw, FloatType& qx, FloatType& qy, FloatType& qz){
+
+    tx = transform.translation()(0);
+    ty = transform.translation()(1);
+    tz = transform.translation()(2);
+    Eigen::Quaternion<FloatType> Q(transform.rotation());
+    qw = Q.w();
+    qx = Q.x();
+    qy = Q.y();
+    qz = Q.z();
+
+}
+
 
 //https://math.stackexchange.com/questions/90081/quaternion-distance
 template<typename FloatType>
@@ -213,6 +227,20 @@ void test_1(){
     std::cout << "normal_pose2:\n" << normal_pose2  << "\n norm: " << normal_pose2.norm() << "\n";
 
 
+    {
+
+        auto Q6  =createQuaternion(0.2,0.3,0.4);
+        float qw = Q6.w(), qx = Q6.x(), qy = Q6.y(), qz = Q6.z();
+        float tx = 0.1 , ty = 0.2, tz =0.3;
+        printf("createSe3 : %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f\n",tx, ty, tz, qw, qx, qy, qz);
+
+        auto T6 = createSe3<float>(tx, ty, tz, qw, qx, qy, qz);
+
+
+        extractSe3<float>(T6, tx, ty, tz, qw, qx, qy, qz);
+        printf("extractSe3 : %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f\n",tx, ty, tz, qw, qx, qy, qz);
+
+    }
 
 }
 
@@ -278,7 +306,7 @@ int main(int argc, char** argv){
 
     test_1();
 //    test_2();
-    test_3();
+//    test_3();
 
 
 }

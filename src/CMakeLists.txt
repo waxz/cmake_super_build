@@ -357,10 +357,11 @@ set_omp(pcl_test)
 
 
 
+message(libnabo_LIBRARIES ${libnabo_LIBRARIES})
 add_executable(libpointmatcher_test  libpointmatcher_test.cpp)
-target_include_directories( libpointmatcher_test PUBLIC  ${libpointmatcher_INCLUDE_DIRS}  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
-target_link_libraries(libpointmatcher_test PUBLIC ${Boost_LIBRARIES} ${libpointmatcher_LIBRARIES} pcl_norm_2d Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
-
+target_include_directories( libpointmatcher_test PUBLIC  ${libpointmatcher_INCLUDE_DIRS}  ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  )
+target_link_libraries(libpointmatcher_test PUBLIC ${Boost_LIBRARIES} ${libpointmatcher_LIBRARIES}  )
+#target_link_directories(libpointmatcher_test PUBLIC  ${libnabo_ROOT}/lib)
 
 add_library(log_test_lib log_test_lib.cpp)
 target_include_directories( log_test_lib PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
@@ -444,3 +445,23 @@ target_include_directories(json_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE
 add_executable(pcl_crop_to_hull pcl_crophull_segment_test.cpp)
 target_include_directories( pcl_crop_to_hull PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
 target_link_libraries(pcl_crop_to_hull PUBLIC  Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
+
+
+add_executable(foonathan_memory_example foonathan_memory_example.cpp)
+target_include_directories( foonathan_memory_example PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+target_link_libraries(foonathan_memory_example PUBLIC   foonathan_memory Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
+
+
+add_executable(likely_test likely_test.cpp)
+target_include_directories( likely_test PUBLIC  ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  )
+target_link_libraries(likely_test PUBLIC   foonathan_memory)
+
+
+add_executable(next_icp next_icp.cpp)
+target_include_directories( next_icp PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+target_link_libraries(next_icp PUBLIC  ${CERES_LIBRARIES}  Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
+
+
+add_subdirectory(tbb)
+
+add_subdirectory(gui)
