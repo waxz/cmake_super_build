@@ -1,5 +1,8 @@
-cmake super build
+# cmake super build
 
+This project demonstrates how to use cmake to compile various open source libraries. In addition to this, sample code is written as an introductory tutorial.
+
+### cmake tips
 1. set c++ standard, linker flag, cmake variable
 ```cmake
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -127,6 +130,12 @@ set_asan(cmake_super_build)
 ```
 
 
-### links
+### libraries
+- https://github.com/oneapi-src/oneTBB
+- https://github.com/ceres-solver/ceres-solver
+- https://github.com/PointCloudLibrary/pcl
 - https://github.com/TartanLlama/optional
 - https://github.com/gulrak/filesystem
+- https://abseil.io/about/intro
+- https://github.com/eProsima/Fast-DDS
+- https://github.com/eclipse-cyclonedds/cyclonedds-cxx
