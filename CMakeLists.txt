@@ -286,8 +286,8 @@ find_package(CycloneDDS-CXX REQUIRED)
 #build_external_project(ecal lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ecal-5.11.2.zip  -DCMAKE_BUILD_TYPE=Release -DECAL_THIRDPARTY_BUILD_PROTOBUF=OFF -DECAL_THIRDPARTY_BUILD_CURL=OFF -DECAL_THIRDPARTY_BUILD_HDF5=OFF -DECAL_THIRDPARTY_BUILD_QWT=OFF)
 #find_package(ecal REQUIRED)
 
-#PLplot-plplot-5.13.0.tar.gz
-build_external_project(plplot lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/PLplot-plplot-5.13.0.tar.gz -DCMAKE_BUILD_TYPE=Release)
+#plplot-5.15.0.tar.gz
+build_external_project(plplot lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/plplot-5.15.0.tar.gz -DCMAKE_BUILD_TYPE=Release)
 find_package(plplot REQUIRED)
 
 
