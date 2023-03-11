@@ -354,6 +354,10 @@ target_link_libraries(pcl_test PUBLIC pcl_norm_2d Matplot++::matplot ${PCL_LIBRA
 
 
 set_omp(pcl_test)
+add_executable(pcl_icp_test pcl_icp_test.cpp   icp/pcl_icp_with_normal.cpp )
+
+target_include_directories( pcl_icp_test PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+target_link_libraries(pcl_icp_test PUBLIC   Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
 
 
 
