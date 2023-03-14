@@ -49,7 +49,7 @@ namespace icp{
 
         float compute(CloudT::Ptr src, CloudT::Ptr tgt,CloudT::Ptr align,  Eigen::Matrix4f& init_pose, Eigen::Matrix4f& final_pose );
 
-        void setReject(float max_dist, float min_normal_cos);
+        void setReject(int max_iter ,int ransac_iter , float reject_max_dist, float match_max_dist, float ransac_max_dist, float min_normal_cos);
     private:
         pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> icp;
 

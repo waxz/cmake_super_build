@@ -8,10 +8,17 @@ namespace icp{
         te->setWarpFunction(warp_func);
         icp.setTransformationEstimation(te);
 
-        icp.setUseSymmetricObjective(true);
-        icp.setUseReciprocalCorrespondences(true);
+//        icp.setUseSymmetricObjective(true);
+//        icp.setUseReciprocalCorrespondences(true);
 
-        setReject(0.5,0.5);
+
+
+        icp.setEuclideanFitnessEpsilon(1e-6);
+        icp.setTransformationRotationEpsilon(1e-8);
+        icp.setTransformationEpsilon(1e-8);
+
+
+
 
 
         icp.addCorrespondenceRejector (cor_rej_dist);
@@ -25,9 +32,14 @@ namespace icp{
 
     }
 
-    void PclIcpWithNormal::setReject(float max_dist, float min_normal_cos){
-        cor_rej_dist->setMaximumDistance(max_dist);
+    void PclIcpWithNormal::setReject(int max_iter,int ransac_iter ,float reject_max_dist, float match_max_dist, float ransac_max_dist,  float min_normal_cos){
+        icp.setMaximumIterations(max_iter);
+        icp.setRANSACIterations(ransac_iter);
+        cor_rej_dist->setMaximumDistance(reject_max_dist);
         cor_rej_norm->setThreshold(min_normal_cos);
+        icp.setMaxCorrespondenceDistance(match_max_dist);
+        icp.setRANSACOutlierRejectionThreshold(ransac_max_dist);
+
     }
 
 

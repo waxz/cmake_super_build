@@ -83,6 +83,7 @@
 
 #include "icp/pcl_icp_with_normal.h"
 
+#include "math/random.h"
 
 int main(int argc, char** argv){
     using ICPTYPE = pcl::registration::TransformationEstimationPointToPlane<pcl::PointNormal, pcl::PointNormal>;
@@ -90,6 +91,7 @@ int main(int argc, char** argv){
     using ICPCensType =  pcl::registration::CorrespondenceEstimation<pcl::PointNormal, pcl::PointNormal, float>;
 
     // read file
+
     pcl::PointCloud<pcl::PointNormal>::Ptr  t_reading(new pcl::PointCloud<pcl::PointNormal>);
     pcl::PointCloud<pcl::PointNormal>::Ptr  t_input(new pcl::PointCloud<pcl::PointNormal>);
 
@@ -102,70 +104,76 @@ int main(int argc, char** argv){
         return 0;
     }
 
-    Eigen::Matrix4f true_transform(Eigen::Matrix4f::Identity ());
 
-    transform::Transform2d est_pose(0.05,0.03,0.14);
+    for(int i = 0; i < 100; i++){
+        Eigen::Matrix4f true_transform(Eigen::Matrix4f::Identity ());
 
-    true_transform(0, 0) = est_pose.matrix[0][0];
-    true_transform(0, 1) = est_pose.matrix[0][1];
-    true_transform(1, 0) = est_pose.matrix[1][0];
-    true_transform(1, 1) = est_pose.matrix[1][1];
-    true_transform(0, 3) = est_pose.matrix[0][2];
-    true_transform(1, 3) = est_pose.matrix[1][2];
+        transform::Transform2d est_pose(0.1,0.06,0.14);
 
-    pcl::transformPointCloud( *t_reading, *t_cloud, true_transform );
+        true_transform(0, 0) = est_pose.matrix[0][0];
+        true_transform(0, 1) = est_pose.matrix[0][1];
+        true_transform(1, 0) = est_pose.matrix[1][0];
+        true_transform(1, 1) = est_pose.matrix[1][1];
+        true_transform(0, 3) = est_pose.matrix[0][2];
+        true_transform(1, 3) = est_pose.matrix[1][2];
+
+        pcl::transformPointCloud( *t_reading, *t_cloud, true_transform );
 
 
 
-    {
-        int valid_num = 0;
-        t_input->points.resize(t_reading->size());
 
-        for(size_t i = 0 ; i < t_reading->size();  i++){
-            auto & p = t_reading->at(i);
-            bool valid = sqrt(p.x * p.x + p.y*p.y) < 15;
+        {
+            int valid_num = 0;
+            t_input->points.resize(t_reading->size());
 
-            t_input->points[valid_num] = p;
+            for(size_t i = 0 ; i < t_reading->size();  i++){
+                auto & p = t_reading->at(i);
+                bool valid = sqrt(p.x * p.x + p.y*p.y) < 15;
 
-            valid_num += valid;
+                t_input->points[valid_num] = p;
+
+                t_input->points[valid_num].x += math::normal_real<float>(0.0f,0.005) +  ( ( ((i%100) > 0) && ((i%100) < 10)) ? 1.0: 0.0 );
+                t_input->points[valid_num].y += math::normal_real<float>(0.0f,0.005) + ( ( ((i%100) > 0) && ((i%100) < 10)) ? 1.0: 0.0 );
+
+                valid_num += valid;
+            }
+
+            t_input->height = 1;
+            t_input->width = valid_num;
+            t_input->points.resize(valid_num);
+
         }
 
-        t_input->height = 1;
-        t_input->width = valid_num;
-        t_input->points.resize(valid_num);
-
-    }
 
 
-
-    ICPTYPE::Ptr m_pl_te(new ICPTYPE);
-    ICPWarpType::Ptr m_warp_fcn_pl(new ICPWarpType);
-    ICPCensType::Ptr cens (new ICPCensType);
-
-
-    
-    pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> m_pl_icp;
-
-    m_pl_te->setWarpFunction(m_warp_fcn_pl);
+        ICPTYPE::Ptr m_pl_te(new ICPTYPE);
+        ICPWarpType::Ptr m_warp_fcn_pl(new ICPWarpType);
+        ICPCensType::Ptr cens (new ICPCensType);
 
 
-    m_pl_icp.setTransformationEstimation(m_pl_te);
 
-    Eigen::Matrix4f initial_guess(Eigen::Matrix4f::Identity ());
+        pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> m_pl_icp;
 
-    // rejector
+        m_pl_te->setWarpFunction(m_warp_fcn_pl);
 
-    pcl::registration::CorrespondenceRejectorOneToOne::Ptr cor_rej_o2o (new pcl::registration::CorrespondenceRejectorOneToOne);
 
-    pcl::registration::CorrespondenceRejectorVarTrimmed::Ptr cor_rej_var (new pcl::registration::CorrespondenceRejectorVarTrimmed);
+        m_pl_icp.setTransformationEstimation(m_pl_te);
 
-    pcl::registration::CorrespondenceRejectorSurfaceNormal::Ptr cor_rej_norm (new pcl::registration::CorrespondenceRejectorSurfaceNormal);
+        Eigen::Matrix4f initial_guess(Eigen::Matrix4f::Identity ());
 
-    pcl::registration::CorrespondenceRejectorTrimmed::Ptr cor_rej_tri (new pcl::registration::CorrespondenceRejectorTrimmed);
-    pcl::registration::CorrespondenceRejectorDistance::Ptr cor_rej_dist (new pcl::registration::CorrespondenceRejectorDistance);
-    pcl::registration::CorrespondenceRejectorMedianDistance::Ptr cor_rej_median_dist (new pcl::registration::CorrespondenceRejectorMedianDistance);
+        // rejector
 
-    cor_rej_dist->setMaximumDistance(0.5);
+        pcl::registration::CorrespondenceRejectorOneToOne::Ptr cor_rej_o2o (new pcl::registration::CorrespondenceRejectorOneToOne);
+
+        pcl::registration::CorrespondenceRejectorVarTrimmed::Ptr cor_rej_var (new pcl::registration::CorrespondenceRejectorVarTrimmed);
+
+        pcl::registration::CorrespondenceRejectorSurfaceNormal::Ptr cor_rej_norm (new pcl::registration::CorrespondenceRejectorSurfaceNormal);
+
+        pcl::registration::CorrespondenceRejectorTrimmed::Ptr cor_rej_tri (new pcl::registration::CorrespondenceRejectorTrimmed);
+        pcl::registration::CorrespondenceRejectorDistance::Ptr cor_rej_dist (new pcl::registration::CorrespondenceRejectorDistance);
+        pcl::registration::CorrespondenceRejectorMedianDistance::Ptr cor_rej_median_dist (new pcl::registration::CorrespondenceRejectorMedianDistance);
+
+        cor_rej_dist->setMaximumDistance(0.5);
 
 
 //    cens->setInputSource (t_input);
@@ -178,45 +186,69 @@ int main(int argc, char** argv){
 
 
 
-    // two point normal vector cross product, aka cos (angle), should be lager than thresh
-    cor_rej_norm->setThreshold(0.5);
+        // two point normal vector cross product, aka cos (angle), should be lager than thresh
+        cor_rej_norm->setThreshold(0.5);
 
-    cor_rej_median_dist->setMedianFactor(0.8);
+        cor_rej_median_dist->setMedianFactor(0.8);
 
 
-    cor_rej_tri->setOverlapRatio(0.5);
+        cor_rej_tri->setOverlapRatio(0.5);
 
 //    m_pl_icp.addCorrespondenceRejector (cor_rej_o2o);
 //    m_pl_icp.addCorrespondenceRejector (cor_rej_var);
-    m_pl_icp.addCorrespondenceRejector (cor_rej_norm);
+        m_pl_icp.addCorrespondenceRejector (cor_rej_norm);
 //    m_pl_icp.addCorrespondenceRejector (cor_rej_tri);
-    m_pl_icp.addCorrespondenceRejector (cor_rej_dist);
+        m_pl_icp.addCorrespondenceRejector (cor_rej_dist);
 //    m_pl_icp.addCorrespondenceRejector (cor_rej_median_dist);
 
 
 
-    m_pl_icp.setCorrespondenceEstimation (cens);
+        m_pl_icp.setCorrespondenceEstimation (cens);
 
-    m_pl_icp.setInputSource(t_input);
-    m_pl_icp.setInputTarget(t_cloud);
-    m_pl_icp.setUseSymmetricObjective(true);
-    m_pl_icp.setUseReciprocalCorrespondences(true);
+        m_pl_icp.setInputSource(t_input);
+        m_pl_icp.setInputTarget(t_cloud);
+        m_pl_icp.setUseSymmetricObjective(true);
+        m_pl_icp.setUseReciprocalCorrespondences(true);
 
-    m_pl_icp.align(*t_align, initial_guess);
+        m_pl_icp.align(*t_align, initial_guess);
 
-    icp::PclIcpWithNormal pl_icp;
-    Eigen::Matrix4f final_pose(Eigen::Matrix4f::Identity ());
-
-
-
-    Eigen::Matrix4f result_pose = m_pl_icp.getFinalTransformation();
-    std::cout << "true_transform:\n" << true_transform << std::endl;
-
-    std::cout << "getFinalTransformation:\n" << result_pose << std::endl;
+        icp::PclIcpWithNormal pl_icp;
+        Eigen::Matrix4f final_pose(Eigen::Matrix4f::Identity ());
 
 
-    pl_icp.compute(t_input, t_cloud, t_align, initial_guess, final_pose);
-    std::cout << "final_pose:\n" << final_pose << std::endl;
+
+        Eigen::Matrix4f result_pose = m_pl_icp.getFinalTransformation();
+        std::cout << "true_transform:\n" << true_transform << std::endl;
+
+        float score_1 = m_pl_icp.getFitnessScore();
+        std::cout << "getFinalTransformation:\n" << result_pose << "\n score: " << score_1<< std::endl;
+
+        pl_icp.setReject(50, 1, 0.3, 0.3, 0.3, 0.8);
+
+        float score_2 = pl_icp.compute(t_input, t_cloud, t_align, initial_guess, final_pose);
+        std::cout << "final_pose:\n" << final_pose << "\n score: " << score_2 << std::endl;
+
+        float error_1 = (true_transform.inverse()*result_pose)(0,3);
+        float error_2 = (true_transform.inverse()*final_pose)(0,3);
+
+        float error_3 = (true_transform.inverse()*result_pose)(1,3);
+        float error_4 = (true_transform.inverse()*final_pose)(1,3);
+
+        printf("error [%.3f, %.3f] vs [%.3f, %.3f]\n", error_1,error_3, error_2, error_4);
+        if(
+//                abs(error_1) > 0.01 || abs(error_2) > 0.01 ||
+
+                 abs(error_2) > 0.01 || abs(error_4) > 0.01
+
+                 ){
+            std::cout << "fail at " << i << std::endl;
+            break;
+        }
+
+
+    }
+    pcl::io::savePCDFileASCII("t_input.pcd", *t_input);
+
 
 
 }
