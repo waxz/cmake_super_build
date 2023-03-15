@@ -75,6 +75,9 @@
 
 #include <pcl/common/transforms.h>
 
+
+#include <pcl/console/time.h>
+
 #include "warp_point_rigid_3d_v2.h"
 
 
@@ -105,6 +108,13 @@ int main(int argc, char** argv){
     }
 
 
+    float stddev = 0.005;
+    int per = 10;
+    if(argc > 2){
+        stddev = atof(argv[1]);
+
+        per = atoi(argv[2]);
+    }
     for(int i = 0; i < 100; i++){
         Eigen::Matrix4f true_transform(Eigen::Matrix4f::Identity ());
 
@@ -132,8 +142,8 @@ int main(int argc, char** argv){
 
                 t_input->points[valid_num] = p;
 
-                t_input->points[valid_num].x += math::normal_real<float>(0.0f,0.005) +  ( ( ((i%100) > 0) && ((i%100) < 10)) ? 1.0: 0.0 );
-                t_input->points[valid_num].y += math::normal_real<float>(0.0f,0.005) + ( ( ((i%100) > 0) && ((i%100) < 10)) ? 1.0: 0.0 );
+                t_input->points[valid_num].x += math::normal_real<float>(0.0f,stddev) +  ( ( ((i%100) > 0) && ((i%100) < per)) ? 1.0: 0.0 );
+                t_input->points[valid_num].y += math::normal_real<float>(0.0f,stddev) + ( ( ((i%100) > 0) && ((i%100) < per)) ? 1.0: 0.0 );
 
                 valid_num += valid;
             }
@@ -210,11 +220,18 @@ int main(int argc, char** argv){
         m_pl_icp.setUseSymmetricObjective(true);
         m_pl_icp.setUseReciprocalCorrespondences(true);
 
+
+        pcl::console::TicToc tt;
+
+        tt.tic ();
+
         m_pl_icp.align(*t_align, initial_guess);
+        printf("icp 1 use %g ms",  tt.toc ());
 
         icp::PclIcpWithNormal pl_icp;
-        Eigen::Matrix4f final_pose(Eigen::Matrix4f::Identity ());
 
+
+        Eigen::Matrix4f final_pose(Eigen::Matrix4f::Identity ());
 
 
         Eigen::Matrix4f result_pose = m_pl_icp.getFinalTransformation();
@@ -225,7 +242,11 @@ int main(int argc, char** argv){
 
         pl_icp.setReject(50, 1, 0.3, 0.3, 0.3, 0.8);
 
+        tt.tic ();
+
         float score_2 = pl_icp.compute(t_input, t_cloud, t_align, initial_guess, final_pose);
+        printf("icp 2 use %g ms",  tt.toc ());
+
         std::cout << "final_pose:\n" << final_pose << "\n score: " << score_2 << std::endl;
 
         float error_1 = (true_transform.inverse()*result_pose)(0,3);

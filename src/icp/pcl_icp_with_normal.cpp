@@ -13,7 +13,7 @@ namespace icp{
 
 
 
-        icp.setEuclideanFitnessEpsilon(1e-6);
+        icp.setEuclideanFitnessEpsilon(1e-7);
         icp.setTransformationRotationEpsilon(1e-8);
         icp.setTransformationEpsilon(1e-8);
 

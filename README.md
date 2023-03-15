@@ -2,6 +2,10 @@
 
 This project demonstrates how to use cmake to compile various open source libraries. In addition to this, sample code is written as an introductory tutorial.
 
+##### support by [JetBrains Open Source Development - Community Support](https://www.jetbrains.com/community/opensource/#support)
+<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo (Main) logo." width="100">
+<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/CLion_icon.png" alt="JetBrains Logo CLion logo." width="100">
+
 ### cmake tips
 1. set c++ standard, linker flag, cmake variable
 ```cmake
