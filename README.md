@@ -133,6 +133,24 @@ target_link_libraries(cmake_super_build PUBLIC
 set_asan(cmake_super_build)
 ```
 
+5. ros environment setup
+
+set Build-Execution-Deployment, cmake, environment
+```sh
+LD_LIBRARY_PATH=/opt/ros/noetic/lib;ROS_HOME=/tmp
+```
+if you build and run code in docker, setup environment in docker container settings
+```sh
+LD_LIBRARY_PATH=/opt/ros/noetic/lib;ROS_HOME=/tmp;ROS_MASTER_URI=http://172.20.0.1:11311
+```
+in `CMakeLists.txt`
+```
+add_executable(ros_init_node ros_init_node.cpp)
+add_ros(ros_init_node roscpp)
+```
+
+
+
 
 ### libraries
 - https://github.com/oneapi-src/oneTBB
@@ -143,3 +161,4 @@ set_asan(cmake_super_build)
 - https://abseil.io/about/intro
 - https://github.com/eProsima/Fast-DDS
 - https://github.com/eclipse-cyclonedds/cyclonedds-cxx
+- https://github.com/arsenm/sanitizers-cmake
