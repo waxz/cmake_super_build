@@ -15,6 +15,71 @@
 
 
 #include "common/suspend.h"
+#include "common/string_logger.h"
+
+struct RosNode{
+    std::map<std::string, std::tuple<std::shared_ptr<ros::CallbackQueue>,
+            bool,
+            std::shared_ptr<ros::NodeHandle>,
+            std::shared_ptr<ros::Subscriber>
+
+            >> callback_queues;
+
+    template<typename T>
+    void addSub(const std::string& topic, T *data){
+        auto it = callback_queues.find(topic);
+        if(it == callback_queues.end()){
+
+            std::cout << "creat sub " << topic << std::endl;
+
+            std::shared_ptr<ros::CallbackQueue> q = std::make_shared<ros::CallbackQueue>();
+
+            std::shared_ptr<ros::NodeHandle> n = std::make_shared<ros::NodeHandle>();
+            std::shared_ptr<ros::Subscriber> sub = std::make_shared<ros::Subscriber>();
+
+
+            std::tie(it,std::ignore )= callback_queues.emplace(topic,std::make_tuple(q, false, n, sub));
+
+
+            bool& rt = std::get<1>(it->second);
+
+
+            n->setCallbackQueue(q.get());
+            ros::SubscribeOptions ops;
+            // pointer should be copied by value
+            // reference should be copied by reference
+            auto cb = [data,&rt] (typename T::ConstPtr msg) mutable {
+                *data = *msg;
+                rt = true;
+            };
+//            *sub = n->subscribe<T>(topic, 1, cb);
+
+            ops.template init<std_msgs::Header>(topic, 10, cb);
+            ops.allow_concurrent_callbacks = true;
+            *sub = n->subscribe(ops);
+
+
+        }else{
+
+
+        }
+
+    }
+
+    bool getDta(const std::string& topic,double t = 0.05){
+        auto it = callback_queues.find(topic);
+        if(it == callback_queues.end()){
+            return false;
+        }else{
+            std::shared_ptr<ros::CallbackQueue> q = std::get<0>(it->second);
+            auto& rt = std::get<1>(it->second);
+            rt = false;
+            q->callAvailable(ros::WallDuration(t));
+            return rt;
+        }
+        return false;
+    }
+};
 
 
 int main(int argc, char** argv) {
@@ -42,11 +107,32 @@ int main(int argc, char** argv) {
             msg.frame_id = ss.str();
 //            ROS_INFO("send %s : %s", topic, msg.frame_id.c_str());
             chatter_pub.publish(msg);
-            s.sleep(0.1);
+            s.sleep(2000);
         }
     });
 
 
+
+    std_msgs::Header msg;
+    RosNode node;
+    std::cout << "&msg_2" << &msg << std::endl;
+
+//    node.addSub("chatter",msg);
+    node.addSub("chatter",&msg);
+    common::Suspend s;
+
+    while (ros::ok()){
+
+        bool rt = node.getDta("chatter");
+
+        if(rt){
+            std::cout << "=== node get data [" << msg.frame_id << "]" << std::endl;
+        }
+        s.sleep(1000);
+
+    }
+
+    return 0;
 
     std::thread t2([]{
         ros::NodeHandle n;
@@ -181,9 +267,8 @@ int main(int argc, char** argv) {
 
     });
 
-    if(t1.joinable()){
-        t1.join();
-    }
+
+
 
     if(t2.joinable()){
         t2.join();
