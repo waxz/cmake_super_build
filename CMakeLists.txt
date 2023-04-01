@@ -8,6 +8,7 @@ include(cmake/find_opencv_helper.cmake)
 set(CMAKE_CXX_STANDARD  14)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/sanitizers")
 
 
 # 设置生成的安装包名字
@@ -291,8 +292,21 @@ find_package(CycloneDDS-CXX REQUIRED)
 build_external_project(plplot lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/plplot-5.15.0.tar.gz -DCMAKE_BUILD_TYPE=Release)
 find_package(plplot REQUIRED)
 
+#FakeIt-2.3.2.zip
+#build_external_project(FakeIt lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/FakeIt-2.3.2.zip -DCMAKE_BUILD_TYPE=Release)
+#find_package(FakeIt REQUIRED)
+
 
 include(cmake/set_ros.cmake)
+
+find_package(Boost
+        1.71.0      # Minimum or EXACT version e.g. 1.67.0
+        REQUIRED            # Fail with error if Boost is not found
+        COMPONENTS thread chrono filesystem
+        )
+
+message(Boost_LIBRARIES = ${Boost_LIBRARIES})
+
 
 add_subdirectory(src)
 

@@ -43,7 +43,11 @@ find_package(Boost 1.58 REQUIRED COMPONENTS system filesystem thread program_opt
 
 
 
-#add_executable(ros_init_node ros_init_node.cpp)
+add_executable(ros_init_node ros_init_node.cpp)
+add_ros(ros_init_node roscpp)
+target_include_directories(ros_init_node PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+set_asan(ros_init_node)
+
 #target_link_directories(ros_init_node PUBLIC /home/waxz/dev/roscpp_src/install_isolated/lib )
 #target_link_libraries(ros_init_node PUBLIC
 #        roscpp xmlrpcpp rosconsole cpp_common rostime roscpp_serialization
@@ -469,3 +473,29 @@ target_link_libraries(next_icp PUBLIC  ${CERES_LIBRARIES}  Matplot++::matplot ${
 add_subdirectory(tbb)
 
 add_subdirectory(gui)
+set(SANITIZE_ADDRESS ON)
+#set(SANITIZE_MEMORY ON)
+#set(SANITIZE_THREAD ON)
+set(SANITIZE_UNDEFINED ON)
+find_package(Sanitizers)
+
+add_executable(sanitizers_test sanitizers_test.cpp)
+add_sanitizers(sanitizers_test)
+#set_asan(sanitizers_test)
+
+
+add_executable(pointer_address_test pointer_address_test.cpp)
+target_include_directories( pointer_address_test PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+#set_asan(pointer_address_test)
+
+add_executable(mock_test mock_test.cpp)
+target_include_directories( mock_test PUBLIC ${CMAKE_SOURCE_DIR}/third_party/Fakeit  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+
+
+add_executable(boost_graph_test boost_graph_test.cpp)
+target_link_libraries(boost_graph_test PUBLIC  ${Boost_LIBRARIES})
+target_include_directories( boost_graph_test PUBLIC
+        ${EIGEN3_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+        )
