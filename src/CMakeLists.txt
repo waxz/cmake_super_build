@@ -487,6 +487,7 @@ add_sanitizers(sanitizers_test)
 add_executable(pointer_address_test pointer_address_test.cpp)
 target_include_directories( pointer_address_test PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
 #set_asan(pointer_address_test)
+target_link_libraries( pointer_address_test PUBLIC Threads::Threads)
 
 add_executable(mock_test mock_test.cpp)
 target_include_directories( mock_test PUBLIC ${CMAKE_SOURCE_DIR}/third_party/Fakeit  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
@@ -499,3 +500,25 @@ target_include_directories( boost_graph_test PUBLIC
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/third_party/nlohmann
         )
+
+add_executable(Observable_test Observable_test.cpp)
+target_link_libraries(Observable_test PUBLIC  ${Boost_LIBRARIES})
+target_include_directories( Observable_test PUBLIC
+        ${EIGEN3_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
+        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
+
+        )
+
+add_executable(affinity_test affinity_test.cpp)
+target_link_libraries(affinity_test PUBLIC  ${Boost_LIBRARIES})
+target_include_directories( affinity_test PUBLIC
+        ${EIGEN3_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
+        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
+        )
+target_link_libraries( affinity_test PUBLIC Threads::Threads hwloc)
