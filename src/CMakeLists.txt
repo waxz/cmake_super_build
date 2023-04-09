@@ -371,14 +371,14 @@ target_include_directories( libpointmatcher_test PUBLIC  ${libpointmatcher_INCLU
 target_link_libraries(libpointmatcher_test PUBLIC ${Boost_LIBRARIES} ${libpointmatcher_LIBRARIES}  )
 #target_link_directories(libpointmatcher_test PUBLIC  ${libnabo_ROOT}/lib)
 
-add_library(log_test_lib log_test_lib.cpp)
-target_include_directories( log_test_lib PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
-target_link_libraries( log_test_lib PUBLIC Threads::Threads dl)
+#add_library(log_test_lib log_test_lib.cpp)
+#target_include_directories( log_test_lib PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+#target_link_libraries( log_test_lib PUBLIC Threads::Threads dl)
 
 
-add_executable(log_test log_test.cpp)
-target_include_directories( log_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
-target_link_libraries( log_test PUBLIC Threads::Threads log_test_lib)
+#add_executable(log_test log_test.cpp)
+#target_include_directories( log_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+#target_link_libraries( log_test PUBLIC Threads::Threads log_test_lib)
 
 
 
@@ -455,42 +455,42 @@ target_include_directories( pcl_crop_to_hull PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMA
 target_link_libraries(pcl_crop_to_hull PUBLIC  Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
 
 
-add_executable(foonathan_memory_example foonathan_memory_example.cpp)
-target_include_directories( foonathan_memory_example PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
-target_link_libraries(foonathan_memory_example PUBLIC   foonathan_memory Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
+#add_executable(foonathan_memory_example foonathan_memory_example.cpp)
+#target_include_directories( foonathan_memory_example PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+#target_link_libraries(foonathan_memory_example PUBLIC   foonathan_memory Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
 
 
-add_executable(likely_test likely_test.cpp)
-target_include_directories( likely_test PUBLIC  ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  )
-target_link_libraries(likely_test PUBLIC   foonathan_memory)
+#add_executable(likely_test likely_test.cpp)
+#target_include_directories( likely_test PUBLIC  ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  )
+#target_link_libraries(likely_test PUBLIC   foonathan_memory)
 
 
-add_executable(next_icp next_icp.cpp)
-target_include_directories( next_icp PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
-target_link_libraries(next_icp PUBLIC  ${CERES_LIBRARIES}  Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
+#add_executable(next_icp next_icp.cpp)
+#target_include_directories( next_icp PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+#target_link_libraries(next_icp PUBLIC  ${CERES_LIBRARIES}  Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
 
 
 add_subdirectory(tbb)
 
 add_subdirectory(gui)
-set(SANITIZE_ADDRESS ON)
+#set(SANITIZE_ADDRESS ON)
 #set(SANITIZE_MEMORY ON)
 #set(SANITIZE_THREAD ON)
-set(SANITIZE_UNDEFINED ON)
-find_package(Sanitizers)
-
-add_executable(sanitizers_test sanitizers_test.cpp)
-add_sanitizers(sanitizers_test)
+#set(SANITIZE_UNDEFINED ON)
+#find_package(Sanitizers)
+#
+#add_executable(sanitizers_test sanitizers_test.cpp)
+#add_sanitizers(sanitizers_test)
 #set_asan(sanitizers_test)
 
 
-add_executable(pointer_address_test pointer_address_test.cpp)
-target_include_directories( pointer_address_test PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
-#set_asan(pointer_address_test)
-target_link_libraries( pointer_address_test PUBLIC Threads::Threads)
+#add_executable(pointer_address_test pointer_address_test.cpp)
+#target_include_directories( pointer_address_test PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+##set_asan(pointer_address_test)
+#target_link_libraries( pointer_address_test PUBLIC Threads::Threads)
 
-add_executable(mock_test mock_test.cpp)
-target_include_directories( mock_test PUBLIC ${CMAKE_SOURCE_DIR}/third_party/Fakeit  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
+#add_executable(mock_test mock_test.cpp)
+#target_include_directories( mock_test PUBLIC ${CMAKE_SOURCE_DIR}/third_party/Fakeit  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include   ${CMAKE_SOURCE_DIR}/src/ICP-Variants-main/icp-variants  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
 
 
 add_executable(boost_graph_test boost_graph_test.cpp)
@@ -522,3 +522,12 @@ target_include_directories( affinity_test PUBLIC
         ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
         )
 target_link_libraries( affinity_test PUBLIC Threads::Threads hwloc)
+
+add_library(breakpad_uploader_library STATIC breakpad/http_upload.cc breakpad/google_crashdump_uploader.cc breakpad/libcurl_wrapper.cc)
+target_include_directories(breakpad_uploader_library PUBLIC ${breakpad_include_dir}  ./breakpad)
+target_link_libraries(breakpad_uploader_library PUBLIC ${breakpad_client_library} curl dl)
+
+
+add_executable(breakpad_test breakpad_test.cpp breakpad_func.cpp  )
+target_include_directories(breakpad_test PUBLIC ${breakpad_include_dir}  ./breakpad)
+target_link_libraries(breakpad_test PUBLIC breakpad_uploader_library)

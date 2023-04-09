@@ -249,25 +249,42 @@ set_target_properties(liblua PROPERTIES  IMPORTED_LOCATION "${LUA_LIBRARIES}")
 target_include_directories(liblua INTERFACE ${LUA_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/third_party/sol)
 target_link_libraries(liblua INTERFACE  dl )
 
+# breakpad-2023.01.27-full.zip
+# https://github.com/google/breakpad/blob/master/docs/linux_starter_guide.md#producing-symbols-for-your-application
+# https://github.com/google/breakpad.git
+# https://chromium.googlesource.com/linux-syscall-support/+/refs/tags/v2022.10.12
+# copy linux-syscall-support/linux_syscall_support.h to breakpad/src/third_party/lss
+build_external_project_command(breakpad lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/breakpad-2023.01.27-full.zip "mkdir -p ${CMAKE_BINARY_DIR}/force_breakpad/install/bin && ./configure --prefix=${CMAKE_BINARY_DIR}/force_breakpad/install" "make" "make install")
+message(STATUS "breakpad_ROOT ${breakpad_ROOT}")
+
+set(breakpad_client_library ${breakpad_ROOT}/lib/libbreakpad_client.a)
+set(breakpad_library ${breakpad_ROOT}/lib/libbreakpad.a)
+set(breakpad_include_dir ${breakpad_ROOT}/include/breakpad)
+message(STATUS "breakpad_client_library ${breakpad_client_library}")
+message(STATUS "breakpad_library ${breakpad_library}")
 
 
 
-#third_party/Fast-DDS-2.9.1.zip
-build_external_project(foonathan_memory lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/foonathan_memory_vendor-1.3.0.zip  -DCMAKE_BUILD_TYPE=Release  -DBUILD_SHARED_LIBS=ON)
-find_package(foonathan_memory REQUIRED)
+set(test_fast_dds OFF)
+if(test_fast_dds)
+    #third_party/Fast-DDS-2.9.1.zip
+    build_external_project(foonathan_memory lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/foonathan_memory_vendor-1.3.0.zip  -DCMAKE_BUILD_TYPE=Release  -DBUILD_SHARED_LIBS=ON)
+    find_package(foonathan_memory REQUIRED)
 
-build_external_project(fastcdr lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-CDR-1.0.26.zip  -DCMAKE_BUILD_TYPE=Release )
-#message(1fastcdf_ROOT ${fastcdf_ROOT})
+    build_external_project(fastcdr lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-CDR-1.0.26.zip  -DCMAKE_BUILD_TYPE=Release )
+    #message(1fastcdf_ROOT ${fastcdf_ROOT})
 
-# fastcdr-config.cmake
-#set(fastcdr_ROOT ${fastcdr_ROOT}/lib/cmake/fastcdr)
-#message(1fastcdf_ROOT ${fastcdf_ROOT})
-find_package(fastcdr REQUIRED)
+    # fastcdr-config.cmake
+    #set(fastcdr_ROOT ${fastcdr_ROOT}/lib/cmake/fastcdr)
+    #message(1fastcdf_ROOT ${fastcdf_ROOT})
+    find_package(fastcdr REQUIRED)
 
 
-#fastrtps-config.cmake
-build_external_project(fastrtps lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-DDS-2.9.1.zip  -DCMAKE_BUILD_TYPE=Release -Dfoonathan_memory_ROOT=${foonathan_memory_ROOT} -Dfastcdr_ROOT=${fastcdr_ROOT} -DFASTDDS_STATIC=OFF)
-find_package(fastrtps REQUIRED)
+    #fastrtps-config.cmake
+    build_external_project(fastrtps lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-DDS-2.9.1.zip  -DCMAKE_BUILD_TYPE=Release -Dfoonathan_memory_ROOT=${foonathan_memory_ROOT} -Dfastcdr_ROOT=${fastcdr_ROOT} -DFASTDDS_STATIC=OFF)
+    find_package(fastrtps REQUIRED)
+endif ()
+
 
 #iceoryx-2.0.3.zip
 build_external_project_command(iceoryx lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/iceoryx-2.0.3.zip  "cmake -Bbuild -Hiceoryx_meta -DBUILD_DOC=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/force_iceoryx/install" "cmake --build build" " cmake --build build --target install" )

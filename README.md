@@ -162,3 +162,4 @@ add_ros(ros_init_node roscpp)
 - https://github.com/eProsima/Fast-DDS
 - https://github.com/eclipse-cyclonedds/cyclonedds-cxx
 - https://github.com/arsenm/sanitizers-cmake
+- https://github.com/google/breakpad

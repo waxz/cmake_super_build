@@ -5,6 +5,7 @@ include(ExternalProject)
 function (build_external_project target prefix url) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
     include(ProcessorCount)
     ProcessorCount(N)
+    math(EXPR USE_CORE_NUM "${N} - 1 " OUTPUT_FORMAT DECIMAL)
 
     set(trigger_build_dir ${CMAKE_BINARY_DIR}/force_${target})
 
@@ -34,7 +35,7 @@ function (build_external_project target prefix url) #FOLLOWING ARGUMENTS are the
     execute_process(COMMAND ${CMAKE_COMMAND} -G${CMAKE_GENERATOR} ..
             WORKING_DIRECTORY ${trigger_build_dir}/build
             )
-    execute_process(COMMAND ${CMAKE_COMMAND} --build . -j${N}
+    execute_process(COMMAND ${CMAKE_COMMAND} --build . -j${USE_CORE_NUM}
             WORKING_DIRECTORY ${trigger_build_dir}/build
             )
     set(${target}_ROOT ${trigger_build_dir}/install PARENT_SCOPE)
@@ -47,6 +48,7 @@ endfunction()
 function (build_external_project_cmake target prefix url) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
     include(ProcessorCount)
     ProcessorCount(N)
+    math(EXPR USE_CORE_NUM "${N} - 1 " OUTPUT_FORMAT DECIMAL)
 
     set(trigger_build_dir ${CMAKE_BINARY_DIR}/force_${target})
 
@@ -77,7 +79,7 @@ function (build_external_project_cmake target prefix url) #FOLLOWING ARGUMENTS a
     execute_process(COMMAND ${CMAKE_COMMAND} -G${CMAKE_GENERATOR} ..
             WORKING_DIRECTORY ${trigger_build_dir}/build
             )
-    execute_process(COMMAND ${CMAKE_COMMAND} --build . -j${N}
+    execute_process(COMMAND ${CMAKE_COMMAND} --build . -j${USE_CORE_NUM}
             WORKING_DIRECTORY ${trigger_build_dir}/build
             )
     set(${target}_ROOT ${trigger_build_dir}/install PARENT_SCOPE)
@@ -90,6 +92,7 @@ endfunction()
 function (build_external_project_make target prefix url) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
     include(ProcessorCount)
     ProcessorCount(N)
+    math(EXPR USE_CORE_NUM "${N} - 1 " OUTPUT_FORMAT DECIMAL)
 
     set(trigger_build_dir ${CMAKE_BINARY_DIR}/force_${target})
 
@@ -121,7 +124,7 @@ function (build_external_project_make target prefix url) #FOLLOWING ARGUMENTS ar
     execute_process(COMMAND ${CMAKE_COMMAND} -G${CMAKE_GENERATOR} ..
             WORKING_DIRECTORY ${trigger_build_dir}/build
             )
-    execute_process(COMMAND ${CMAKE_COMMAND} --build . -j${N}
+    execute_process(COMMAND ${CMAKE_COMMAND} --build . -j${USE_CORE_NUM}
             WORKING_DIRECTORY ${trigger_build_dir}/build
             )
 
@@ -135,6 +138,7 @@ endfunction()
 function (build_external_project_command target prefix url configure_command build_command install_command) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
     include(ProcessorCount)
     ProcessorCount(N)
+    math(EXPR USE_CORE_NUM "${N} - 1 " OUTPUT_FORMAT DECIMAL)
 
     set(trigger_build_dir ${CMAKE_BINARY_DIR}/force_${target})
 
@@ -166,7 +170,7 @@ function (build_external_project_command target prefix url configure_command bui
     execute_process(COMMAND ${CMAKE_COMMAND} -G${CMAKE_GENERATOR} ..
             WORKING_DIRECTORY ${trigger_build_dir}/build
             )
-    execute_process(COMMAND ${CMAKE_COMMAND} --build . -j${N}
+    execute_process(COMMAND ${CMAKE_COMMAND} --build . -j${USE_CORE_NUM}
             WORKING_DIRECTORY ${trigger_build_dir}/build
             )
 
