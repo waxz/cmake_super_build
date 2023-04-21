@@ -313,6 +313,37 @@ find_package(plplot REQUIRED)
 #build_external_project(FakeIt lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/FakeIt-2.3.2.zip -DCMAKE_BUILD_TYPE=Release)
 #find_package(FakeIt REQUIRED)
 
+#libcopp-2.1.4.zip
+#https://github.com/owent/libcopp
+#https://github.com/atframework/cmake-toolset/tree/c911fe34b494dcb3200408803f25787772e5d8c6
+build_external_project(libcopp lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libcopp-2.1.4.zip -DCMAKE_BUILD_TYPE=Release)
+find_package(libcopp REQUIRED)
+
+#highway-1.0.4.zip
+build_external_project(hwy lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/highway-1.0.4.zip -DCMAKE_BUILD_TYPE=Release)
+find_package(hwy REQUIRED)
+
+
+#canfestival-de1fc3261f21.zip
+#examples build fail without python
+#change line24 form `all: objdictedit canfestival examples` to `all: objdictedit canfestival`
+# ldconfig create cache fail without root permission
+# change line48 from `ldconfig` to `ldconfig -C ./ld.so.cache`
+#  --disable-dll
+build_external_project_command(canfestival lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/canfestival-de1fc3261f21.zip "mkdir -p ${CMAKE_BINARY_DIR}/force_canfestival/install/ && ./configure --timers=unix --can=virtual --disable-dll --prefix=${CMAKE_BINARY_DIR}/force_canfestival/install" "make all PREFIX=${CMAKE_BINARY_DIR}/force_canfestival/install" "make all install PREFIX=${CMAKE_BINARY_DIR}/force_canfestival/install")
+
+message(STATUS "canfestival_ROOT ${canfestival_ROOT}")
+
+# link order is important, if link libcanfestival.a before libcanfestival_unix.a, `canDispatch' , `TimeDispatch', `SetAlarm' will be undefined
+set(canfestival_library
+        ${canfestival_ROOT}/lib/libcanfestival_unix.a
+        ${canfestival_ROOT}/lib/libcanfestival.a
+        ${canfestival_ROOT}/lib/libcanfestival_can_virtual.so
+        )
+set(canfestival_include_dir ${canfestival_ROOT}/include/canfestival)
+message(STATUS "canfestival_library ${canfestival_library}")
+message(STATUS "canfestival_include_dir ${canfestival_include_dir}")
+
 
 include(cmake/set_ros.cmake)
 

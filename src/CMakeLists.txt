@@ -500,16 +500,22 @@ target_include_directories( boost_graph_test PUBLIC
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/third_party/nlohmann
         )
+add_library(tinyco SHARED
+        ${CMAKE_SOURCE_DIR}/include/tinyco-master/include/tinyco/context.cc
+        ${CMAKE_SOURCE_DIR}/include/tinyco-master/include/tinyco/coroutine.cc
+        ${CMAKE_SOURCE_DIR}/include/tinyco-master/include/tinyco/schedule.cc
+        )
+target_include_directories(tinyco PUBLIC ${CMAKE_SOURCE_DIR}/include/tinyco-master/include)
 
 add_executable(Observable_test Observable_test.cpp)
-target_link_libraries(Observable_test PUBLIC  ${Boost_LIBRARIES})
+target_link_libraries(Observable_test PUBLIC  ${Boost_LIBRARIES} libcopp::cotask tinyco)
 target_include_directories( Observable_test PUBLIC
         ${EIGEN3_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/third_party/nlohmann
         ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
         ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
-
+        ${CMAKE_SOURCE_DIR}/third_party/stackless_coroutine-master
         )
 
 add_executable(affinity_test affinity_test.cpp)
@@ -531,3 +537,42 @@ target_link_libraries(breakpad_uploader_library PUBLIC ${breakpad_client_library
 add_executable(breakpad_test breakpad_test.cpp breakpad_func.cpp  )
 target_include_directories(breakpad_test PUBLIC ${breakpad_include_dir}  ./breakpad)
 target_link_libraries(breakpad_test PUBLIC breakpad_uploader_library)
+
+add_executable(thread_test thread_test.cpp)
+add_executable(simd_hwy_test simd_hwy_test.cpp)
+target_link_libraries( simd_hwy_test PUBLIC  hwy::hwy hwy::hwy_contrib)
+
+
+
+find_library(USB_CAN_LIBRARY
+        NAMES usbcan
+        PATHS ${CMAKE_SOURCE_DIR}/third_party/zlg_usb_can/USBCAN_mini_Linux_Drivers/usbcan_libusb_x64_2018_10_15/test/
+        REQUIRED
+        )
+
+message(USB_CAN_LIBRARY ${USB_CAN_LIBRARY})
+#add_library(usbcan SHARED IMPORTED GLOBAL)
+#set_target_properties(usbcan PROPERTIES
+#        IMPORTED_LOCATION_RELEASE ${USB_CAN_LIBRARY}
+#        IMPORTED_LOCATION_DEBUG ${USB_CAN_LIBRARY}
+#        )
+#
+#target_include_directories(usbcan INTERFACE
+#        ${CMAKE_SOURCE_DIR}/third_party/zlg_usb_can/USBCAN_mini_Linux_Drivers/usbcan_libusb_x64_2018_10_15/test
+#        )
+add_executable(zlg_can_test zlg_can_test.cpp)
+target_link_libraries(zlg_can_test PUBLIC ${USB_CAN_LIBRARY} )
+target_include_directories(zlg_can_test PUBLIC
+        ${CMAKE_SOURCE_DIR}/third_party/zlg_usb_can/USBCAN_mini_Linux_Drivers/usbcan_libusb_x64_2018_10_15/test
+        )
+
+add_executable(can_test can_test.cpp)
+target_link_libraries(can_test PUBLIC
+        ${canfestival_library}
+        pthread rt dl
+        )
+target_include_directories(can_test PUBLIC
+        ${canfestival_include_dir}
+        )
+
+add_executable(lamda_function_test lamda_function_test.cpp)
