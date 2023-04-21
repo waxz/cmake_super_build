@@ -111,8 +111,8 @@ struct PathFinding{
             return -1;
         }
         if(id_start >= node_num
-        &&id_end >= node_num
-        && id_start == id_end
+        ||id_end >= node_num
+        ||id_start == id_end
         ){
             return -2;
         }

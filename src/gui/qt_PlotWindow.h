@@ -36,6 +36,7 @@
 #include <QPrintDialog>
 #include <QPrinter>
 #include <QMessageBox>
+#include <QWidget>
 #include "qt.h"
 
 class PlotWindow : public QMainWindow
@@ -73,6 +74,9 @@ protected:
     PLINT       strm;
 
     QtExtWidget * plot;
+
+private:
+    void createActions();
 };
 
 #endif

@@ -30,12 +30,9 @@ PlotWindow::PlotWindow( int argc, char** argv, QWidget* parent ) :
 {
     setAttribute( Qt::WA_DeleteOnClose );
 
-    QMenu * plotMenu = menuBar()->addMenu( "Plot" );
-    plotMenu->addAction( "Curves", this, SLOT( plotCurves() ) );
-    plotMenu->addAction( "Histogram", this, SLOT( plotHistogram() ) );
-    plotMenu->addAction( "3D", this, SLOT( plot3D() ) );
+    createActions();
 
-    plotMenu->addAction( "Interactive Selection", this, SLOT( interactive() ) );
+
 
     plot = new QtExtWidget( QT_DEFAULT_X, QT_DEFAULT_Y, this );
     setCentralWidget( plot );
@@ -43,6 +40,8 @@ PlotWindow::PlotWindow( int argc, char** argv, QWidget* parent ) :
     // One window = One plot widget = one stream
     plmkstrm( &strm );
     plsdev( "extqt" );
+
+    QLayout* plotLayout = layout();
 
     // Get all the application arguments as argc, argv
 
@@ -59,6 +58,19 @@ PlotWindow::PlotWindow( int argc, char** argv, QWidget* parent ) :
     resize( 800, 800 );
 
     pladv( 0 );
+}
+
+void PlotWindow::createActions(){
+
+    QMenu * plotMenu = menuBar()->addMenu( "Plot" );
+    plotMenu->addAction( "Curves", this, SLOT( plotCurves() ) );
+    plotMenu->addAction( "Histogram", this, SLOT( plotHistogram() ) );
+    plotMenu->addAction( "3D", this, SLOT( plot3D() ) );
+
+    plotMenu->addAction( "Interactive Selection", this, SLOT( interactive() ) );
+
+
+
 }
 
 PlotWindow::~PlotWindow()

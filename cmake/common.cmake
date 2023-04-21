@@ -41,7 +41,8 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
 
 
     #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--whole-archive  -Wl,--no-whole-archive")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -O3 -march=native -ftree-vectorize -fopt-info-vec-optimized ")
+    #  -ffp-contract=fast -flto
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -O3 -march=native -ftree-vectorize -fopt-info-vec-optimized -ffp-contract=fast -flto")
 
 endif ()
 
@@ -62,7 +63,7 @@ if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -ftree-vectorize  -ffast-math -fopt-info-vec-optimized  -opt-report=5 ")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -pthread -fprofile-arcs -mstackrealign  -march=native -ftest-coverage")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -pthread -fprofile-arcs -mstackrealign  -march=native")
 
 
 endif ()
@@ -99,7 +100,10 @@ function(set_asan target)
     target_compile_options(${target} PUBLIC "-fno-omit-frame-pointer")
 
     target_compile_options(${target} PUBLIC "-fstack-protector")
-    target_link_libraries(${target} PUBLIC  "-fuse-ld=gold")
+    target_compile_options(${target} PUBLIC  "-fuse-ld=gold")
+
+#    target_compile_options(${target} PUBLIC -fsanitize-coverage=trace-pc-guard -fsanitize=address,undefined,leak -fuse-ld=gold)
+
 
     target_link_libraries(${target} PUBLIC "-fsanitize=address  -fsanitize=leak -fsanitize=undefined")
     #    target_compile_options(${target} PUBLIC "-fsanitize=memory")
@@ -120,15 +124,16 @@ endfunction()
 
 
 function(set_omp target)
+    find_package(OpenMP)
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries(${target} PUBLIC OpenMP::OpenMP_CXX)
+        target_include_directories(${target} PUBLIC ${OpenMP_CXX_INCLUDE_DIRS} )
+        target_link_libraries(${target} PUBLIC
+                ${OpenMP_CXX_LIBRARIES}
+                )
+        target_compile_options(${target} PUBLIC ${OpenMP_CXX_FLAGS})
+    endif()
 
-    find_package(OpenMP REQUIRED)
-    message( OpenMP_CXX_LIBRARIES : ${OpenMP_CXX_LIBRARIES}, OpenMP_CXX_FLAGS : ${OpenMP_CXX_FLAGS}, OpenMP_EXE_LINKER_FLAGS : ${OpenMP_EXE_LINKER_FLAGS} )
-
-    target_include_directories(${target} PUBLIC ${OpenMP_CXX_INCLUDE_DIRS} )
-    target_link_libraries(${target} PUBLIC
-            ${OpenMP_CXX_LIBRARIES}
-            )
-    target_compile_options(${target} PUBLIC ${OpenMP_CXX_FLAGS})
 endfunction()
 
 
