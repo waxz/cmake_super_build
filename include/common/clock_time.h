@@ -12,7 +12,12 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
-
+#include <sstream>
+#include <ctime>
+#include <locale>
+#include <iostream>
+#include <iomanip>
+#include <ctime>
 
 namespace common {
     using int8 = int8_t;
@@ -171,15 +176,18 @@ namespace common {
         return std::chrono::duration_cast<Duration>(
                 std::chrono::milliseconds(milliseconds));
     }
-
+    Duration FromMicroseconds(int64 microseconds){
+        return std::chrono::duration_cast<Duration>(
+                std::chrono::microseconds (microseconds));
+    }
 // Returns the given duration in seconds.
-    double ToMillSeconds(Duration duration){
+    long ToMillSeconds(Duration duration){
         return std::chrono::duration_cast<std::chrono::milliseconds>(duration)
                 .count();
     }
 
     // Returns the given duration in seconds.
-    double ToMicroSeconds(Duration duration){
+    long ToMicroSeconds(Duration duration){
         return std::chrono::duration_cast<std::chrono::microseconds>(duration)
                 .count();
     }
@@ -218,6 +226,21 @@ namespace common {
         strftime(buf, sizeof(buf), format.c_str(), &tstruct);
 
         return buf;
+    }
+
+    void formatTimestamp(const Time& timestamp, std::string& out)
+    {
+        std::time_t time = std::chrono::system_clock::to_time_t(
+                std::chrono::time_point_cast<Duration>(
+                        std::chrono::system_clock::time_point{Duration {ToUniversal(timestamp)}}));
+        std::chrono::microseconds u_s = std::chrono::duration_cast<std::chrono::microseconds>(
+                timestamp.time_since_epoch() - std::chrono::duration_cast<std::chrono::seconds>(
+                        timestamp.time_since_epoch()));
+
+        std::ostringstream s;
+        s << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S")
+          << ":" << std::setw(6) << std::setfill('0') << u_s.count()<<" us";
+        out.assign(s.str());
     }
 } // namespace common
 #endif //COMMON_CLOCK_TIME_H
