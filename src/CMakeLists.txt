@@ -46,7 +46,7 @@ find_package(Boost 1.58 REQUIRED COMPONENTS system filesystem thread program_opt
 add_executable(ros_init_node ros_init_node.cpp)
 add_ros(ros_init_node roscpp)
 target_include_directories(ros_init_node PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
-set_asan(ros_init_node)
+#set_asan(ros_init_node)
 
 #target_link_directories(ros_init_node PUBLIC /home/waxz/dev/roscpp_src/install_isolated/lib )
 #target_link_libraries(ros_init_node PUBLIC
@@ -574,5 +574,56 @@ target_link_libraries(can_test PUBLIC
 target_include_directories(can_test PUBLIC
         ${canfestival_include_dir}
         )
+#set_asan(can_test  )
 
+#set_property(TARGET can_test PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_executable(lamda_function_test lamda_function_test.cpp)
+target_include_directories( lamda_function_test PUBLIC
+        ${EIGEN3_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
+        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
+        ${CMAKE_SOURCE_DIR}/third_party/stackless_coroutine-master
+        )
+
+add_executable(task_schedual_test task_schedual_test.cpp)
+target_include_directories( task_schedual_test PUBLIC
+        ${EIGEN3_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
+        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
+        ${CMAKE_SOURCE_DIR}/third_party/stackless_coroutine-master
+        )
+add_subdirectory(c_test)
+
+add_executable(endian_align_test endian_align_test.cpp)
+target_include_directories( endian_align_test PUBLIC
+        ${EIGEN3_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
+        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
+        ${CMAKE_SOURCE_DIR}/third_party/stackless_coroutine-master
+        )
+
+add_library(libcatch2 SHARED ${CMAKE_SOURCE_DIR}/include/catch2/catch_amalgamated.cpp)
+target_include_directories( libcatch2 PUBLIC
+        ${CMAKE_SOURCE_DIR}/include/catch2
+        )
+add_executable(static_assert_test static_assert_test.cpp
+        )
+target_include_directories( static_assert_test PUBLIC
+        ${EIGEN3_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/include/catch2
+
+#        ${CMAKE_SOURCE_DIR}/include/fakeit/include
+#        ${CMAKE_SOURCE_DIR}/include/fakeit/config/catch
+        ${CMAKE_SOURCE_DIR}/include/fakeit/single_header/catch
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
+        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
+        )
+target_link_libraries(static_assert_test PUBLIC  libcatch2)

@@ -20,6 +20,8 @@
 #include <iomanip>
 #include <ctime>
 
+#include "common/signals.h"
+
 
 #include <time.h>
 #include <stdio.h>
@@ -58,6 +60,12 @@ void preciseSleep(double seconds) {
 
 
 int main(int argc, char** argv){
+
+    //void sigintHandler(int sig)
+    std::atomic_bool program_run(true);
+    auto my_handler = common::fnptr<void(int)>([&](int sig){ std::cout << "get sig " << sig;program_run = false;});
+
+    common::set_signal_handler(my_handler);
 
 
     std::string time_str;
@@ -110,7 +118,7 @@ int main(int argc, char** argv){
         common::Time recv_time = common::FromUnixNow();
         formatTimestamp(common::FromUnixNow(),sub_1_time_str);
 
-        MLOGI("%s : sub1 get msg %d", sub_1_time_str.c_str(),msg);
+//        MLOGI("%s : sub1 get msg %d", sub_1_time_str.c_str(),msg);
 
     });
 
@@ -157,13 +165,14 @@ int main(int argc, char** argv){
     common::Time timestamp = common::FromUnixNow();
 
 
-    for(int i = 0 ; i < 10000;i++){
+    manager.intiTime();
+    while (program_run){
 
         manager.call();
 
-        using namespace std::chrono_literals;
+//        using namespace std::chrono_literals;
 
-        suspend.sleep(0.005);
+//        suspend.sleep(0.005);
 
     }
 
