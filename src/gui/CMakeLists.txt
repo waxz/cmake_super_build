@@ -9,3 +9,11 @@ set_target_properties(qt_example PROPERTIES
         AUTOMOC_MOC_OPTIONS "${PLPLOT_AUTOMOC_MOC_OPTIONS}"
         )
 target_include_directories( qt_example PUBLIC ${plplot_ROOT}/include/plplot)
+
+add_executable(plplot_test plplot_test.cpp)
+target_link_libraries(plplot_test  PLPLOT::plplot PLPLOT::plplotqt  PLPLOT::plplotcxx )
+target_include_directories( plplot_test PUBLIC ${plplot_ROOT}/include/plplot
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../include
+        ${EIGEN3_INCLUDE_DIR}
+        )
