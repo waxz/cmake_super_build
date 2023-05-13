@@ -1,7 +1,7 @@
 //
 // Created by waxz on 9/8/22.
 //
-#include "message/MqttClient.h"
+#include "MqttClient.h"
 
 namespace message{
 
@@ -63,7 +63,7 @@ namespace message{
     void MqttClient::on_message(const struct mosquitto_message *msg)
     {
         /* This blindly prints the payload, but the payload can be anything so take care. */
-        printf("sub receive: %s %d %s\n", msg->topic, msg->qos, (char *)msg->payload);
+//        printf("sub receive: %s %d %s\n", msg->topic, msg->qos, (char *)msg->payload);
         if (message_callback_func){
             message_callback_func(msg->topic, (char *)msg->payload);
 

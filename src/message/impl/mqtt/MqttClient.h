@@ -67,7 +67,7 @@ namespace message{
             std::cerr << "mosq disconnect try to reconnect" << std::endl;
             reconnect_async();
         }
-        virtual ~MqttClient() {
+        ~MqttClient() {
             std::cout << "~MqttClient"<<std::endl;
             mosqpp::lib_cleanup();
 

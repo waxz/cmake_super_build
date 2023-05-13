@@ -163,3 +163,11 @@ add_ros(ros_init_node roscpp)
 - https://github.com/eclipse-cyclonedds/cyclonedds-cxx
 - https://github.com/arsenm/sanitizers-cmake
 - https://github.com/google/breakpad
+- https://github.com/bfgroup/Lyra
+
+### ldd
+https://stackoverflow.com/questions/58997230/cmake-project-fails-to-find-shared-library
+```sh
+readelf -a  ./executable | grep -e NEEDED -e PATH
+LD_DEBUG=files,libs ldd ./executable
+```

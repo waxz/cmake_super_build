@@ -86,10 +86,14 @@ namespace common{
 
         template <typename T>
         T & ref() {
-            char buffer[200];
-            sprintf(buffer,"%s:%d, ref type_name = %s, allocated type_name = %s\n",__FILE__, __LINE__,TypeName<T>::Get(), type_name);
-            dynamic_assert(type_name != nullptr,buffer );
-            dynamic_assert(std::strcmp(type_name,TypeName<T>::Get() )==0,buffer );
+//            char buffer[500];
+//            sprintf(buffer,"%s:%d, ref type_name = %s, allocated type_name = %s\n",__FILE__, __LINE__,TypeName<T>::Get(), type_name);
+//            dynamic_assert(type_name != nullptr,buffer );
+//            dynamic_assert(std::strcmp(type_name,TypeName<T>::Get() )==0,buffer );
+            dynamic_assert(type_name != nullptr,"ref null" );
+            dynamic_assert(std::strcmp(type_name,TypeName<T>::Get() )==0,"ref type not matched" );
+
+
             return (*(T*)v.get());
         }
     };

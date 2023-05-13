@@ -330,12 +330,14 @@ find_package(hwy REQUIRED)
 # ldconfig create cache fail without root permission
 # change line48 from `ldconfig` to `ldconfig -C ./ld.so.cache`
 #  --disable-dll
-build_external_project_command(canfestival lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/canfestival-de1fc3261f21.zip "mkdir -p ${CMAKE_BINARY_DIR}/force_canfestival/install/ && ./configure --timers=unix --can=virtual --disable-dll --prefix=${CMAKE_BINARY_DIR}/force_canfestival/install" "make all PREFIX=${CMAKE_BINARY_DIR}/force_canfestival/install" "make all install PREFIX=${CMAKE_BINARY_DIR}/force_canfestival/install")
+build_external_project_command(canfestival lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/canfestival-de1fc3261f21.zip "mkdir -p ${CMAKE_BINARY_DIR}/force_canfestival/install/ && ./configure --timers=unix --can=virtual --disable-dll --debug=MSG --prefix=${CMAKE_BINARY_DIR}/force_canfestival/install" "make all PREFIX=${CMAKE_BINARY_DIR}/force_canfestival/install" "make all install PREFIX=${CMAKE_BINARY_DIR}/force_canfestival/install")
 
 message(STATUS "canfestival_ROOT ${canfestival_ROOT}")
 
 # link order is important, if link libcanfestival.a before libcanfestival_unix.a, `canDispatch' , `TimeDispatch', `SetAlarm' will be undefined
+# https://stackoverflow.com/questions/51725564/cmake-doesnt-link-c-and-c-static-libraries-undefined-reference-to-function
 set(canfestival_library
+        ${canfestival_ROOT}/lib/libcanfestival.a
         ${canfestival_ROOT}/lib/libcanfestival_unix.a
         ${canfestival_ROOT}/lib/libcanfestival.a
         ${canfestival_ROOT}/lib/libcanfestival_can_virtual.so
@@ -354,7 +356,8 @@ find_package(Boost
         )
 
 message(Boost_LIBRARIES = ${Boost_LIBRARIES})
-
+set(ROOT_ROOT ${CMAKE_SOURCE_DIR}/third_party/root_v6.28.02.Linux-ubuntu20-x86_64-gcc9.4/root/cmake )
+find_package(ROOT REQUIRED COMPONENTS RIO Net)
 
 add_subdirectory(src)
 

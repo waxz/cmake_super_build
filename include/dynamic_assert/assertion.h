@@ -57,14 +57,14 @@ void dynamic_assert(bool assertion,
 }
 
 template<>
-void dynamic_assert<false, ExceptionBase>(bool, const std::string &, int) { }
+inline void dynamic_assert<false, ExceptionBase>(bool, const std::string &, int) { }
 
-void dynamic_assert(bool b, const std::string & mesg)
+inline void dynamic_assert(bool b, const std::string & mesg)
 {
    dynamic_assert<true>(b, mesg);
 }
 
-void dynamic_assert(bool b)
+inline void dynamic_assert(bool b)
 {
    dynamic_assert<true>(b);
 }
