@@ -17,12 +17,24 @@ if("${isSystemDir}" STREQUAL "-1")
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif("${isSystemDir}" STREQUAL "-1")
 
+# really worked
+# for secondary dependency
+# every target should add this macro
+macro(set_rpath)
+    message(STATUS "Configuring rpath for target(s) ${ARGV0}")
+    set_target_properties(${ARGV0} PROPERTIES
+            BUILD_WITH_INSTALL_RPATH FALSE
+            LINK_FLAGS "-Wl,-rpath,$ORIGIN/../lib")
+endmacro()
 
+# https://stackoverflow.com/questions/24598047/why-does-ld-need-rpath-link-when-linking-an-executable-against-a-so-that-needs
+# The difference between -rpath and -rpath-link is that directories specified by -rpath options are included in the executable and used at runtime, whereas the -rpath-link option is only effective at link time. Searching -rpath in this way is only supported by native linkers and cross linkers which have been configured with the --with-sysroot option.
 
 macro(set_target_rpath __Target)
     set (extra_args ${ARGN})
 
     set_target_properties(${__Target} PROPERTIES LINK_FLAGS "-Wl,-rpath,.,-disable-new-dtags")  # set RPATH ok ok
+#    set_target_properties(${__Target} PROPERTIES LINK_FLAGS "-Wl,-rpath-link,.,-disable-new-dtags")  # set RPATH ok ok
     set_property(
             TARGET ${__Target}
             PROPERTY BUILD_RPATH
