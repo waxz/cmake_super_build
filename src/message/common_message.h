@@ -9,6 +9,9 @@
 
 namespace common_message{
 
+    struct Int16Array{
+        std::vector<int16_t> data;
+    };
     struct Header{
         u_int32_t seq = 0;
         common::Time  stamp;

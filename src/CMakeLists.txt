@@ -42,20 +42,30 @@ install(TARGETS ceres_simple_solve DESTINATION bin)
 find_package(Boost 1.58 REQUIRED COMPONENTS system filesystem thread program_options chrono)
 
 
+add_subdirectory(message/impl/ros)
+add_subdirectory(message/impl/mqtt)
 
-add_executable(ros_init_node ros_init_node.cpp)
-add_ros(ros_init_node roscpp)
-target_include_directories(ros_init_node PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
-#set_asan(ros_init_node)
+add_executable(message_manager_test message_manager_test.cpp )
+#add_ros(message_manager_test roscpp)
+#target_link_libraries(message_manager_test PUBLIC tf )
+target_include_directories(message_manager_test PUBLIC
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${EIGEN3_INCLUDE_DIR})
+target_link_libraries(message_manager_test PUBLIC  ros_message_manager mqtt_message_manager absl::strings)
+#target_include_directories(message_manager_test PUBLIC ${CMAKE_SOURCE_DIR}/third_party/sol ${mosquitto_INCLUDE_DIR})
 
-#target_link_directories(ros_init_node PUBLIC /home/waxz/dev/roscpp_src/install_isolated/lib )
-#target_link_libraries(ros_init_node PUBLIC
+set_asan(message_manager_test)
+
+#target_link_directories(message_manager_test PUBLIC /home/waxz/dev/roscpp_src/install_isolated/lib )
+#target_link_libraries(message_manager_test PUBLIC
 #        roscpp xmlrpcpp rosconsole cpp_common rostime roscpp_serialization
 #        ${Boost_LIBRARIES}
 #
 #        )
 #target_include_directories(
-#        ros_init_node PUBLIC
+#        message_manager_test PUBLIC
 #        /home/waxz/dev/roscpp_src/install_isolated/include
 #)
 
@@ -297,7 +307,7 @@ endif()
 #add_library(MqttClient message/MqttClient.cpp)
 #target_include_directories(MqttClient PUBLIC ${CMAKE_SOURCE_DIR}/include ${mosquitto_INCLUDE_DIR}   ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
 
-add_executable(mqtt_cient_test  mqtt_cient_test.cpp message/MqttClient.cpp )
+add_executable(mqtt_cient_test  mqtt_cient_test.cpp message/impl/mqtt/MqttClient.cpp )
 target_link_libraries(mqtt_cient_test  PUBLIC ${mosquitto_LIBRARY} ) # X11 pthread
 target_include_directories(mqtt_cient_test PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}  ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/include ${mosquitto_INCLUDE_DIR}   ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
 print_include_dir(mqtt_cient_test)
@@ -627,3 +637,39 @@ target_include_directories( static_assert_test PUBLIC
         ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
         )
 target_link_libraries(static_assert_test PUBLIC  libcatch2)
+
+add_executable(lua_test lua_test.cpp)
+target_include_directories( lua_test PUBLIC
+        ${EIGEN3_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/include/catch2
+
+        #        ${CMAKE_SOURCE_DIR}/include/fakeit/include
+        #        ${CMAKE_SOURCE_DIR}/include/fakeit/config/catch
+        ${CMAKE_SOURCE_DIR}/include/fakeit/single_header/catch
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
+        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
+        )
+target_link_libraries(lua_test PUBLIC  libcatch2)
+
+target_link_libraries(lua_test PUBLIC liblua ) # dl
+target_include_directories(lua_test PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries( lua_test PUBLIC Threads::Threads)
+
+
+add_executable(argparse_test argparse_test.cpp)
+target_include_directories( argparse_test PUBLIC
+        ${EIGEN3_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/include/catch2
+
+        #        ${CMAKE_SOURCE_DIR}/include/fakeit/include
+        #        ${CMAKE_SOURCE_DIR}/include/fakeit/config/catch
+        ${CMAKE_SOURCE_DIR}/include/fakeit/single_header/catch
+        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
+        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
+        )
+
+add_subdirectory(root_test)

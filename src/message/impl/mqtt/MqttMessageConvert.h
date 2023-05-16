@@ -35,6 +35,13 @@ namespace common_message{
         return j.dump();
     }
 
+    template <typename T, typename std::enable_if<std::is_same<T,Int16Array>{} , bool>::type = true>
+    std::string from_common(const T& data){
+        std::string target;
+        target.assign((char*)data.data(), data.size()*2);
+        return target;
+    }
+
 
     // common
 

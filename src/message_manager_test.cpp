@@ -41,8 +41,8 @@
 
 #include "json.hpp"
 
-
-
+#include "absl/strings/str_format.h"
+#include "absl/strings/escaping.h"
 #include "message/common_message.h"
 
 namespace common_message{
@@ -875,14 +875,15 @@ int main(int argc, char** argv) {
                     "server:127.0.0.1:1883",
                     "server:127.0.0.1:1883"
             };
-            char* mqtt_config_str[] = {"server:127.0.0.1", "port:1883","keep_alive:5","clean_session:1"};
+            //"server:broker-cn.emqx.io"
+            char* mqtt_config_str[] = {"server:broker-cn.emqx.io", "port:1883","keep_alive:30","clean_session:1"};
 
             message::MqttMessageManager mqttMessageManager;
-            char* mqtt_client_id = "A";
+            char* mqtt_client_id = "cpp_test";
             mqttMessageManager.open(mqtt_client_id,4, mqtt_config_str);
 
-            mqttMessageManager.add_channel<std::string>("SUB:hello:0");
-            mqttMessageManager.add_channel<std::string>("PUB:hello:0");
+            mqttMessageManager.add_channel<std::string>("SUB:hello1:0");
+            mqttMessageManager.add_channel<std::string>("PUB:hello1:0");
 
             mqttMessageManager.add_channel<common_message::Twist>("SUB:chatter:0");
             mqttMessageManager.add_channel<common_message::Twist>("PUB:chatter:0");
@@ -892,9 +893,59 @@ int main(int argc, char** argv) {
 
             mqttMessageManager.start("");
             int i = 0;
-            auto hello_sub = [](void* data){
+
+
+            std::vector<float> controller_state_array(10);
+            std::vector<float> controller_state_array_recv(10);
+
+            common_message::Int16Array int16Array;
+            int16Array.data.resize(10);
+
+            int16_t controller_state_array_int[10];
+            int16_t controller_state_array_int_recv[10];
+
+            for(int i = 0 ; i < 10;i++){
+                controller_state_array[i] = -0.05;
+            }
+            for(int i = 0 ; i < 10;i++){
+                controller_state_array_int[i] = int16_t (controller_state_array[i]*1e4 + 0.5) ;
+                int16Array.data[i] = int16_t (controller_state_array[i]*1e4 + 0.5) ;
+
+            }
+
+
+
+
+            int recv_num = 0;
+            std::string decode_str;
+
+            auto hello_sub = [&](void* data){
                 std::string* data_ptr = static_cast<std::string*>(data);
+                std::cout << "test123 recv_num: " << recv_num << std::endl;
+                recv_num++;
                 std::cout << "test123 recv msg: " << *data_ptr << std::endl;
+                bool decode_ok =  absl::Base64Unescape(*data_ptr,&decode_str);
+                std::cout << "test123 decode_ok: " <<  decode_ok << std::endl;
+
+                std::cout << "test123 recv msg size : " <<  decode_str.size() << std::endl;
+
+                const char* p = decode_str.c_str();
+                for(int i = 0 ; i < decode_str.size() ;i++){
+                    std::cout << "get byte " <<int(*(p+i)) <<"\n";
+                }
+                if(decode_str.size() != 20){
+                    return ;
+                }
+
+                int16_t* p2 = (int16_t*)p;
+
+                for(int i = 0 ; i < 10;i++){
+                    controller_state_array_int_recv[i] = * (p2 + i);
+                }
+                for(int i = 0 ; i < 10;i++){
+                    std::cout << "get num " << controller_state_array_int_recv[i]<< "\n";
+                }
+
 
             };
 
@@ -909,21 +960,40 @@ int main(int argc, char** argv) {
                 "hello cpp",
                 "hello mqtt"
             };
+
+
+            for(int i = 0 ; i < 10;i++){
+                controller_state_array_int[i] = int16_t (controller_state_array[i]*1e4 + 0.5) ;
+            }
+            msgs[0].assign((char*)(&controller_state_array_int[0])  , 10*2 );
+
             while (program_run){
                 for(auto& m: twist_msgs){
                     m.linear.x += 0.01;
                 }
+                for(int i = 0 ; i < 10;i++){
+                    controller_state_array[i]  += 0.01;
+                }
+                for(int i = 0 ; i < 10;i++){
+                    controller_state_array_int[i] = int16_t (controller_state_array[i]*1e4 ) ;
+                }
+                msgs[0].assign((char*)(&controller_state_array_int[0])  , 10*2 );
+
+                msgs[0] = absl::Base64Escape(msgs[0]);
+
+                std::cout<< "run" << std::endl;
 
 
-                mqttMessageManager.send_message("hello", msgs.data(),2,0.1);
 
-                mqttMessageManager.recv_message("hello",2,0.1,hello_sub);
+                mqttMessageManager.send_message("hello1", msgs.data(),1,0.1);
 
-                mqttMessageManager.send_message("chatter",twist_msgs.data(), 5, 0.1 );
+                mqttMessageManager.recv_message("hello1",2,0.1,hello_sub);
+
+                mqttMessageManager.send_message("chatter",twist_msgs.data(), 1, 0.1 );
 
                 mqttMessageManager.recv_message("chatter",10,0.01, sub_cb);
 
-                s.sleep(1);
+                s.sleep(1000);
 
 //                if(i++ > 20){ break;}
             }
