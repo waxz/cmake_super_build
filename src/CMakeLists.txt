@@ -672,4 +672,4 @@ target_include_directories( argparse_test PUBLIC
         ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
         )
 
-add_subdirectory(root_test)
+#add_subdirectory(root_test)

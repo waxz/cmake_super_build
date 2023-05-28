@@ -240,7 +240,7 @@ set_property(TARGET liboptim PROPERTY INTERFACE_LINK_LIBRARIES autodiff::autodif
 print_include_dir(liboptim)
 
 # https://github.com/openresty/luajit2
-build_external_project_command(luajit lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/luajit2-2.1-20230119.tar.gz "mkdir -p ${CMAKE_BINARY_DIR}/force_luajit/install/bin/luajit-2.1.0-beta3" "make PREFIX=${CMAKE_BINARY_DIR}/force_luajit/install" "make install PREFIX=${CMAKE_BINARY_DIR}/force_luajit/install")
+build_external_project_command(luajit lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/luajit2-2.1-20230410.tar.gz "mkdir -p ${CMAKE_BINARY_DIR}/force_luajit/install/bin" "make PREFIX=${CMAKE_BINARY_DIR}/force_luajit/install" "make install PREFIX=${CMAKE_BINARY_DIR}/force_luajit/install")
 set(LUA_LIBRARIES ${luajit_ROOT}/lib/libluajit-5.1.a)
 set(LUA_INCLUDE_DIR ${luajit_ROOT}/include/luajit-2.1)
 
@@ -356,8 +356,8 @@ find_package(Boost
         )
 
 message(Boost_LIBRARIES = ${Boost_LIBRARIES})
-set(ROOT_ROOT ${CMAKE_SOURCE_DIR}/third_party/root_v6.28.02.Linux-ubuntu20-x86_64-gcc9.4/root/cmake )
-find_package(ROOT REQUIRED COMPONENTS RIO Net)
+#set(ROOT_ROOT ${CMAKE_SOURCE_DIR}/third_party/root_v6.28.02.Linux-ubuntu20-x86_64-gcc9.4/root/cmake )
+#find_package(ROOT REQUIRED COMPONENTS RIO Net)
 
 add_subdirectory(src)
 
