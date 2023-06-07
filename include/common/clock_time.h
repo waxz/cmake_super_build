@@ -12,12 +12,13 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
-#include <sstream>
 #include <ctime>
 #include <locale>
 #include <iostream>
 #include <iomanip>
-#include <ctime>
+#include <iterator>
+#include <locale>
+
 
 namespace common {
     using int8 = int8_t;
@@ -167,44 +168,47 @@ namespace common {
     using Time = UniversalTimeScaleClock::time_point;
 
 // Convenience functions to create common::Durations.
-    Duration FromSeconds(double seconds) {
+    inline Duration FromSeconds(double seconds) {
         return std::chrono::duration_cast<Duration>(
                 std::chrono::duration<double>(seconds));
     }
 
-    Duration FromMilliseconds(int64 milliseconds){
+    inline Duration FromMilliseconds(int64 milliseconds){
         return std::chrono::duration_cast<Duration>(
                 std::chrono::milliseconds(milliseconds));
     }
-    Duration FromMicroseconds(int64 microseconds){
+    inline Duration FromMicroseconds(int64 microseconds){
         return std::chrono::duration_cast<Duration>(
                 std::chrono::microseconds (microseconds));
     }
 // Returns the given duration in seconds.
-    long ToMillSeconds(Duration duration){
+    inline long ToMillSeconds(Duration duration){
         return std::chrono::duration_cast<std::chrono::milliseconds>(duration)
                 .count();
     }
 
     // Returns the given duration in seconds.
-    long ToMicroSeconds(Duration duration){
+    inline long ToMicroSeconds(Duration duration){
         return std::chrono::duration_cast<std::chrono::microseconds>(duration)
                 .count();
     }
 
 // Creates a time from a Universal Time Scale.
-    Time FromUniversal(int64 ticks) { return Time(Duration(ticks)); }
+    inline Time FromUniversal(int64 ticks) { return Time(Duration(ticks)); }
 
 // Outputs the Universal Time Scale timestamp for a given Time.
 //将c++的time_point对象转为TUC时间,单位是us
-    int64 ToUniversal(Time time) { return time.time_since_epoch().count(); }
+    inline int64 ToUniversal(Time time) { return time.time_since_epoch().count(); }
 
 // For logging and unit tests, outputs the timestamp integer.
-    std::ostream &operator<<(std::ostream &os, Time time);
+    inline std::ostream &operator<<(std::ostream &os, Time time){
+        os  << std::to_string(ToUniversal(time));
+        return os;
+    }
 
 // utc time <---> unix time
 //https://stackoverflow.com/questions/31255486/c-how-do-i-convert-a-stdchronotime-point-to-long-and-back
-    Time FromUnixNow(){
+    inline Time FromUnixNow(){
         using namespace std::chrono;
         // Get current time with precision of milliseconds
         auto now = time_point_cast<Duration>(system_clock::now());
@@ -212,11 +216,43 @@ namespace common {
         // Convert time_point to signed integral type
         auto integral_duration = now.time_since_epoch().count(); // 1ms = 1e3us = 1e4 * 100ns
 
-        return common::FromUniversal(integral_duration );
+        return FromUniversal(integral_duration );
     }
 
-    // Get current date/time, format is YYYY-MM-DD HH:mm:ss, format = "%Y-%m-%d %X"
-    std::string getCurrentDateTime(const std::string & format = "%Y-%m-%d %X") {
+    inline Time FromTimePoint(std::chrono::time_point<std::chrono::system_clock,
+                                      std::chrono::nanoseconds> timestamp){
+        using namespace std::chrono;
+
+        // Get current time with precision of milliseconds
+        auto now = time_point_cast<Duration>(timestamp);
+
+        // Convert time_point to signed integral type
+        auto integral_duration = now.time_since_epoch().count(); // 1ms = 1e3us = 1e4 * 100ns
+
+        return FromUniversal(integral_duration );
+    }
+
+    template<typename TimeType>
+    void ToRos(Time time,TimeType& target_time)
+    {
+        int64_t uts_timestamp = ToUniversal(time);
+//        int64_t ns_since_unix_epoch = (uts_timestamp - kUtsEpochOffsetFromUnixEpochInSeconds *10000000ll) * 100ll;
+        int64_t ns_since_unix_epoch = (uts_timestamp ) * 100ll;
+
+        target_time.fromNSec(ns_since_unix_epoch);
+    }
+    template<typename TimeType>
+    Time FromRos(const TimeType& time)
+    {
+//        auto integral_duration = (time.sec + common::kUtsEpochOffsetFromUnixEpochInSeconds) * 10000000ll  + (time.nsec + 50) / 100;
+        auto integral_duration = (time.sec ) * 10000000ll  + (time.nsec + 50) / 100;
+
+        return FromUniversal(integral_duration);
+    }
+
+
+    // Get current date/time, format is YYYY-MM-DD HH:mm:ss, format = "%Y-%m-%d %X" or "%Y-%m-%d-%H-%M-%S"
+    inline std::string getCurrentDateTime(const std::string & format = "%Y-%m-%d %X") {
         time_t     now = time(0);
         struct tm  tstruct;
         char       buf[80];
@@ -228,7 +264,7 @@ namespace common {
         return buf;
     }
 
-    void formatTimestamp(const Time& timestamp, std::string& out)
+    inline void formatTimestamp(const Time& timestamp, std::string& out)
     {
         std::time_t time = std::chrono::system_clock::to_time_t(
                 std::chrono::time_point_cast<Duration>(

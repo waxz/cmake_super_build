@@ -111,6 +111,7 @@ int main(int argc, char** argv){
     common::TaskManager manager;
     std::string time_str_1,time_str_2;
 
+#if 0
     auto sub_1 = observable::subject<void(int)> { };
     std::string sub_1_time_str;
     sub_1.subscribe([&](auto const & msg) {
@@ -141,14 +142,27 @@ int main(int argc, char** argv){
     coroutine::resume(rt1);
 
 
+#endif
+
     int cnt = 0;
     manager.addTask([&]{
+        std::cout << "cnt = " << cnt << "\n";
         std::cout << "run 1 ";
         formatTimestamp(common::FromUnixNow(),time_str_1);
         std::cout << "now = " <<time_str_1 << std::endl;
         cnt++;
+        if(cnt == 10){
+            manager.addTask([&]{
+                std::cout << "run 3 ";
+                formatTimestamp(common::FromUnixNow(),time_str_1);
+                std::cout << "now = " <<time_str_1 << std::endl;
+
+
+                return cnt < 30;
+                },10000,1);
+        }
 //        channel.push(cnt);
-        sub_1.notify(cnt);
+//        sub_1.notify(cnt);
         return true;
     },10000, 1);
 
