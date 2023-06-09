@@ -395,7 +395,8 @@ namespace sol {
 
 #include <stdexcept>
 #include <string>
-
+#include <limits>
+#include <algorithm>
 namespace sol {
 	namespace detail {
 		struct direct_error_tag {};
