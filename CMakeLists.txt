@@ -33,6 +33,23 @@ set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 #set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6), libc6 (<< 3)")
 
 
+#iceoryx-2.0.3.zip
+#https://man7.org/tlpi/code/faq.html#sys-acl.h-missing
+#sudo apt-get install libacl1-dev
+build_external_project_command(iceoryx lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/iceoryx-2.0.3.zip  "cmake -Bbuild -Hiceoryx_meta -DBUILD_DOC=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/force_iceoryx/install" "cmake --build build" " cmake --build build --target install" )
+set(iceoryx_binding_c_ROOT ${iceoryx_ROOT})
+find_package(iceoryx_binding_c REQUIRED)
+
+#cyclonedds-0.10.2.zip
+build_external_project(CycloneDDS lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-0.10.2.zip -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT} -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
+find_package(CycloneDDS REQUIRED)
+
+#cyclonedds-cxx-0.10.2.zip
+#
+build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.2.zip -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
+find_package(CycloneDDS-CXX REQUIRED)
+
+
 # Eigen3
 build_external_project(Eigen3 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen-3.4.0.zip  -DCMAKE_BUILD_TYPE=Release )
 message(Eigen3_ROOT : ${Eigen3_ROOT} )
@@ -336,21 +353,6 @@ if(test_fast_dds)
 endif ()
 
 
-#iceoryx-2.0.3.zip
-#https://man7.org/tlpi/code/faq.html#sys-acl.h-missing
-#sudo apt-get install libacl1-dev
-build_external_project_command(iceoryx lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/iceoryx-2.0.3.zip  "cmake -Bbuild -Hiceoryx_meta -DBUILD_DOC=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/force_iceoryx/install" "cmake --build build" " cmake --build build --target install" )
-set(iceoryx_binding_c_ROOT ${iceoryx_ROOT})
-find_package(iceoryx_binding_c REQUIRED)
-
-#cyclonedds-0.10.2.zip
-build_external_project(CycloneDDS lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-0.10.2.zip -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT} -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
-find_package(CycloneDDS REQUIRED)
-
-#cyclonedds-cxx-0.10.2.zip
-#
-build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.2.zip -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
-find_package(CycloneDDS-CXX REQUIRED)
 
 #ecal-5.11.2.zip
 #cmake .. -DCMAKE_BUILD_TYPE=Release -DECAL_THIRDPARTY_BUILD_PROTOBUF=OFF -DECAL_THIRDPARTY_BUILD_CURL=OFF -DECAL_THIRDPARTY_BUILD_HDF5=OFF -DECAL_THIRDPARTY_BUILD_QWT=OFF
