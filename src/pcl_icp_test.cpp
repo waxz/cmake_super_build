@@ -78,7 +78,7 @@
 
 #include <pcl/console/time.h>
 
-#include "warp_point_rigid_3d_v2.h"
+//#include "warp_point_rigid_3d_v2.h"
 
 
 #include "transform/transform.h"
@@ -86,11 +86,11 @@
 
 #include "icp/pcl_icp_with_normal.h"
 
-#include "math/random.h"
+#include "common/random.h"
 
 int main(int argc, char** argv){
     using ICPTYPE = pcl::registration::TransformationEstimationPointToPlane<pcl::PointNormal, pcl::PointNormal>;
-    using ICPWarpType = pcl::registration::WarpPointRigid3D_V2<pcl::PointNormal, pcl::PointNormal>;
+    using ICPWarpType = pcl::registration::WarpPointRigid3D<pcl::PointNormal, pcl::PointNormal>;
     using ICPCensType =  pcl::registration::CorrespondenceEstimation<pcl::PointNormal, pcl::PointNormal, float>;
 
     // read file
@@ -142,8 +142,8 @@ int main(int argc, char** argv){
 
                 t_input->points[valid_num] = p;
 
-                t_input->points[valid_num].x += math::normal_real<float>(0.0f,stddev) +  ( ( ((i%100) > 0) && ((i%100) < per)) ? 1.0: 0.0 );
-                t_input->points[valid_num].y += math::normal_real<float>(0.0f,stddev) + ( ( ((i%100) > 0) && ((i%100) < per)) ? 1.0: 0.0 );
+                t_input->points[valid_num].x += common::normal_real<float>(0.0f,stddev) +  ( ( ((i%100) > 0) && ((i%100) < per)) ? 1.0: 0.0 );
+                t_input->points[valid_num].y += common::normal_real<float>(0.0f,stddev) + ( ( ((i%100) > 0) && ((i%100) < per)) ? 1.0: 0.0 );
 
                 valid_num += valid;
             }

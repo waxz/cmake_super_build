@@ -89,6 +89,7 @@ int main(void)
     }
 
     {
+        int i = 0;
         assert(str2int(&i, "11", 10) == STR2INT_SUCCESS);
         assert(i == 11);
 
@@ -138,6 +139,41 @@ int main(void)
             ch = strtok(NULL, ":");
         }
 
+    }
+    {
+        {
+            char str[] ="0:11";
+            char* st = str ;
+            char *ch;
+            ch = strtok(st, ":");
+            int count = 0;
+            while (ch != NULL) {
+                printf("get %s\n", ch);
+
+                switch (count) {
+                    case 0:
+                        printf("get %s\n", ch);
+                        int dev_id1;
+                        if(str2int(&dev_id1, ch, 10) == STR2INT_SUCCESS){
+                            printf("dev_id1 %d\n", dev_id1);
+                        }
+                        break;
+                    case 1:
+                        printf("get %s\n", ch);
+                        int dev_id2;
+                        if(str2int(&dev_id2, ch, 10) == STR2INT_SUCCESS){
+                            printf("dev_id2 %d\n", dev_id2);
+                        }
+
+                        break;
+                    default:
+                        break;
+                }
+                count ++;
+                ch = strtok(NULL, ":");
+            }
+
+        }
     }
     thrd_t id[SIZE];
 

@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#if TEST_AUTODIFF
+
 #define OPTIM_ENABLE_EIGEN_WRAPPERS
 #include "optim.hpp"
 //#include <autodiff/forward/real.hpp>
@@ -41,6 +43,106 @@ opt_fn(const Eigen::VectorXd &x, Eigen::VectorXd *grad_out, void *opt_data) {
 
     return autodiff::val(y);
 }
+autodiff::var
+tf_opt_fnd(const autodiff::ArrayXvar &x) {
+
+    auto tf1 = createSe3<autodiff::var>(x(0),x(1),x(2),x(3),x(4),x(5),x(6));
+
+    auto tf_base = createSe3<autodiff::var>(0.1,0.2,0.15,0.57,0.57,0.0,0.0);
+
+    Eigen::Quaternion<autodiff::var>  Q1 (tf1.rotation());
+    Eigen::Quaternion<autodiff::var>  Q2 (tf_base.rotation());
+
+    autodiff::var angle_error = computeQuaternionDiff(Q1 ,Q2);
+    autodiff::var x_error = tf1.translation()[0] - tf_base.translation()[0];
+    autodiff::var y_error = tf1.translation()[1]- tf_base.translation()[1];
+    autodiff::var z_error = tf1.translation()[2] - tf_base.translation()[2];
+    autodiff::var q_error = (x(3)*x(3) + x(4)*x(4)  + x(5)*x(5) + x(6)*x(6)) - 1.0;
+
+    autodiff::var r = angle_error*angle_error +x_error*x_error + y_error*y_error + z_error*z_error + q_error*q_error;
+
+
+    return r;
+}
+
+
+double
+tf_opt_fn(const Eigen::VectorXd &x, Eigen::VectorXd *grad_out, void *opt_data) {
+
+    autodiff::ArrayXvar xd = x.eval();
+
+    autodiff::var y = tf_opt_fnd(xd);
+
+    if (grad_out) {
+        Eigen::VectorXd grad_tmp = autodiff::gradient(y, xd);
+
+        *grad_out = grad_tmp;
+    }
+
+    return autodiff::val(y);
+}
+
+
+void test_2() {
+    Eigen::VectorXd x(5);
+    x << 1, 2, 3, 4, 5;
+
+    bool success = optim::bfgs(x, opt_fn, nullptr);
+
+    if (success) {
+        std::cout << "bfgs: reverse-mode autodiff test completed successfully.\n" << std::endl;
+    } else {
+        std::cout << "bfgs: reverse-mode autodiff test completed unsuccessfully.\n" << std::endl;
+    }
+
+    std::cout << "solution: x = \n" << x << std::endl;
+
+}
+
+void test_3() {
+    // x cannot be zero
+    Eigen::VectorXd x(7);
+    x << 1e-5, 1e-5, 1e-5,
+    1.-1e-5, 1e-5, 1e-5, 1e-5;
+
+    optim::algo_settings_t settings;
+
+    settings.vals_bound = true;
+
+    settings.lower_bounds = optim::ColVec_t::Zero(7);
+    settings.lower_bounds(0) = -1.0;
+    settings.lower_bounds(1) = -1.0;
+    settings.lower_bounds(2) = -1.0;
+    settings.lower_bounds(3) = -1.0;
+    settings.lower_bounds(4) = -1.0;
+    settings.lower_bounds(5) = -1.0;
+    settings.lower_bounds(6) = -1.0;
+
+
+    settings.upper_bounds = optim::ColVec_t::Zero(7);
+    settings.upper_bounds(0) = 1.0;
+    settings.upper_bounds(1) = 1.0;
+    settings.upper_bounds(2) = 1.0;
+    settings.upper_bounds(3) = 1.0;
+    settings.upper_bounds(4) = 1.0;
+    settings.upper_bounds(5) = 1.0;
+    settings.upper_bounds(6) = 1.0;
+
+
+
+    bool success = optim::bfgs(x, tf_opt_fn, nullptr,settings);
+
+    if (success) {
+        std::cout << "bfgs: reverse-mode autodiff test completed successfully.\n" << std::endl;
+    } else {
+        std::cout << "bfgs: reverse-mode autodiff test completed unsuccessfully.\n" << std::endl;
+    }
+
+    std::cout << "solution: x = \n" << x << std::endl;
+
+}
+#endif
+
 
 
 
@@ -105,46 +207,6 @@ Eigen::Quaternion<FloatType> createQuaternion( FloatType qw, FloatType qx, Float
 }
 
 
-
-
-autodiff::var
-tf_opt_fnd(const autodiff::ArrayXvar &x) {
-
-    auto tf1 = createSe3<autodiff::var>(x(0),x(1),x(2),x(3),x(4),x(5),x(6));
-
-    auto tf_base = createSe3<autodiff::var>(0.1,0.2,0.15,0.57,0.57,0.0,0.0);
-
-    Eigen::Quaternion<autodiff::var>  Q1 (tf1.rotation());
-    Eigen::Quaternion<autodiff::var>  Q2 (tf_base.rotation());
-
-    autodiff::var angle_error = computeQuaternionDiff(Q1 ,Q2);
-    autodiff::var x_error = tf1.translation()[0] - tf_base.translation()[0];
-    autodiff::var y_error = tf1.translation()[1]- tf_base.translation()[1];
-    autodiff::var z_error = tf1.translation()[2] - tf_base.translation()[2];
-    autodiff::var q_error = (x(3)*x(3) + x(4)*x(4)  + x(5)*x(5) + x(6)*x(6)) - 1.0;
-
-    autodiff::var r = angle_error*angle_error +x_error*x_error + y_error*y_error + z_error*z_error + q_error*q_error;
-
-
-    return r;
-}
-
-
-double
-tf_opt_fn(const Eigen::VectorXd &x, Eigen::VectorXd *grad_out, void *opt_data) {
-
-    autodiff::ArrayXvar xd = x.eval();
-
-    autodiff::var y = tf_opt_fnd(xd);
-
-    if (grad_out) {
-        Eigen::VectorXd grad_tmp = autodiff::gradient(y, xd);
-
-        *grad_out = grad_tmp;
-    }
-
-    return autodiff::val(y);
-}
 
 
 
@@ -244,64 +306,7 @@ void test_1(){
 
 }
 
-void test_2() {
-    Eigen::VectorXd x(5);
-    x << 1, 2, 3, 4, 5;
 
-    bool success = optim::bfgs(x, opt_fn, nullptr);
-
-    if (success) {
-        std::cout << "bfgs: reverse-mode autodiff test completed successfully.\n" << std::endl;
-    } else {
-        std::cout << "bfgs: reverse-mode autodiff test completed unsuccessfully.\n" << std::endl;
-    }
-
-    std::cout << "solution: x = \n" << x << std::endl;
-
-}
-
-void test_3() {
-    // x cannot be zero
-    Eigen::VectorXd x(7);
-    x << 1e-5, 1e-5, 1e-5,
-    1.-1e-5, 1e-5, 1e-5, 1e-5;
-
-    optim::algo_settings_t settings;
-
-    settings.vals_bound = true;
-
-    settings.lower_bounds = optim::ColVec_t::Zero(7);
-    settings.lower_bounds(0) = -1.0;
-    settings.lower_bounds(1) = -1.0;
-    settings.lower_bounds(2) = -1.0;
-    settings.lower_bounds(3) = -1.0;
-    settings.lower_bounds(4) = -1.0;
-    settings.lower_bounds(5) = -1.0;
-    settings.lower_bounds(6) = -1.0;
-
-
-    settings.upper_bounds = optim::ColVec_t::Zero(7);
-    settings.upper_bounds(0) = 1.0;
-    settings.upper_bounds(1) = 1.0;
-    settings.upper_bounds(2) = 1.0;
-    settings.upper_bounds(3) = 1.0;
-    settings.upper_bounds(4) = 1.0;
-    settings.upper_bounds(5) = 1.0;
-    settings.upper_bounds(6) = 1.0;
-
-
-
-    bool success = optim::bfgs(x, tf_opt_fn, nullptr,settings);
-
-    if (success) {
-        std::cout << "bfgs: reverse-mode autodiff test completed successfully.\n" << std::endl;
-    } else {
-        std::cout << "bfgs: reverse-mode autodiff test completed unsuccessfully.\n" << std::endl;
-    }
-
-    std::cout << "solution: x = \n" << x << std::endl;
-
-}
 int main(int argc, char** argv){
 
     test_1();

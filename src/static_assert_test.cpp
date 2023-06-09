@@ -316,7 +316,7 @@ void from_json(const nlohmann::json& j, Cat& object) {
 TEST_CASE("json test", "[json convert]"){
 
     constexpr auto type_dict = std::make_tuple(
-            property(int, "barkType"),
+            property(&Cat::barkType, "barkType"),
             property(&Cat::color, "color"),
             property(&Cat::weight, "weight"),
             property(&Cat::pawType, "pawType")
@@ -375,6 +375,10 @@ TEST_CASE("typeid","[typde id]"){
         const char* name = common::TypeName<Point>::Get();
         std::cout << "Point : " << name << std::endl;
     }
+    {
+        const char* name = common::TypeName<std::vector<std::string>>::Get();
+        std::cout << "std::vector<std::string> : " << name << std::endl;
+    }
 
 }
 
@@ -427,6 +431,22 @@ TEST_CASE("memory pointer","[wild pointer]"){
 
     std::cout << "********\ncheck wild_ptr" << std::endl;
 
+    {
+        std::cout << "********\ncheck wild_ptr check very lone typeid" << std::endl;
+
+        common::wild_ptr buffer;
+        using T = std::string;
+        buffer.set(std::vector<T>{});
+        {
+
+            auto& buffer_ref =  buffer.ref<std::vector<T>>();
+
+            buffer_ref.emplace_back("aaa");
+            buffer_ref.emplace_back("aaab");
+
+        }
+
+    }
     {
 
         std::cout << "********\ncheck wild_ptr cat move" << std::endl;
@@ -615,4 +635,30 @@ TEST_CASE("invoke","[invoke]"){
     static_assert(
             inv::is_invocable<decltype(&obj_t::member_r_with_arg), std::reference_wrapper<obj_t>, int>::value,
             "unit test fail");
+}
+
+TEST_CASE("bitset"){
+
+}
+
+TEST_CASE("vector dynamic modify"){
+    std::vector<int> arr{1,2,3,4,5};
+
+    std::vector<int> arr2{1,2,3,4,5};
+
+    for(size_t i = 0 ; i < arr.size() ;i++){
+
+        std::cout << "id : " << i << ", prt : " << &(arr[i]) << ", value : " << arr[i] << "\n";
+
+    }
+
+    for(size_t i = 0 ; i < arr.size() ;i++){
+
+        std::cout << "id : " << i << ", prt : " << &(arr[i]) << ", value : " << arr[i] << "\n";
+
+        if(i == 2){
+            arr.push_back(10);
+        }
+    }
+
 }

@@ -37,8 +37,8 @@ public:
       runtime_error(rMsg),
       mErrCode(code) { }
 
-   const int code(void) const { return mErrCode; }
-   const void print(void) const {
+   int code() const { return mErrCode; }
+   void print() const {
       std::cerr << "error_code[" << mErrCode << "]|"
                 << this->what() << std::endl;
    }

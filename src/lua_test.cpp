@@ -300,30 +300,22 @@ TEST_CASE("memory"){
                               "value", &my_type::value
     );
 
+    using vector_float = std::vector<float>;
+
     {
 
-        lua.new_usertype<std::vector<float>>("vector_float",
-                                              sol::constructors<std::vector<float>(int)>(),
-                                              "size", &std::vector<float>::size,
-                                              "push_back",
-                                              sol::overload([](std::vector<float> & self, const float& v){ self.push_back(v);},
-                                                                          [](std::vector<float> & self, const double& v){self.push_back(v);}
-                                                                          ),
-
-                                             sol::meta_function::length, [](std::vector<float> &self){return  self.size();},
-                                              sol::meta_function::index, [](std::vector<float> &self, int i) -> float & {
-                    return self[i]; // treat like a container, despite is_container specialization
-                },
-                                              sol::meta_function::new_index, [](std::vector<float> &self, int i, float v)   {
-                    self[i] = v; // treat like a container, despite is_container specialization
-                },
-                                              "iterable", [](std::vector<float> &self) {
-                    return sol::as_container(self); // treat like a container, despite is_container specialization
-                }
+        lua.new_usertype<vector_float>("vector_float",
+                                              sol::constructors<vector_float(), vector_float(const size_t&)>(),
+                                              "size", &vector_float::size,
+                                              "push_back", sol::overload([](vector_float & self, const float& v){ self.push_back(v);},  [](vector_float & self, const double& v){self.push_back(v);} ),
+                                             sol::meta_function::length, [](vector_float &self){return  self.size();},
+                                              sol::meta_function::index, [](vector_float &self, int i) -> float & { return self[i]; },
+                                              sol::meta_function::new_index, [](vector_float &self, int i, float v)   { self[i] = v; },
+                                              "iterable", [](vector_float &self) { return sol::as_container(self); }
         );
 
 
-        std::vector<float> arr{0.1f,0.2f,0.3f,0.4f};
+        vector_float arr{0.1f,0.2f,0.3f,0.4f};
 
         arr.reserve(10);
 
@@ -354,7 +346,7 @@ arr_push_back(50)
         for( int i = 0 ; i < arr.size();i++){
             std::cout << i  << "  = " << arr[i]  <<"\n";
         }
-        std::vector<float> arr2 = lua["arr"];
+        vector_float arr2 = lua["arr"];
         std::cout << "=== check in cpp: arr2 ===" << std::endl;
 
         for( int i = 0 ; i < arr2.size();i++){
@@ -362,6 +354,50 @@ arr_push_back(50)
         }
 
 
+
+    }
+    {
+        auto simple_handler_lambda =
+                [](lua_State*, const sol::protected_function_result& result) {
+                    // You can just pass it through to let the
+                    // call-site handle it
+                    std::cout << "\n******LUA INFO:\nAn exception occurred in a function, here's what it says ";
+                    sol::error err = result;
+                    std::cout << "call failed, sol::error::what() is " <<  err.what() << std::endl;
+//                MLOGW("%s", what.c_str());
+                    return result;
+                };
+
+
+        lua.set_function("hello",[&](int v){
+
+            std::cout << " hello " << v << " from lua" << std::endl;
+
+        });
+        lua.script("hello(20);");
+
+        std::thread t1([&]{
+            lua.script("hello(333); ");
+
+
+            auto result = lua.script(
+                    "hello1(333);",
+                    simple_handler_lambda);
+            if (result.valid()) {
+                std::cout << "run lua script ok"
+                          << std::endl;
+
+            }
+            else {
+                std::cout << "run lua script fail"
+                          << std::endl;
+            }
+
+
+
+        });
+
+        t1.join();
 
     }
     {

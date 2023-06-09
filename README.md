@@ -164,6 +164,8 @@ add_ros(ros_init_node roscpp)
 - https://github.com/arsenm/sanitizers-cmake
 - https://github.com/google/breakpad
 - https://github.com/bfgroup/Lyra
+- https://github.com/openresty/luajit2
+- https://www.open-mpi.org/software/hwloc
 
 ### ldd
 https://stackoverflow.com/questions/58997230/cmake-project-fails-to-find-shared-library
@@ -171,3 +173,7 @@ https://stackoverflow.com/questions/58997230/cmake-project-fails-to-find-shared-
 readelf -a  ./executable | grep -e NEEDED -e PATH
 LD_DEBUG=files,libs ldd ./executable
 ```
+
+# python
+- pip install dearpygui -i https://pypi.doubanio.com/simple
+- pip install paho-mqtt -i https://pypi.doubanio.com/simple 

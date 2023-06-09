@@ -5,7 +5,7 @@ include(ExternalProject)
 function (build_external_project target prefix url) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
     include(ProcessorCount)
     ProcessorCount(N)
-    math(EXPR USE_CORE_NUM "${N} - 1 " OUTPUT_FORMAT DECIMAL)
+    math(EXPR USE_CORE_NUM "${N} / 2 " OUTPUT_FORMAT DECIMAL)
 
     set(trigger_build_dir ${CMAKE_BINARY_DIR}/force_${target})
 
@@ -48,7 +48,7 @@ endfunction()
 function (build_external_project_cmake target prefix url) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
     include(ProcessorCount)
     ProcessorCount(N)
-    math(EXPR USE_CORE_NUM "${N} - 1 " OUTPUT_FORMAT DECIMAL)
+    math(EXPR USE_CORE_NUM "${N} / 2 " OUTPUT_FORMAT DECIMAL)
 
     set(trigger_build_dir ${CMAKE_BINARY_DIR}/force_${target})
 
@@ -92,7 +92,7 @@ endfunction()
 function (build_external_project_make target prefix url) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
     include(ProcessorCount)
     ProcessorCount(N)
-    math(EXPR USE_CORE_NUM "${N} - 1 " OUTPUT_FORMAT DECIMAL)
+    math(EXPR USE_CORE_NUM "${N} / 2 " OUTPUT_FORMAT DECIMAL)
 
     set(trigger_build_dir ${CMAKE_BINARY_DIR}/force_${target})
 
@@ -138,7 +138,7 @@ endfunction()
 function (build_external_project_command target prefix url configure_command build_command install_command) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
     include(ProcessorCount)
     ProcessorCount(N)
-    math(EXPR USE_CORE_NUM "${N} - 1 " OUTPUT_FORMAT DECIMAL)
+    math(EXPR USE_CORE_NUM "${N} / 2 " OUTPUT_FORMAT DECIMAL)
 
     set(trigger_build_dir ${CMAKE_BINARY_DIR}/force_${target})
 

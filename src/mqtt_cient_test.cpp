@@ -1,7 +1,7 @@
 //
 // Created by waxz on 9/14/22.
 //
-#include "message/MqttClient.h"
+#include "message/impl/mqtt/MqttClient.h"
 
 
 #include "json.hpp"
@@ -19,7 +19,7 @@ int main(int argc, char** argv){
 
     common::initSystemSignalHandler();
 
-    std::string mqtt_server_ip = "172.17.0.1";
+    std::string mqtt_server_ip = "127.0.0.1";
     int mqtt_server_port = 1883;
     int mqtt_topic_qos =0;
     std::string mqtt_user_name = "user_1";

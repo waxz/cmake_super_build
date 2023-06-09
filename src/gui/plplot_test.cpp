@@ -25,52 +25,13 @@
 
 #include "message/common_message.h"
 #include "common/suspend.h"
+#include "math/geometry.h"
+#include "math/BezierGenerator.h"
+#include "control/ControlSimulator.h"
+#include "control/MobileRobotController.h"
 
 #include <vector>
 
-//https://gist.github.com/TimSC/47203a0f5f15293d2099507ba5da44e6#file-linelineintersect-cpp
-/** Calculate determinant of matrix:
-	[a b]
-	[c d]
-*/
-inline float Det(float a, float b, float c, float d)
-{
-    return a*d - b*c;
-}
-///Calculate intersection of two lines.
-///\return true if found, false if not found or error
-bool LineLineIntersect(float x1, float y1, //Line 1 start
-                       float x2, float y2, //Line 1 end
-                       float x3, float y3, //Line 2 start
-                       float x4, float y4, //Line 2 end
-                       float &ixOut, float &iyOut) //Output
-{
-    //http://mathworld.wolfram.com/Line-LineIntersection.html
-
-    float detL1 = Det(x1, y1, x2, y2);
-    float detL2 = Det(x3, y3, x4, y4);
-    float x1mx2 = x1 - x2;
-    float x3mx4 = x3 - x4;
-    float y1my2 = y1 - y2;
-    float y3my4 = y3 - y4;
-
-    float xnom = Det(detL1, x1mx2, detL2, x3mx4);
-    float ynom = Det(detL1, y1my2, detL2, y3my4);
-    float denom = Det(x1mx2, y1my2, x3mx4, y3my4);
-    if(denom == 0.0)//Lines don't seem to cross
-    {
-        ixOut = NAN;
-        iyOut = NAN;
-        return false;
-    }
-
-    ixOut = xnom / denom;
-    iyOut = ynom / denom;
-    if(!std::isfinite(ixOut) || !std::isfinite(iyOut)) //Probably a numerical issue
-        return false;
-
-    return true; //All OK
-}
 
 
 namespace control{
@@ -225,9 +186,25 @@ Plot::Plot( int argc, char **argv )
 {
     PLFLT x[NSIZE], y[NSIZE];
     PLFLT xmin = -1.5, xmax = 1.5, ymin = -1.5, ymax = 1.5;
+    const char      *legline[4];
 
 
+    PLINT           colbox, collab, colline[4], styline[4];
+    PLINT           id1;
 
+
+    //pen
+    colbox     = 1;
+    collab     = 3;
+    styline[0] = colline[0] = 2;      // pens color and line style
+    styline[1] = colline[1] = 3;
+    styline[2] = colline[2] = 4;
+    styline[3] = colline[3] = 5;
+
+    legline[0] = "sum";                       // pens legend
+    legline[1] = "sin";
+    legline[2] = "sin*noi";
+    legline[3] = "sin+noi";
 
 
     // Prepare data to be plotted.
@@ -286,11 +263,13 @@ Plot::Plot( int argc, char **argv )
             float y4 = 1.0;
 
             float xc, yc;
-            bool ok = LineLineIntersect(x1,y1,x2,y2,x3,y3,x4,y4,xc,yc);
+            bool ok = math::LineLineIntersect(x1,y1,x2,y2,x3,y3,x4,y4,xc,yc);
             std::cout << "1 check LineLineIntersect : " << ok << std::endl;
             pls->join(x1,y1,x2,y2);
             pls->join(x3,y3,x4,y4);
-            pls->join(0.0,0.0,xc,yc);
+            if(ok){
+                pls->join(0.0,0.0,xc,yc);
+            }
 
         }
         {
@@ -304,21 +283,79 @@ Plot::Plot( int argc, char **argv )
             float y4 = y2;
 
             float xc, yc;
-            bool ok = LineLineIntersect(x1,y1,x2,y2,x3,y3,x4,y4,xc,yc);
+            bool ok = math::LineLineIntersect(x1,y1,x2,y2,x3,y3,x4,y4,xc,yc);
             std::cout << "2 check LineLineIntersect : " << ok << std::endl;
 
             pls->join(x1,y1,x2,y2);
             pls->join(x3,y3,x4,y4);
-            pls->join(0.0,0.0,xc,yc);
+            if(ok){
+                pls->join(0.0,0.0,xc,yc);
+            }
 
         }
 
-        common_message::Twist cmd_vel_msg;
-        cmd_vel_msg.linear.x = 0.1;
 
         common::Suspend s;
         int i = 0;
-        std::cout << __LINE__ <<  " wait" << std::endl;
+
+        {
+
+            control::DoubleSteerController controller;
+            control::SteerWheelBase wheel_1;
+            wheel_1.enable_rot = true;
+            wheel_1.mount_position_x = -0.4075;
+            wheel_1.mount_position_y = -0.1675;
+            wheel_1.mount_position_yaw = 0.0;
+
+            control::SteerWheelBase wheel_2;
+            wheel_2.enable_rot = true;
+            wheel_2.mount_position_x = 0.4075;
+            wheel_2.mount_position_y = 0.1675;
+            wheel_2.mount_position_yaw = 0.0;
+
+            controller.set_wheel(wheel_1,wheel_2);
+
+            controller.cmd_vel(0.8, 0.5);
+            std::cout << "get cmd_vel " << controller.m_steer_wheel_1.target_rot_angle << ", "
+            << controller.m_steer_wheel_1.target_forward_vel << ", "
+            << controller.m_steer_wheel_2.target_rot_angle << ", "
+            << controller.m_steer_wheel_2.target_forward_vel<< std::endl;
+
+            float axis_range = 2.5;
+            pls->env( -axis_range, axis_range, -axis_range, axis_range, 1, 0 );
+
+            pls->lab  ( "x", "y", "Robot" );
+
+            control::DoubleSteerBase robot;
+
+
+            robot.steer_1.position.set(wheel_1.mount_position_x ,wheel_1.mount_position_y ,wheel_1.mount_position_yaw );
+            robot.steer_2.position.set(wheel_2.mount_position_x ,wheel_2.mount_position_y ,wheel_2.mount_position_yaw );
+
+            robot.update(controller.m_steer_wheel_1.target_forward_vel,controller.m_steer_wheel_1.target_rot_angle ,
+                         controller.m_steer_wheel_2.target_forward_vel,controller.m_steer_wheel_2.target_rot_angle );
+            Arrow(robot.position.x(),robot.position.y(),robot.position.yaw(),1.0);
+
+
+            std::cout << "robot .steer_1.position: " << robot .steer_1.position << "\n"
+            <<"robot .steer_2.position: " << robot .steer_2.position << "\n";
+            Arrow(robot .steer_1.position.x(),robot.steer_1.position.y(),robot.steer_1.position.yaw() + (robot.steer_1.actual_forward_vel > 0.0 ? 0.0 : M_PI )   ,0.2);
+            Arrow(robot .steer_2.position.x(),robot.steer_2.position.y(),robot.steer_2.position.yaw()+ (robot.steer_2.actual_forward_vel > 0.0 ? 0.0 : M_PI ),0.2);
+            Arrow(robot .steer_1.position.x(),robot.steer_1.position.y(),robot.steer_1.position.yaw() -M_PI_2,10.2);
+            Arrow(robot .steer_2.position.x(),robot.steer_2.position.y(),robot.steer_2.position.yaw() -M_PI_2,10.2);
+            Arrow(robot .steer_1.position.x(),robot.steer_1.position.y(),robot.steer_1.position.yaw() + M_PI_2,10.2);
+            Arrow(robot .steer_2.position.x(),robot.steer_2.position.y(),robot.steer_2.position.yaw() + M_PI_2,10.2);
+
+            if(robot.is_rotate){
+
+                pls->join(robot.position.x(),robot.position.y(),robot.rotate_center_x,robot.rotate_center_y);
+//                pls->join(robot.steer_1.position.x(),robot.steer_1.position.y(),robot.rotate_center_x,robot.rotate_center_y);
+//                pls->join(robot.steer_1.position.x(),robot.steer_1.position.y(),robot.rotate_center_x,robot.rotate_center_y);
+
+            }
+
+
+        }
 
 //        pls->bop();
 
@@ -336,12 +373,18 @@ Plot::Plot( int argc, char **argv )
 
         std::cout << __LINE__ <<  " wait" << std::endl;
 
+        pls->width(0.4);
+        static PLINT mark  = 50;
+        static PLINT space = 500;
+        pls->styl( 1, &mark, &space );
         while ( i < 100){
+            pls->width(i%3);
+
             Arrow(0.0,0.0,0.0628*i,1);
             pls->flush();
 
 //            pls->replot();
-            s.sleep(10);
+            s.sleep(1);
             i++;
         }
 
@@ -357,46 +400,32 @@ Plot::Plot( int argc, char **argv )
 
     {
 //        pls->bop();
+
+
         pls->env( xmin, xmax, ymin, ymax, 1, 1 );
         pls->lab  ( "x", "y", "Bezier" );
 
-        PLFLT PA[2] = {-1.2,0.5};
-        PLFLT PB[2] = {-1.0,0.0};
-        PLFLT PC[2] = {-0.8,0.0};
-        PLFLT PD[2] = {0.0,0.0};
+        float PA[2] = {-1.2,0.5};
+        float PB[2] = {-1.0,0.0};
+        float PC[2] = {-0.8,0.0};
+        float PD[2] = {0.0,0.0};
+        float PE[3] = {0.0,0.0,0.0};
 
         float t_step = 0.01;
         size_t t_num = 1.0/t_step;
+        t_step = 1.0/t_num;
+
 
         std::vector<PLFLT> Bezier_x(t_num);
         std::vector<PLFLT> Bezier_y(t_num);
-        for(size_t i = 0 ; i < t_num ; i++){
-            PLFLT t = i*t_step;
 
-            PLFLT PAB[2];
-            PAB[0] = (1-t) *PA[0] + t*PB[0];
-            PAB[1] = (1-t) *PA[1] + t*PB[1];
-
-            PLFLT PBC[2];
-            PBC[0] = (1-t) *PB[0] + t*PC[0];
-            PBC[1] = (1-t) *PB[1] + t*PC[1];
-
-            PLFLT PCD[2];
-            PCD[0] = (1-t) *PC[0] + t*PD[0];
-            PCD[1] = (1-t) *PC[1] + t*PD[1];
+        std::vector<std::array<float,2>> path;
+        math::buildBezier(PA,PB,PC,PD,0.01,path);
+        for(size_t i = 0 ; i < path.size() ; i++){
 
 
-            PLFLT PABC[2];
-            PABC[0] = (1-t) *PAB[0] + t*PBC[0];
-            PABC[1] = (1-t) *PAB[1] + t*PBC[1];
-
-            PLFLT PBCD[2];
-            PBCD[0] = (1-t) *PBC[0] + t*PCD[0];
-            PBCD[1] = (1-t) *PBC[1] + t*PCD[1];
-
-
-            Bezier_x[i] = (1-t) *PABC[0] + t*PBCD[0];
-            Bezier_y[i] =  (1-t) *PABC[1] + t*PBCD[1];
+            Bezier_x[i] = path[i][0];
+            Bezier_y[i] = path[i][1];
 
         }
         std::cout << "t_num " << t_num << std::endl;
@@ -409,10 +438,15 @@ Plot::Plot( int argc, char **argv )
 
         char buffer[100];
         sprintf(buffer,"arc_len=%.3f",arc_len);
+//        pls->wind( 0.0, 1.0, 0.0, 1.0 );
+        pls->sfci( 0 );
+        pls->schr( 0, 0.5 );
         pls->sfont(0,0,1);
-        pls->ptex(0,1,1,0,1,buffer);
+        pls->font( 1 );
+        pls->ptex(0,1,1,0,0.1,buffer);
 
-
+//        pls->mtex( "t", 1.5, 0.5, 0.5, "PLplot Example 6 - plpoin symbols (compact)" );
+        pls->lsty(2);
 
         pls->line( t_num, Bezier_x.data(), Bezier_y.data() );
 //        pls->eop();

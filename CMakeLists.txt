@@ -89,16 +89,18 @@ find_package(FlatBuffers REQUIRED)
 
 include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
+include(ExternalProject)
+
+if (BUILD_LUA)
 
 set(LUA_VERSION "5.3.5" CACHE STRING "The version of Lua needed. Can be 5.1, 5.2, 5.3, LuaJIT, or a more specific 3-part version number for a specifc Lua (e.g., 5.3.4 or luajit-2.0.5)")
 string(TOLOWER ${LUA_VERSION} NORMALIZED_LUA_VERSION)
 #    find_package(LuaBuild REQUIRED COMPONENTS ${LUA_VERSION})
-include(ExternalProject)
-
 build_external_project_make(lua lib "https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz")
 message(lua_ROOT : ${lua_ROOT})
 set(LUA_LIBRARIES ${lua_ROOT}/lib/liblua.a)
 set(LUA_INCLUDE_DIR ${lua_ROOT}/include)
+endif ()
 
 
 #ExternalProject_Add(lua
@@ -163,49 +165,95 @@ find_package(Matplot++ REQUIRED)
 build_external_project(tinyxml2 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinyxml2-9.0.0.tar.gz  -DCMAKE_BUILD_TYPE=Release  )
 find_package(tinyxml2 REQUIRED)
 
+#include(FetchContent)
+#
+#FetchContent_Declare(
+#        Boost
+#        URL https://github.com/boostorg/boost/releases/download/boost-1.81.0/boost-1.82.0.tar.xz
+##        URL_MD5 6cf0cdd797bca685910d527ae3c08cb3
+##        DOWNLOAD_EXTRACT_TIMESTAMP ON
+#)
+#
+#set(BOOST_INCLUDE_LIBRARIES timer filesystem regex)
+#FetchContent_MakeAvailable(Boost)
 
 #build_external_project(mv-lm-icp lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mv-lm-icp-master-all.zip  -DCMAKE_BUILD_TYPE=Release  )
 #find_package(mv-lm-icp REQUIRED)
 
-build_external_project(PCL lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pcl-pcl-1.13.0.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_examples=OFF -DBUILD_apps=OFF -DBUILD_global_tests=OFF -DBUILD_simulation=OFF -DBUILD_tools=OFF)
+#set(BOOST_INCLUDE_LIBRARIES "filesystem\;date_time\;iostreams\;system")
+
+#set(BOOST_INCLUDE_LIBRARIES "timer;filesystem;regex;date_time")
+#list(APPEND BOOST_INCLUDE_LIBRARIES filesystem)
+#list(APPEND BOOST_INCLUDE_LIBRARIES date_time)
+#list(APPEND BOOST_INCLUDE_LIBRARIES iostreams)
+#list(APPEND BOOST_INCLUDE_LIBRARIES system)
+
+#message("BOOST_INCLUDE_LIBRARIES = ${BOOST_INCLUDE_LIBRARIES}")
+#foreach(__boost_included_lib IN LISTS BOOST_INCLUDE_LIBRARIES)
+#
+#    message("__boost_included_lib = ${__boost_included_lib}")
+#
+#endforeach()
+
+#https://stackoverflow.com/questions/33242956/cmake-passing-lists-on-command-line
+build_external_project(Boost lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/boost-1.82.0.tar.xz -DCMAKE_BUILD_TYPE=Release '-DBOOST_INCLUDE_LIBRARIES=filesystem;date_time;iostreams;system;program_options' -DBUILD_SHARED_LIBS=ON )
+
+#find_package(boost_timer REQUIRED)
+#find_package(boost_filesystem REQUIRED)
+set(BOOST_REQUIRED_MODULES filesystem date_time iostreams system program_options)
+
+find_package(Boost 1.82.0 REQUIRED COMPONENTS ${BOOST_REQUIRED_MODULES})
+
+#flann-1.9.1.zip
+build_external_project(flann lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann-master.zip  -DCMAKE_BUILD_TYPE=Release -DBUILD_C_BINDINGS=OFF -DBUILD_PYTHON_BINDINGS=OFF -DBUILD_MATLAB_BINDINGS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_DOC=OFF  )
+
+find_package(flann REQUIRED )
+
+build_external_project(PCL lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pcl-pcl-1.13.0.tar.gz -DBOOST_ROOT=${Boost_ROOT} -DFLANN_ROOT=${flann_ROOT} -DWITH_VTK=OFF -DWITH_PCAP=OFF -DWITH_OPENGL=OFF -DEIGEN_INCLUDE_DIR=${EIGEN3_INCLUDE_DIRS} -DCMAKE_BUILD_TYPE=Release  -DBUILD_examples=OFF -DBUILD_apps=OFF -DBUILD_global_tests=OFF -DBUILD_simulation=OFF -DBUILD_tools=OFF)
 find_package(PCL 1.13 REQUIRED )
 message("PCL_LIBRARIES = " ${PCL_LIBRARIES})
 
 #ifm3d-0.93.0.zip
-build_external_project(ifm3d lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ifm3d-0.93.0.zip -DBUILD_SHARED_LIBS=OFF  -DCMAKE_BUILD_TYPE=Release  -DPCL_ROOT=${PCL_ROOT} -DBUILD_TESTS=OFF)
+if (BUILD_IFM3D)
+    build_external_project(ifm3d lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ifm3d-0.93.0.zip -DBUILD_SHARED_LIBS=OFF  -DCMAKE_BUILD_TYPE=Release  -DPCL_ROOT=${PCL_ROOT} -DBUILD_TESTS=OFF)
 
-set(glog_ROOT ${ifm3d_ROOT}/lib/cmake/glog )
+    set(glog_ROOT ${ifm3d_ROOT}/lib/cmake/glog )
 
-find_package(glog REQUIRED)
-set(CURL_ROOT ${ifm3d_ROOT}/lib/cmake/CURL )
+    find_package(glog REQUIRED)
+    set(CURL_ROOT ${ifm3d_ROOT}/lib/cmake/CURL )
 
-find_package(CURL REQUIRED)
-
-
-set(xmlrpc-c_ROOT ${ifm3d_ROOT}/lib/cmake/xmlrpc-c )
-find_package(
-        xmlrpc-c CONFIG
-        REQUIRED COMPONENTS xmlrpc xmlrpc_client xmlrpc++ xmlrpc_client++
-)
+    find_package(CURL REQUIRED)
 
 
-find_package(ifm3d REQUIRED COMPONENTS
-        camera
-        framegrabber
-        stlimage
-        )
-#octomap-1.9.6.tar.gz
-build_external_project(octomap lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/octomap-1.9.6.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_OCTOVIS_SUBPROJECT=OFF -DBUILD_DYNAMICETD3D_SUBPROJECT=OFF)
-find_package(octomap REQUIRED)
+    set(xmlrpc-c_ROOT ${ifm3d_ROOT}/lib/cmake/xmlrpc-c )
+    find_package(
+            xmlrpc-c CONFIG
+            REQUIRED COMPONENTS xmlrpc xmlrpc_client xmlrpc++ xmlrpc_client++
+    )
 
-# libnabo-master.zip
-build_external_project(libnabo lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libnabo-master.zip  -DCMAKE_BUILD_TYPE=Release -DBUILD_TYPE=cmake -Dcatkin_DIR=/opt/ros/noetic/share/catkin/cmake )
-find_package(libnabo REQUIRED)
 
-# libpointmatcher-master.zip -DEIGEN_INCLUDE_DIR=${EIGEN3_INCLUDE_DIRS}
-build_external_project(libpointmatcher lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpointmatcher-master.zip -DBUILD_TYPE=cmake -DCMAKE_BUILD_TYPE=Release -Dlibnabo_ROOT=${libnabo_ROOT} -DSHARED_LIBS=OFF )
+    find_package(ifm3d REQUIRED COMPONENTS
+            camera
+            framegrabber
+            stlimage
+            )
+endif ()
 
-find_package(libpointmatcher REQUIRED)
+if(BUILD_LIBPOINTMATCHER)
+    #octomap-1.9.6.tar.gz
+    build_external_project(octomap lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/octomap-1.9.6.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_OCTOVIS_SUBPROJECT=OFF -DBUILD_DYNAMICETD3D_SUBPROJECT=OFF)
+    find_package(octomap REQUIRED)
+
+    # libnabo-master.zip
+    build_external_project(libnabo lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libnabo-master.zip -DBOOST_ROOT=${Boost_ROOT} -DEIGEN_INCLUDE_DIR=${EIGEN3_INCLUDE_DIRS} -DFLANN_ROOT=${flann_ROOT}  -DCMAKE_BUILD_TYPE=Release -DBUILD_TYPE=cmake -Dcatkin_DIR=/opt/ros/noetic/share/catkin/cmake )
+    find_package(libnabo REQUIRED)
+
+    # libpointmatcher-master.zip -DEIGEN_INCLUDE_DIR=${EIGEN3_INCLUDE_DIRS}
+    build_external_project(libpointmatcher lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpointmatcher-master.zip -DBUILD_TYPE=cmake -DBOOST_ROOT=${Boost_ROOT} -DCMAKE_BUILD_TYPE=Release -Dlibnabo_ROOT=${libnabo_ROOT} -DSHARED_LIBS=OFF )
+
+    find_package(libpointmatcher REQUIRED)
+endif ()
+
 
 # taskflow-3.4.0.tar.gz
 build_external_project(Taskflow lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/taskflow-3.4.0.tar.gz -DBUILD_TYPE=cmake -DCMAKE_BUILD_TYPE=Release -DTF_BUILD_EXAMPLES=OFF -DTF_BUILD_TESTS=OFF -DTF_BUILD_PROFILER=OFF -DTF_BUILD_BENCHMARKS=OFF  )
@@ -216,28 +264,30 @@ find_package(Taskflow REQUIRED)
 
 build_external_project(autodiff lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/autodiff-0.6.12.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DAUTODIFF_BUILD_TESTS=OFF -DAUTODIFF_BUILD_PYTHON=OFF -DAUTODIFF_BUILD_EXAMPLES=OFF -DAUTODIFF_BUILD_DOCS=OFF)
 find_package(autodiff REQUIRED)
+if (BUILD_OPTIM)
+    build_external_project_command(optim lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/optim.zip "EIGEN_INCLUDE_PATH=${EIGEN3_INCLUDE_DIRS} ./configure -i ./install -l eigen -p" "make && mkdir -p ./install/lib" "make install"  -DCMAKE_BUILD_TYPE=Release  -DAUTODIFF_BUILD_TESTS=OFF -DAUTODIFF_BUILD_PYTHON=OFF -DAUTODIFF_BUILD_EXAMPLES=OFF -DAUTODIFF_BUILD_DOCS=OFF)
+    #find_package(optim REQUIRED)
+    message(optim_BUILD_DIR ${optim_BUILD_DIR})
+    set(optim_ROOT ${optim_BUILD_DIR}/optim/install)
+    set(optim_INCLUDE_DIR ${optim_ROOT}/include/optim)
+    set(optim_LIBRARY ${optim_ROOT}/lib/liboptim.so)
 
-build_external_project_command(optim lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/optim.zip "EIGEN_INCLUDE_PATH=${EIGEN3_INCLUDE_DIRS} ./configure -i ./install -l eigen -p" "make && mkdir -p ./install/lib" "make install"  -DCMAKE_BUILD_TYPE=Release  -DAUTODIFF_BUILD_TESTS=OFF -DAUTODIFF_BUILD_PYTHON=OFF -DAUTODIFF_BUILD_EXAMPLES=OFF -DAUTODIFF_BUILD_DOCS=OFF)
-#find_package(optim REQUIRED)
-message(optim_BUILD_DIR ${optim_BUILD_DIR})
-set(optim_ROOT ${optim_BUILD_DIR}/optim/install)
-set(optim_INCLUDE_DIR ${optim_ROOT}/include/optim)
-set(optim_LIBRARY ${optim_ROOT}/lib/liboptim.so)
+    message(optim_INCLUDE_DIR ${optim_INCLUDE_DIR})
+    message(optim_LIBRARY ${optim_LIBRARY})
 
-message(optim_INCLUDE_DIR ${optim_INCLUDE_DIR})
-message(optim_LIBRARY ${optim_LIBRARY})
+    add_library(liboptim SHARED IMPORTED GLOBAL)
+    set_target_properties(liboptim PROPERTIES
+            IMPORTED_LOCATION_RELEASE ${optim_LIBRARY}
+            IMPORTED_LOCATION_DEBUG ${optim_LIBRARY}
+            )
 
-add_library(liboptim SHARED IMPORTED GLOBAL)
-set_target_properties(liboptim PROPERTIES
-        IMPORTED_LOCATION_RELEASE ${optim_LIBRARY}
-        IMPORTED_LOCATION_DEBUG ${optim_LIBRARY}
-        )
-
-set_property(TARGET liboptim PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${optim_INCLUDE_DIR}  ${EIGEN3_INCLUDE_DIRS})
-set_property(TARGET liboptim PROPERTY INTERFACE_LINK_LIBRARIES autodiff::autodiff )
+    set_property(TARGET liboptim PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${optim_INCLUDE_DIR}  ${EIGEN3_INCLUDE_DIRS})
+    set_property(TARGET liboptim PROPERTY INTERFACE_LINK_LIBRARIES autodiff::autodiff )
 
 
-print_include_dir(liboptim)
+    print_include_dir(liboptim)
+endif ()
+
 
 # https://github.com/openresty/luajit2
 build_external_project_command(luajit lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/luajit2-2.1-20230410.tar.gz "mkdir -p ${CMAKE_BINARY_DIR}/force_luajit/install/bin" "make PREFIX=${CMAKE_BINARY_DIR}/force_luajit/install" "make install PREFIX=${CMAKE_BINARY_DIR}/force_luajit/install")
@@ -287,6 +337,8 @@ endif ()
 
 
 #iceoryx-2.0.3.zip
+#https://man7.org/tlpi/code/faq.html#sys-acl.h-missing
+#sudo apt-get install libacl1-dev
 build_external_project_command(iceoryx lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/iceoryx-2.0.3.zip  "cmake -Bbuild -Hiceoryx_meta -DBUILD_DOC=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/force_iceoryx/install" "cmake --build build" " cmake --build build --target install" )
 set(iceoryx_binding_c_ROOT ${iceoryx_ROOT})
 find_package(iceoryx_binding_c REQUIRED)
@@ -320,9 +372,13 @@ build_external_project(libcopp lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libco
 find_package(libcopp REQUIRED)
 
 #highway-1.0.4.zip
-build_external_project(hwy lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/highway-1.0.4.zip -DCMAKE_BUILD_TYPE=Release)
-find_package(hwy REQUIRED)
+#build_external_project(hwy lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/highway-1.0.4.zip -DCMAKE_BUILD_TYPE=Release)
+#find_package(hwy REQUIRED)
 
+
+build_external_project_command(hwloc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/hwloc-2.9.1.tar.gz "mkdir -p ${CMAKE_BINARY_DIR}/force_hwloc/install/ && ./configure --prefix=${CMAKE_BINARY_DIR}/force_hwloc/install/" "make" "make install")
+set(hwloc_INCLUDE_DIR ${hwloc_ROOT}/include)
+set(hwloc_LIBRARIES ${hwloc_ROOT}/lib/libhwloc.so)
 
 #canfestival-de1fc3261f21.zip
 #examples build fail without python

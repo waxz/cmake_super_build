@@ -39,35 +39,29 @@ target_include_directories(ceres_simple_solve PUBLIC  ${CMAKE_SOURCE_DIR}/includ
 
 install(TARGETS ceres_simple_solve DESTINATION bin)
 
-find_package(Boost 1.58 REQUIRED COMPONENTS system filesystem thread program_options chrono)
+#find_package(Boost 1.58 REQUIRED COMPONENTS system filesystem thread program_options chrono)
 
 
-add_subdirectory(message/impl/ros)
-add_subdirectory(message/impl/mqtt)
+if(BUILD_ROS)
+    add_subdirectory(message/impl/ros)
+    add_subdirectory(message/impl/mqtt)
 
-add_executable(message_manager_test message_manager_test.cpp )
-#add_ros(message_manager_test roscpp)
-#target_link_libraries(message_manager_test PUBLIC tf )
-target_include_directories(message_manager_test PUBLIC
-        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${EIGEN3_INCLUDE_DIR})
-target_link_libraries(message_manager_test PUBLIC  ros_message_manager mqtt_message_manager absl::strings)
-#target_include_directories(message_manager_test PUBLIC ${CMAKE_SOURCE_DIR}/third_party/sol ${mosquitto_INCLUDE_DIR})
+    add_executable(message_manager_test message_manager_test.cpp )
+    #add_ros(message_manager_test roscpp)
+    #target_link_libraries(message_manager_test PUBLIC tf )
+    target_include_directories(message_manager_test PUBLIC
+            ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/src
+            ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(message_manager_test PUBLIC  ros_message_manager mqtt_message_manager absl::strings)
+    #target_include_directories(message_manager_test PUBLIC ${CMAKE_SOURCE_DIR}/third_party/sol ${mosquitto_INCLUDE_DIR})
 
-set_asan(message_manager_test)
+    set_asan(message_manager_test)
+endif ()
 
-#target_link_directories(message_manager_test PUBLIC /home/waxz/dev/roscpp_src/install_isolated/lib )
-#target_link_libraries(message_manager_test PUBLIC
-#        roscpp xmlrpcpp rosconsole cpp_common rostime roscpp_serialization
-#        ${Boost_LIBRARIES}
-#
-#        )
-#target_include_directories(
-#        message_manager_test PUBLIC
-#        /home/waxz/dev/roscpp_src/install_isolated/include
-#)
+
+
 
 
 
@@ -348,9 +342,9 @@ add_executable(xml_json xml_json.cpp )
 target_include_directories( xml_json PUBLIC ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
 target_link_libraries(xml_json PUBLIC tinyxml2::tinyxml2)
 
-add_executable(stl_test  stl_test.cpp)
-target_include_directories( stl_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
-target_link_libraries( stl_test PUBLIC Threads::Threads dl)
+#add_executable(stl_test  stl_test.cpp)
+#target_include_directories( stl_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
+#target_link_libraries( stl_test PUBLIC Threads::Threads dl)
 # Boost Package ############################################################
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -373,12 +367,14 @@ add_executable(pcl_icp_test pcl_icp_test.cpp   icp/pcl_icp_with_normal.cpp )
 target_include_directories( pcl_icp_test PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
 target_link_libraries(pcl_icp_test PUBLIC   Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
 
+if (BUILD_LIBPOINTMATCHER)
+    message(Boost_LIBRARIES ${Boost_LIBRARIES})
+    message(libnabo_LIBRARIES ${libnabo_LIBRARIES})
+    add_executable(libpointmatcher_test  libpointmatcher_test.cpp)
+    target_include_directories( libpointmatcher_test PUBLIC  ${libpointmatcher_INCLUDE_DIRS}  ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  )
+    target_link_libraries(libpointmatcher_test PUBLIC ${Boost_LIBRARIES} ${libpointmatcher_LIBRARIES} Boost::filesystem )
+endif ()
 
-
-message(libnabo_LIBRARIES ${libnabo_LIBRARIES})
-add_executable(libpointmatcher_test  libpointmatcher_test.cpp)
-target_include_directories( libpointmatcher_test PUBLIC  ${libpointmatcher_INCLUDE_DIRS}  ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  )
-target_link_libraries(libpointmatcher_test PUBLIC ${Boost_LIBRARIES} ${libpointmatcher_LIBRARIES}  )
 #target_link_directories(libpointmatcher_test PUBLIC  ${libnabo_ROOT}/lib)
 
 #add_library(log_test_lib log_test_lib.cpp)
@@ -401,29 +397,29 @@ add_executable(std_test std_test.cpp)
 target_include_directories( std_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann)
 target_link_libraries( std_test PUBLIC Threads::Threads )
 
-
+if (BUILD_OPTIM)
 add_executable(optimlib_test optimlib_test.cpp)
 target_include_directories(optimlib_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
 target_link_libraries(optimlib_test PUBLIC liboptim)
 print_include_dir(optimlib_test)
-
+endif ()
 
 add_executable(function_overload_test function_overload_test.cpp)
 
-add_executable(ifm3d_test  ifm3d_test.cpp)
-target_link_libraries(ifm3d_test PUBLIC
-        xmlrpc-c::xmlrpc_client++
-        ifm3d::camera
-        ifm3d::framegrabber
-        ifm3d::stlimage
-        ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES}
-        )
-target_include_directories( ifm3d_test PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/ifm_tools/simpleimage/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/ifm_tools/ppm-io-master/include
-        ${PCL_INCLUDE_DIRS}
-        ${CMAKE_SOURCE_DIR}/include
-        )
+#add_executable(ifm3d_test  ifm3d_test.cpp)
+#target_link_libraries(ifm3d_test PUBLIC
+#        xmlrpc-c::xmlrpc_client++
+#        ifm3d::camera
+#        ifm3d::framegrabber
+#        ifm3d::stlimage
+#        ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES}
+#        )
+#target_include_directories( ifm3d_test PUBLIC
+#        ${CMAKE_CURRENT_SOURCE_DIR}/ifm_tools/simpleimage/include
+#        ${CMAKE_CURRENT_SOURCE_DIR}/ifm_tools/ppm-io-master/include
+#        ${PCL_INCLUDE_DIRS}
+#        ${CMAKE_SOURCE_DIR}/include
+#        )
 
 #target_link_directories(ifm3d_test PUBLIC  ${ifm3d_ROOT}/lib )
 
@@ -452,18 +448,18 @@ set_property(TARGET ddscxxHelloworldPublisher PROPERTY CXX_STANDARD ${cyclonedds
 set_property(TARGET ddscxxHelloworldSubscriber PROPERTY CXX_STANDARD ${cyclonedds_cpp_std_to_use})
 
 add_executable(eigen_test eigen_test.cpp)
-target_include_directories(eigen_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
-target_link_libraries(eigen_test PUBLIC liboptim)
+target_include_directories(eigen_test PUBLIC ${EIGEN3_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
+#target_link_libraries(eigen_test PUBLIC liboptim)
 print_include_dir(eigen_test)
 
 add_executable(json_test json_test.cpp)
 target_include_directories(json_test PUBLIC ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
 
-
+if (BUILD_PCL_QHULL)
 add_executable(pcl_crop_to_hull pcl_crophull_segment_test.cpp)
 target_include_directories( pcl_crop_to_hull PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
 target_link_libraries(pcl_crop_to_hull PUBLIC  Matplot++::matplot ${PCL_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${PCL_FILTERS_LIBRARIES} ${OCTOMAP_LIBRARIES} )
-
+endif ()
 
 #add_executable(foonathan_memory_example foonathan_memory_example.cpp)
 #target_include_directories( foonathan_memory_example PUBLIC  ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann  ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} )
@@ -482,7 +478,7 @@ target_link_libraries(pcl_crop_to_hull PUBLIC  Matplot++::matplot ${PCL_LIBRARIE
 
 add_subdirectory(tbb)
 
-add_subdirectory(gui)
+#add_subdirectory(gui)
 #set(SANITIZE_ADDRESS ON)
 #set(SANITIZE_MEMORY ON)
 #set(SANITIZE_THREAD ON)
@@ -510,57 +506,61 @@ target_include_directories( boost_graph_test PUBLIC
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/third_party/nlohmann
         )
-add_library(tinyco SHARED
-        ${CMAKE_SOURCE_DIR}/include/tinyco-master/include/tinyco/context.cc
-        ${CMAKE_SOURCE_DIR}/include/tinyco-master/include/tinyco/coroutine.cc
-        ${CMAKE_SOURCE_DIR}/include/tinyco-master/include/tinyco/schedule.cc
-        )
-target_include_directories(tinyco PUBLIC ${CMAKE_SOURCE_DIR}/include/tinyco-master/include)
-
-add_executable(Observable_test Observable_test.cpp)
-target_link_libraries(Observable_test PUBLIC  ${Boost_LIBRARIES} libcopp::cotask tinyco)
-target_include_directories( Observable_test PUBLIC
-        ${EIGEN3_INCLUDE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
-        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
-        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
-        ${CMAKE_SOURCE_DIR}/third_party/stackless_coroutine-master
-        )
+#add_library(tinyco SHARED
+#        ${CMAKE_SOURCE_DIR}/include/tinyco-master/include/tinyco/context.cc
+#        ${CMAKE_SOURCE_DIR}/include/tinyco-master/include/tinyco/coroutine.cc
+#        ${CMAKE_SOURCE_DIR}/include/tinyco-master/include/tinyco/schedule.cc
+#        )
+#target_include_directories(tinyco PUBLIC ${CMAKE_SOURCE_DIR}/include/tinyco-master/include)
+#
+#add_executable(Observable_test Observable_test.cpp)
+#target_link_libraries(Observable_test PUBLIC  ${Boost_LIBRARIES} libcopp::cotask tinyco)
+#target_include_directories( Observable_test PUBLIC
+#        ${EIGEN3_INCLUDE_DIR}
+#        ${CMAKE_SOURCE_DIR}/include
+#        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+#        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
+#        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
+#        ${CMAKE_SOURCE_DIR}/third_party/stackless_coroutine-master
+#        )
 
 add_executable(affinity_test affinity_test.cpp)
-target_link_libraries(affinity_test PUBLIC  ${Boost_LIBRARIES})
+target_link_libraries(affinity_test PUBLIC  ${Boost_LIBRARIES} ${hwloc_LIBRARIES})
 target_include_directories( affinity_test PUBLIC
         ${EIGEN3_INCLUDE_DIR}
+        ${hwloc_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/third_party/nlohmann
         ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
         ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
         )
-target_link_libraries( affinity_test PUBLIC Threads::Threads hwloc)
-
+target_link_libraries( affinity_test PUBLIC Threads::Threads
+#        hwloc
+        )
+if(BUILD_BREAKPAD)
 add_library(breakpad_uploader_library STATIC breakpad/http_upload.cc breakpad/google_crashdump_uploader.cc breakpad/libcurl_wrapper.cc)
 target_include_directories(breakpad_uploader_library PUBLIC ${breakpad_include_dir}  ./breakpad)
 target_link_libraries(breakpad_uploader_library PUBLIC ${breakpad_client_library} curl dl)
-
-
 add_executable(breakpad_test breakpad_test.cpp breakpad_func.cpp  )
 target_include_directories(breakpad_test PUBLIC ${breakpad_include_dir}  ./breakpad)
 target_link_libraries(breakpad_test PUBLIC breakpad_uploader_library)
+endif ()
+
+
 
 add_executable(thread_test thread_test.cpp)
-add_executable(simd_hwy_test simd_hwy_test.cpp)
-target_link_libraries( simd_hwy_test PUBLIC  hwy::hwy hwy::hwy_contrib)
+#add_executable(simd_hwy_test simd_hwy_test.cpp)
+#target_link_libraries( simd_hwy_test PUBLIC  hwy::hwy hwy::hwy_contrib)
 
 
 
-find_library(USB_CAN_LIBRARY
-        NAMES usbcan
-        PATHS ${CMAKE_SOURCE_DIR}/third_party/zlg_usb_can/USBCAN_mini_Linux_Drivers/usbcan_libusb_x64_2018_10_15/test/
-        REQUIRED
-        )
-
-message(USB_CAN_LIBRARY ${USB_CAN_LIBRARY})
+#find_library(USB_CAN_LIBRARY
+#        NAMES usbcan
+#        PATHS ${CMAKE_SOURCE_DIR}/third_party/zlg_usb_can/USBCAN_mini_Linux_Drivers/usbcan_libusb_x64_2018_10_15/test/
+#        REQUIRED
+#        )
+#
+#message(USB_CAN_LIBRARY ${USB_CAN_LIBRARY})
 #add_library(usbcan SHARED IMPORTED GLOBAL)
 #set_target_properties(usbcan PROPERTIES
 #        IMPORTED_LOCATION_RELEASE ${USB_CAN_LIBRARY}
@@ -570,11 +570,11 @@ message(USB_CAN_LIBRARY ${USB_CAN_LIBRARY})
 #target_include_directories(usbcan INTERFACE
 #        ${CMAKE_SOURCE_DIR}/third_party/zlg_usb_can/USBCAN_mini_Linux_Drivers/usbcan_libusb_x64_2018_10_15/test
 #        )
-add_executable(zlg_can_test zlg_can_test.cpp)
-target_link_libraries(zlg_can_test PUBLIC ${USB_CAN_LIBRARY} )
-target_include_directories(zlg_can_test PUBLIC
-        ${CMAKE_SOURCE_DIR}/third_party/zlg_usb_can/USBCAN_mini_Linux_Drivers/usbcan_libusb_x64_2018_10_15/test
-        )
+#add_executable(zlg_can_test zlg_can_test.cpp)
+#target_link_libraries(zlg_can_test PUBLIC ${USB_CAN_LIBRARY} )
+#target_include_directories(zlg_can_test PUBLIC
+#        ${CMAKE_SOURCE_DIR}/third_party/zlg_usb_can/USBCAN_mini_Linux_Drivers/usbcan_libusb_x64_2018_10_15/test
+#        )
 
 add_executable(can_test can_test.cpp)
 target_link_libraries(can_test PUBLIC
@@ -658,18 +658,18 @@ target_include_directories(lua_test PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries( lua_test PUBLIC Threads::Threads)
 
 
-add_executable(argparse_test argparse_test.cpp)
-target_include_directories( argparse_test PUBLIC
-        ${EIGEN3_INCLUDE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/include/catch2
-
-        #        ${CMAKE_SOURCE_DIR}/include/fakeit/include
-        #        ${CMAKE_SOURCE_DIR}/include/fakeit/config/catch
-        ${CMAKE_SOURCE_DIR}/include/fakeit/single_header/catch
-        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
-        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
-        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
-        )
+#add_executable(argparse_test argparse_test.cpp)
+#target_include_directories( argparse_test PUBLIC
+#        ${EIGEN3_INCLUDE_DIR}
+#        ${CMAKE_SOURCE_DIR}/include
+#        ${CMAKE_SOURCE_DIR}/include/catch2
+#
+#        #        ${CMAKE_SOURCE_DIR}/include/fakeit/include
+#        #        ${CMAKE_SOURCE_DIR}/include/fakeit/config/catch
+#        ${CMAKE_SOURCE_DIR}/include/fakeit/single_header/catch
+#        ${CMAKE_SOURCE_DIR}/third_party/nlohmann
+#        ${CMAKE_SOURCE_DIR}/third_party/observable-master/observable/include
+#        ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
+#        )
 
 #add_subdirectory(root_test)
