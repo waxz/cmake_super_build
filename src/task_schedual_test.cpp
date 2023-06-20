@@ -178,6 +178,20 @@ int main(int argc, char** argv){
 
     common::Time timestamp = common::FromUnixNow();
 
+    {
+        manager.addTask([]{
+            std::cout << "run temp 1 ";
+            return true;
+        },100*1000, 1);
+    }
+    {
+        auto f_2 = []{
+            std::cout << "run temp 2 ";
+            return true;
+        };
+
+        manager.addTask(f_2,100*1000, 1);
+    }
 
     manager.intiTime();
     while (program_run){

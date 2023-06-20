@@ -673,3 +673,6 @@ target_link_libraries( lua_test PUBLIC Threads::Threads)
 #        )
 
 #add_subdirectory(root_test)
+
+add_executable(clock_test clock_test.cpp)
+target_include_directories(clock_test PUBLIC ${CMAKE_SOURCE_DIR}/include)
