@@ -9,6 +9,7 @@
 #include <vector>
 #include <array>
 #include <iostream>
+#include "math/math_basic.h"
 
 namespace transform{
 
@@ -339,6 +340,108 @@ namespace transform{
             return result;
         }
     };
+
+
+
+    /// compute squared distance between tow Transform2d
+    /// \param v_start: Transform2d 1
+    /// \param v_end: Transform2d 2
+    /// \return squared distance
+    inline float diff2(const Transform2d & v_start,const Transform2d& v_end ){
+        return (v_start.x() -v_end.x())*(v_start.x() -v_end.x()) + (v_start.y() -v_end.y())*(v_start.y() -v_end.y());
+    }
+
+    inline Transform2d interpolate(double factor, const Transform2d & v_start,const Transform2d& v_end  ){
+        float tx, ty, yaw;
+        tx = v_start.x() + factor*(v_end.x() - v_start.x());
+        ty = v_start.y() + factor*(v_end.y() - v_start.y());
+
+        float yaw_1 = angle_normalise_zero(v_start.yaw());
+        float yaw_2 = angle_normalise(v_end.yaw(), yaw_1);
+
+        yaw = yaw_1 + factor*(yaw_2 - yaw_1);
+
+        return Transform2d(tx,ty,yaw);
+    }
+
+    // Quaternion
+
+    template<typename T>
+    void toQuaternion(T &qw, T &qx, T &qy, T &qz, T yaw, T pitch = 0.0, T roll = 0.0) // yaw (Z), pitch (Y), roll (X)
+    {
+        // Abbreviations for the various angular functions
+        T cy = cos(yaw * 0.5);
+        T sy = sin(yaw * 0.5);
+        T cp = cos(pitch * 0.5);
+        T sp = sin(pitch * 0.5);
+        T cr = cos(roll * 0.5);
+        T sr = sin(roll * 0.5);
+
+        qw = cy * cp * cr + sy * sp * sr;
+        qx = cy * cp * sr - sy * sp * cr;
+        qy = sy * cp * sr + cy * sp * cr;
+        qz = sy * cp * cr - cy * sp * sr;
+
+        /* 2d condition only yaw
+            q.qw = cos(yaw * 0.5) ;
+            q.qx = 0 ;
+            q.qy = 0 ;
+            q.qz = sin(yaw * 0.5) ;
+             * */
+    }
+
+    //https://stackoverflow.com/questions/11667783/quaternion-and-normalization
+    template<typename T>
+    bool toEulerAngle(T &yaw, T &pitch, T &roll,  T qw, T qx, T qy, T qz) {
+
+        double qmagsq = qw*qw + qx*qx + qy*qy + qz*qz;
+
+        double scale = 1.0;
+
+        if (std::abs(1.0 - qmagsq) < 2.107342e-08) {
+            scale = 2.0 / (1.0 + qmagsq);
+        }
+        else {
+            scale = 1.0 / std::sqrt(qmagsq);
+        }
+
+        qw *= scale;
+        qx *= scale;
+        qy *= scale;
+        qz *= scale;
+
+        // We choose the quaternion with positive 'qw', i.e., the one with a smaller
+        // angle that represents this orientation.
+#if 1
+        if (qw < 0.0) {
+            // Multiply by -1. http://eigen.tuxfamily.org/bz/show_bug.cgi?id=560
+            qw = -1. * qw;
+            qx = -1. * qx;
+            qy = -1. * qy;
+            qz = -1. * qz;
+        }
+#endif
+
+        // roll (qx-axis rotation)
+        T sinr_cosp = +2.0 * (qw * qx + qy * qz);
+        T cosr_cosp = +1.0 - 2.0 * (qx * qx + qy * qy);
+        roll = atan2(sinr_cosp, cosr_cosp);
+
+        // pitch (qy-axis rotation)
+        T sinp = +2.0 * (qw * qy - qz * qx);
+        if (fabs(sinp) >= 1)
+            pitch = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+        else
+            pitch = asin(sinp);
+
+        // yaw (qz-axis rotation)
+        T siny_cosp = +2.0 * (qw * qz + qx * qy);
+        T cosy_cosp = +1.0 - 2.0 * (qy * qy + qz * qz);
+        yaw = atan2(siny_cosp, cosy_cosp);
+
+        return true;
+
+    }
 
 }
 #endif //SCAN_REPUBLISHER_TRANSFORM_H

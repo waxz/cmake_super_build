@@ -12,296 +12,23 @@
 #include "common/clock_time.h"
 
 #include "nlohmann/json.hpp"
-struct Transform2d{
-    float matrix[3][3] = {};
-    Transform2d(float x=0.0, float y=0.0,float yaw=0.0){
-        // Calculate rotation about z axis
-        /*
-                 cos(yaw),   -sin(yaw),      0,
-                 sin(yaw),   cos(yaw),       0,
-                 0,          0,              1
-             */
-        matrix[0][0] = cos(yaw);
-        matrix[0][1]  = -sin(yaw);
-        matrix[1][0] = sin(yaw);
-        matrix[1][1]  = cos(yaw);
 
-        matrix[0][2]  = x;
-        matrix[1][2]  = y;
-        matrix[2][2]  = 1.0;
+#define  USE_CATCH 1
 
-    }
-    Transform2d operator*(const Transform2d& rhv){
-        Transform2d result;
-
-        auto& a = this->matrix;
-        auto& b = rhv.matrix;
-        auto& c = result.matrix;
-        // Calculate the j-th column of the result in-place (in B) using the helper array
-        for(int i=0 ; i<3 ; i++)
-        {
-            for(int j=0 ; j<3 ; j++)
-            {
-
-                c[i][j]=0;
-                for(int k=0 ; k<3 ; k++)
-                {
-                    c[i][j]+=a[i][k]*b[k][j];
-                    //--^-- should be k
-                }
-            }
-        }
-        return result;
-
-    }
-    void mul_v1(const std::vector<float>& points, std::vector<float>& result){
-
-        /*
-     r00 r01 r02 tx     x0        x1
-     r10 r11 r12 ty  X  y0   =>   y1
-     r20 r21 r22 tz     z0        z1
-     0   0   0   1      1         1
-    */
-
-        if(points.size()%2 != 0 ){
-            std::cerr << __FUNCTION__ << " ERROR : " << " points.size() = " << points.size() << std::endl;
-
-        }
-        result.resize(points.size());
-
-        float r00 = this->matrix[0][0];
-        float r01 = this->matrix[0][1];
-
-        float r10 = this->matrix[1][0];
-        float r11 = this->matrix[1][1];
-
-        float tx = this->matrix[0][2];
-        float ty = this->matrix[1][2];
-
-        int n_dim = points.size()/2;
-
-        const float *p_data_x = &(points[0]);
-        const float *p_data_y = p_data_x + n_dim;
-
-        float *p_x = &(result[0]);
-        float *p_y = p_x + n_dim;
-
-        for (int i = 0; i < n_dim; i++) {
-            p_x[i] = r00 * p_data_x[i] + r01 * p_data_y[i] + tx;
-            p_y[i] = r10 * p_data_x[i] + r11 * p_data_y[i] + ty;
-        }
-
-    }
-
-    void mul_v2(const std::vector<float>& points, std::vector<float>& result){
-
-        /*
-     r00 r01 r02 tx     x0        x1
-     r10 r11 r12 ty  X  y0   =>   y1
-     r20 r21 r22 tz     z0        z1
-     0   0   0   1      1         1
-    */
-
-        if(points.size()%2 != 0 ){
-            std::cerr << __FUNCTION__ << " ERROR : " << " points.size() = " << points.size() << std::endl;
-
-        }
-        result.resize(points.size());
-
-        float r00 = this->matrix[0][0];
-        float r01 = this->matrix[0][1];
-
-        float r10 = this->matrix[1][0];
-        float r11 = this->matrix[1][1];
-
-        float tx = this->matrix[0][2];
-        float ty = this->matrix[1][2];
-
-        int n_dim = points.size()/2;
-
-        const float *p_data_x = &(points[0]);
-        const float *p_data_y = p_data_x + n_dim;
-
-        float *p_x = &(result[0]);
-        float *p_y = p_x + n_dim;
-
-        for (int i = 0; i < n_dim; i++) {
-            p_x[i + i] = r00 * p_data_x[i+i] + r01 * p_data_x[i+i+1] + tx;
-            p_x[i + i + 1] = r10 * p_data_x[i+i] + r11 * p_data_x[i+i+1] + ty;
-        }
-
-    }
-    void mul_v3(const std::vector<float>& points, std::vector<float>& result){
-
-        /*
-     r00 r01 r02 tx     x0        x1
-     r10 r11 r12 ty  X  y0   =>   y1
-     r20 r21 r22 tz     z0        z1
-     0   0   0   1      1         1
-    */
-
-        if(points.size()%2 != 0 ){
-            std::cerr << __FUNCTION__ << " ERROR : " << " points.size() = " << points.size() << std::endl;
-
-        }
-        result.resize(points.size());
-
-        float r00 = this->matrix[0][0];
-        float r01 = this->matrix[0][1];
-
-        float r10 = this->matrix[1][0];
-        float r11 = this->matrix[1][1];
-
-        float tx = this->matrix[0][2];
-        float ty = this->matrix[1][2];
-
-        int n_dim = points.size()/2;
-
-        const float *p_data_x = &(points[0]);
-        const float *p_data_y = p_data_x + n_dim;
-
-        float *p_x = &(result[0]);
-        float *p_y = p_x + n_dim;
-#ifdef _OPENMP
-#pragma omp simd
+// fakeit
+#if USE_FAKEIT
+#include "catch_amalgamated.hpp"
+#include "fakeit.hpp"
 #endif
-        for (int i = 0; i < n_dim; i++) {
-            p_x[i] = r00 * p_data_x[i] + r01 * p_data_y[i] + tx;
-            p_y[i] = r10 * p_data_x[i] + r11 * p_data_y[i] + ty;
-        }
-
-    }
-
-    void mul_v4(const std::vector<float>& points, std::vector<float>& result){
-
-        /*
-     r00 r01 r02 tx     x0        x1
-     r10 r11 r12 ty  X  y0   =>   y1
-     r20 r21 r22 tz     z0        z1
-     0   0   0   1      1         1
-    */
-
-        if(points.size()%2 != 0 ){
-            std::cerr << __FUNCTION__ << " ERROR : " << " points.size() = " << points.size() << std::endl;
-
-        }
-        result.resize(points.size());
-
-        float r00 = this->matrix[0][0];
-        float r01 = this->matrix[0][1];
-
-        float r10 = this->matrix[1][0];
-        float r11 = this->matrix[1][1];
-
-        float tx = this->matrix[0][2];
-        float ty = this->matrix[1][2];
-
-        int n_dim = points.size()/2;
-
-        const float *p_data_x = &(points[0]);
-        const float *p_data_y = p_data_x + n_dim;
-
-        float *p_x = &(result[0]);
-        float *p_y = p_x + n_dim;
-#ifdef _OPENMP
-#pragma omp simd
+#if USE_CATCH
+#include "catch2/catch_amalgamated.hpp"
 #endif
-        for (int i = 0; i < n_dim; i++) {
-            p_x[i + i] = r00 * p_data_x[i+i] + r01 * p_data_x[i+i+1] + tx;
-            p_x[i + i + 1] = r10 * p_data_x[i+i] + r11 * p_data_x[i+i+1] + ty;
-        }
 
-    }
-
-    void mul_v5(const std::vector<float>& points, std::vector<std::array<float,2>>& result){
-
-        /*
-     r00 r01 r02 tx     x0        x1
-     r10 r11 r12 ty  X  y0   =>   y1
-     r20 r21 r22 tz     z0        z1
-     0   0   0   1      1         1
-    */
-
-        if(points.size()%2 != 0 ){
-            std::cerr << __FUNCTION__ << " ERROR : " << " points.size() = " << points.size() << std::endl;
-
-        }
-        result.resize(points.size());
-
-        float r00 = this->matrix[0][0];
-        float r01 = this->matrix[0][1];
-
-        float r10 = this->matrix[1][0];
-        float r11 = this->matrix[1][1];
-
-        float tx = this->matrix[0][2];
-        float ty = this->matrix[1][2];
-
-        int n_dim = points.size()/2;
-
-        const float *p_data_x = &(points[0]);
-        const float *p_data_y = p_data_x + n_dim;
+#include <iostream>
 
 
-        for (int i = 0; i < n_dim; i++) {
-            result[i] [0]= r00 * p_data_x[i+i] + r01 * p_data_x[i+i+1] + tx;
-            result[i] [1]= r10 * p_data_x[i+i] + r11 * p_data_x[i+i+1] + ty;
-        }
-
-    }
-
-    Transform2d operator*(const Transform2d& rhv )const{
-        Transform2d transform;
-        auto & mat  =this->matrix;
-        auto & mat_rhv  =rhv.matrix;
-        auto & mat_mul  =transform.matrix;
-        for(int i = 0; i < 3; i++){
-            for(int j = 0; j < 3; j++)
-                mat_mul[i][j] += mat[i][j] * mat_rhv[j][i] ;
-        }
-
-        return transform;
-
-    }
-    Transform2d inverse() const{
-        Transform2d transform_inv;
-        float determinant = 0;
-
-        auto & mat  =this->matrix;
-        //finding determinant
-        for(int i = 0; i < 3; i++)
-            determinant += (mat[0][i] * (mat[1][(i+1)%3] * mat[2][(i+2)%3] - mat[1][(i+2)%3] * mat[2][(i+1)%3]));
-
-        auto & mat_inv  =transform_inv.matrix;
-        float determinant_inv = 1.0f/determinant;
-
-        for(int i = 0; i < 3; i++){
-            for(int j = 0; j < 3; j++)
-                mat_inv[i][j]= ((mat[(j+1)%3][(i+1)%3] * mat[(j+2)%3][(i+2)%3]) - (mat[(j+1)%3][(i+2)%3] * mat[(j+2)%3][(i+1)%3]))* determinant_inv ;
-
-        }
-
-        return transform_inv;
-
-    }
-
-
-};
-std::ostream& operator <<(std::ostream& out,const Transform2d& rhv ){
-    out << "Transform2d:\n";
-//    out.unsetf ( std::ios::floatfield );                // floatfield not set
-    out.precision(5);
-    out.setf( std::ios::fixed, std:: ios::floatfield ); // floatfield set to fixed
-
-    out << "[" << rhv.matrix[0][0] << ", " << rhv.matrix[0][1] << ", " << rhv.matrix[0][2]<<"\n"
-        << " " << rhv.matrix[1][0] << ", " << rhv.matrix[1][1] << ", " << rhv.matrix[1][2]<<"\n"
-        <<" " << rhv.matrix[2][0] << ", " << rhv.matrix[2][1] << ", " << rhv.matrix[2][2]<<"]\n"
-        << std::endl;
-    out.unsetf ( std::ios::floatfield );                // floatfield not set
-
-    return out;
-}
-
+#include "transform/transform.h"
+#include "transform/eigen_transform.h"
 
 template <typename T>
 void lin_space(T start, T inc, int n, std::vector<T>& data){
@@ -409,6 +136,106 @@ void check_size_expand(Args...args){
 }
 
 
+TEST_CASE("transform error"){
+#ifdef _OPENMP
+    std::cout << "use _OPENMP" <<std::endl;
+
+#endif
+
+
+    double yaw = 0.5, pitch = 0.0, roll =0.0;
+    double qw = 0.5, qx = 0.0 , qy = 0.0 , qz = 0.0;
+
+
+    bool ok = false;
+    transform::toQuaternion(qw,qx,qy,qz,yaw,pitch,roll);
+
+
+    transform::toEulerAngle(yaw, pitch, roll, qw,qx,qy,qz);
+
+
+    ok = transform::toEulerAngle(yaw, pitch, roll, qw,qx,qy,qz);
+    std::cout << "normalise\n";
+    std::cout << "ok : " << ok << "\n";
+
+    std::cout << "qw: " << qw << "\n";
+    std::cout << "qx: " << qx << "\n";
+    std::cout << "qy: " << qy << "\n";
+    std::cout << "qz: " << qz << "\n";
+    std::cout << "yaw: " << yaw << "\n";
+    std::cout << "pitch: " << pitch << "\n";
+    std::cout << "roll: " << roll << "\n";
+
+
+
+    // not normalise
+    qw += 0.0001;
+    ok = transform::toEulerAngle(yaw, pitch, roll, qw,qx,qy,qz);
+
+    std::cout << "not normalise\n";
+    std::cout << "ok : " << ok << "\n";
+
+    std::cout << "qw: " << qw << "\n";
+    std::cout << "qx: " << qx << "\n";
+    std::cout << "qy: " << qy << "\n";
+    std::cout << "qz: " << qz << "\n";
+    std::cout << "yaw: " << yaw << "\n";
+    std::cout << "pitch: " << pitch << "\n";
+    std::cout << "roll: " << roll << "\n";
+
+
+}
+
+TEST_CASE("eigen error"){
+
+    double yaw = 0.5, pitch = 0.0, roll =0.0;
+    double qw = 0.5, qx = 0.0 , qy = 0.0 , qz = 0.0;
+
+    double tx = 0.0, ty = 0.0, tz = 0.0;
+
+    bool ok = false;
+    transform::toQuaternion(qw,qx,qy,qz,yaw,pitch,roll);
+
+
+    Eigen::Isometry3d tf1;
+    tf1 = transform::createSe3(tx,ty,tz,qw,qx,qy,qz);
+    std::cout << "normalise\n";
+
+    std::cout << "qw: " << qw << "\n";
+    std::cout << "qx: " << qx << "\n";
+    std::cout << "qy: " << qy << "\n";
+    std::cout << "qz: " << qz << "\n";
+    std::cout << "yaw: " << yaw << "\n";
+    std::cout << "pitch: " << pitch << "\n";
+    std::cout << "roll: " << roll << "\n";
+    std::cout << "tf1:\n" << tf1.matrix() << "\n";
+
+    qw += 0.01;
+    tf1 = transform::createSe3(tx,ty,tz,qw,qx,qy,qz);
+
+    std::cout << "not normalise\n";
+    std::cout << "qw: " << qw << "\n";
+    std::cout << "qx: " << qx << "\n";
+    std::cout << "qy: " << qy << "\n";
+    std::cout << "qz: " << qz << "\n";
+    std::cout << "yaw: " << yaw << "\n";
+    std::cout << "pitch: " << pitch << "\n";
+    std::cout << "roll: " << roll << "\n";
+    std::cout << "tf1:\n" << tf1.matrix() << "\n";
+
+    transform::extractSe3(tf1,tx,ty,tz,qw,qx,qy,qz);
+    std::cout << "not normalise extractSe3\n";
+    std::cout << "qw: " << qw << "\n";
+    std::cout << "qx: " << qx << "\n";
+    std::cout << "qy: " << qy << "\n";
+    std::cout << "qz: " << qz << "\n";
+    std::cout << "yaw: " << yaw << "\n";
+    std::cout << "pitch: " << pitch << "\n";
+    std::cout << "roll: " << roll << "\n";
+    std::cout << "tf1:\n" << tf1.matrix() << "\n";
+}
+
+#if 0
 
 
 int main (int argc, char** argv){
@@ -416,10 +243,7 @@ int main (int argc, char** argv){
 
 
 
-#ifdef _OPENMP
-    std::cout << "use _OPENMP" <<std::endl;
 
-#endif
 
 
     auto t = Transform2d(1,0.0,0.4);
@@ -566,3 +390,4 @@ int main (int argc, char** argv){
     check_size_expand(r,r2,xy_v);
 
 }
+#endif

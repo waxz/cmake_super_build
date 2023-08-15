@@ -329,10 +329,7 @@ set_property(TARGET template_test PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND}
 #target_link_libraries(matplot_test  PUBLIC Matplot++::matplot)
 
 
-add_executable(transform_test  transform_test.cpp)
-target_include_directories( transform_test PUBLIC ${CMAKE_SOURCE_DIR}/include )
-target_link_libraries(transform_test PUBLIC ) #range-v3::range-v3
-set_omp(transform_test)
+
 
 
 add_executable(immer_test.cpp immer_test.cpp )
@@ -676,3 +673,21 @@ target_link_libraries( lua_test PUBLIC Threads::Threads)
 
 add_executable(clock_test clock_test.cpp)
 target_include_directories(clock_test PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+pybind11_add_module(cmake_example py11_test.cpp)
+
+add_executable(absl_test absl_test.cpp )
+target_include_directories( absl_test PUBLIC
+        ${CMAKE_SOURCE_DIR}/include
+#        ${CMAKE_SOURCE_DIR}/include/fakeit/single_header/catch
+        )
+
+target_link_libraries(absl_test PUBLIC
+        libcatch2
+        absl::strings  absl::str_format absl::log absl::log_internal_check_impl absl::log_internal_check_op absl::statusor)
+
+
+add_executable(transform_test  transform_test.cpp)
+target_include_directories( transform_test PUBLIC ${CMAKE_SOURCE_DIR}/include ${EIGEN3_INCLUDE_DIRS})
+target_link_libraries(transform_test PUBLIC libcatch2 ) #range-v3::range-v3
+set_omp(transform_test)

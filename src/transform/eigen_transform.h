@@ -8,6 +8,12 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+// transformation should only use double
+
+// if you use non-normalised float matrix ,  Eigen::Quaternion<FloatType> Q(transform.rotation()) , may block program
+
+//typedef Transform<double,3,Isometry> Isometry3d;
+
 namespace transform{
     //https://stackoverflow.com/questions/63341630/angle-axis-to-quaternion-using-eigen
     template<typename FloatType>

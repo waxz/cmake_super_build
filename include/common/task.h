@@ -51,7 +51,7 @@ namespace common{
             std::generate(task_queue_index.begin(), task_queue_index.end(), [n = 0]() mutable { return n++; });
 
             std::sort(task_queue_index.begin(),task_queue_index.end(),[&](auto& v1, auto& v2){
-                return task_queue[v1].prio < task_queue[v2].prio;
+                return task_queue[v1].prio < task_queue[v2].prio || (task_queue[v1].prio == task_queue[v2].prio  && task_queue[v1].delay_us < task_queue[v2].delay_us);
             });
         }
         void intiTime(){
@@ -138,7 +138,9 @@ namespace common{
                     std::generate(task_queue_index.begin(), task_queue_index.end(), [n = 0]() mutable { return n++; });
 
                     std::sort(task_queue_index.begin(),task_queue_index.end(),[&](auto& v1, auto& v2){
-                        return task_queue[v1].prio < task_queue[v2].prio;
+//                        return task_queue[v1].prio < task_queue[v2].prio;
+                        return task_queue[v1].prio < task_queue[v2].prio || (task_queue[v1].prio == task_queue[v2].prio  && task_queue[v1].delay_us < task_queue[v2].delay_us);
+
                     });
 
                 }
