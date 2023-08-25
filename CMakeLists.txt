@@ -156,7 +156,7 @@ endif()
 #===============
 
 #abseil-cpp-20220623.1.tar.gz
-build_external_project(absl lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/abseil-cpp-20220623.1.tar.gz -DABSL_BUILD_TESTING=OFF -DABSL_USE_GOOGLETEST_HEAD=ON -DCMAKE_CXX_STANDARD=14  -DABSL_ENABLE_INSTALL=ON)
+build_external_project(absl lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/abseil-cpp-20230125.3.tar.gz -DABSL_BUILD_TESTING=OFF -DABSL_USE_GOOGLETEST_HEAD=ON -DCMAKE_CXX_STANDARD=14  -DABSL_ENABLE_INSTALL=ON -DBUILD_SHARED_LIBS=OFF)
 find_package(absl REQUIRED)
 
 
@@ -382,28 +382,37 @@ build_external_project_command(hwloc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party
 set(hwloc_INCLUDE_DIR ${hwloc_ROOT}/include)
 set(hwloc_LIBRARIES ${hwloc_ROOT}/lib/libhwloc.so)
 
-#canfestival-de1fc3261f21.zip
-#examples build fail without python
-#change line24 form `all: objdictedit canfestival examples` to `all: objdictedit canfestival`
-# ldconfig create cache fail without root permission
-# change line48 from `ldconfig` to `ldconfig -C ./ld.so.cache`
-#  --disable-dll
-build_external_project_command(canfestival lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/canfestival-de1fc3261f21.zip "mkdir -p ${CMAKE_BINARY_DIR}/force_canfestival/install/ && ./configure --timers=unix --can=virtual --disable-dll --debug=MSG --prefix=${CMAKE_BINARY_DIR}/force_canfestival/install" "make all PREFIX=${CMAKE_BINARY_DIR}/force_canfestival/install" "make all install PREFIX=${CMAKE_BINARY_DIR}/force_canfestival/install")
+if(build_can)
+    #canfestival-de1fc3261f21.zip
+    #examples build fail without python
+    #change line24 form `all: objdictedit canfestival examples` to `all: objdictedit canfestival`
+    # ldconfig create cache fail without root permission
+    # change line48 from `ldconfig` to `ldconfig -C ./ld.so.cache`
+    #  --disable-dll
+    build_external_project_command(canfestival lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/canfestival-de1fc3261f21.zip "mkdir -p ${CMAKE_BINARY_DIR}/force_canfestival/install/ && ./configure --timers=unix --can=virtual --disable-dll --debug=MSG --prefix=${CMAKE_BINARY_DIR}/force_canfestival/install" "make all PREFIX=${CMAKE_BINARY_DIR}/force_canfestival/install" "make all install PREFIX=${CMAKE_BINARY_DIR}/force_canfestival/install")
 
-message(STATUS "canfestival_ROOT ${canfestival_ROOT}")
+    message(STATUS "canfestival_ROOT ${canfestival_ROOT}")
 
-# link order is important, if link libcanfestival.a before libcanfestival_unix.a, `canDispatch' , `TimeDispatch', `SetAlarm' will be undefined
-# https://stackoverflow.com/questions/51725564/cmake-doesnt-link-c-and-c-static-libraries-undefined-reference-to-function
-set(canfestival_library
-        ${canfestival_ROOT}/lib/libcanfestival.a
-        ${canfestival_ROOT}/lib/libcanfestival_unix.a
-        ${canfestival_ROOT}/lib/libcanfestival.a
-        ${canfestival_ROOT}/lib/libcanfestival_can_virtual.so
-        )
-set(canfestival_include_dir ${canfestival_ROOT}/include/canfestival)
-message(STATUS "canfestival_library ${canfestival_library}")
-message(STATUS "canfestival_include_dir ${canfestival_include_dir}")
+    # link order is important, if link libcanfestival.a before libcanfestival_unix.a, `canDispatch' , `TimeDispatch', `SetAlarm' will be undefined
+    # https://stackoverflow.com/questions/51725564/cmake-doesnt-link-c-and-c-static-libraries-undefined-reference-to-function
+    set(canfestival_library
+            ${canfestival_ROOT}/lib/libcanfestival.a
+            ${canfestival_ROOT}/lib/libcanfestival_unix.a
+            ${canfestival_ROOT}/lib/libcanfestival.a
+            ${canfestival_ROOT}/lib/libcanfestival_can_virtual.so
+    )
+    set(canfestival_include_dir ${canfestival_ROOT}/include/canfestival)
+    message(STATUS "canfestival_library ${canfestival_library}")
+    message(STATUS "canfestival_include_dir ${canfestival_include_dir}")
+endif ()
 
+
+#nanobench-4.3.11.tar.gz
+build_external_project(nanobench lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobench-4.3.11.tar.gz -DCMAKE_BUILD_TYPE=Release)
+find_package(nanobench REQUIRED)
+#doctest-2.4.11.tar.gz
+build_external_project(doctest lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/doctest-2.4.11.tar.gz -DCMAKE_BUILD_TYPE=Release)
+find_package(doctest REQUIRED)
 
 include(cmake/set_ros.cmake)
 
@@ -417,6 +426,7 @@ message(Boost_LIBRARIES = ${Boost_LIBRARIES})
 #set(ROOT_ROOT ${CMAKE_SOURCE_DIR}/third_party/root_v6.28.02.Linux-ubuntu20-x86_64-gcc9.4/root/cmake )
 #find_package(ROOT REQUIRED COMPONENTS RIO Net)
 
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11-2.10.4)
 add_subdirectory(src)
 
 

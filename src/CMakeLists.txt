@@ -684,10 +684,16 @@ target_include_directories( absl_test PUBLIC
 
 target_link_libraries(absl_test PUBLIC
         libcatch2
+        doctest::doctest
+        nanobench::nanobench
         absl::strings  absl::str_format absl::log absl::log_internal_check_impl absl::log_internal_check_op absl::statusor)
-
+#https://abseil.io/docs/cpp/platforms/compilerflags#gcc-flags
+SET_GCC_FLAGS(absl_test)
 
 add_executable(transform_test  transform_test.cpp)
 target_include_directories( transform_test PUBLIC ${CMAKE_SOURCE_DIR}/include ${EIGEN3_INCLUDE_DIRS})
 target_link_libraries(transform_test PUBLIC libcatch2 ) #range-v3::range-v3
 set_omp(transform_test)
+
+
+add_subdirectory(timer)
