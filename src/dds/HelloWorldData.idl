@@ -10,11 +10,10 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 module HelloWorldData
-{
-  struct Msg
-  {
-    long userID;
-    string message;
-  };
-  #pragma keylist Msg userID
-};
+        {
+                struct Msg
+                {
+                    @key long userID;
+                    string message;
+                };
+        };

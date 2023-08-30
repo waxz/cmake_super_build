@@ -33,6 +33,9 @@ set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 #set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6), libc6 (<< 3)")
 
 
+
+# https://cyclonedds.io/
+# https://github.com/eclipse-iceoryx/iceoryx/releases/tag/v2.0.3
 #iceoryx-2.0.3.zip
 #https://man7.org/tlpi/code/faq.html#sys-acl.h-missing
 #sudo apt-get install libacl1-dev
@@ -40,13 +43,15 @@ build_external_project_command(iceoryx lib ${CMAKE_CURRENT_SOURCE_DIR}/third_par
 set(iceoryx_binding_c_ROOT ${iceoryx_ROOT})
 find_package(iceoryx_binding_c REQUIRED)
 
+#https://github.com/eclipse-cyclonedds/cyclonedds/releases/tag/0.10.4
 #cyclonedds-0.10.2.zip
-build_external_project(CycloneDDS lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-0.10.2.zip -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT} -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
+build_external_project(CycloneDDS lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-0.10.4.tar.gz -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT} -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
 find_package(CycloneDDS REQUIRED)
 
+# https://github.com/eclipse-cyclonedds/cyclonedds-cxx/releases/tag/0.10.4
 #cyclonedds-cxx-0.10.2.zip
 #
-build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.2.zip -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
+build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.4.tar.gz -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
 find_package(CycloneDDS-CXX REQUIRED)
 
 
@@ -64,7 +69,7 @@ find_package(Ceres  REQUIRED)
 message(Ceres_ROOT : ${Ceres_ROOT} ,CERES_LIBRARIES : ${CERES_LIBRARIES} )
 #find_opencv(/home/waxz/dev/docker/docker_dev/share/opencv/install 4.6.0)
 
-build_external_project(Fruit lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fruit-3.6.0.tar.gz  -DFRUIT_USES_BOOST=False -DCMAKE_BUILD_TYPE=Release)
+build_external_project(Fruit lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fruit-3.7.1.tar.gz  -DFRUIT_USES_BOOST=False -DCMAKE_BUILD_TYPE=Release)
 set(FRUIT_INSTALLED_DIR ${Fruit_ROOT})
 find_package(Fruit  REQUIRED)
 message(Fruit_ROOT : ${Fruit_ROOT} , FRUIT_LIBRARY : ${FRUIT_LIBRARY}, FRUIT_INCLUDE_DIR : ${FRUIT_INCLUDE_DIR} )
@@ -159,6 +164,14 @@ endif()
 build_external_project(absl lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/abseil-cpp-20230125.3.tar.gz -DABSL_BUILD_TESTING=OFF -DABSL_USE_GOOGLETEST_HEAD=ON -DCMAKE_CXX_STANDARD=14  -DABSL_ENABLE_INSTALL=ON -DBUILD_SHARED_LIBS=OFF)
 find_package(absl REQUIRED)
 
+
+#double-conversion-3.3.0.tar.gz
+build_external_project(double-conversion lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/double-conversion-3.3.0.tar.gz -DCMAKE_CXX_STANDARD=14 -DBUILD_SHARED_LIBS=OFF)
+find_package(double-conversion REQUIRED)
+
+#folly-v2023.08.28.00.tar.gz
+#build_external_project(folly lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/folly-v2023.08.28.00.tar.gz -DCMAKE_CXX_STANDARD=14 -DBUILD_SHARED_LIBS=OFF -Ddouble-conversion_ROOT=${double-conversion_ROOT})
+#find_package(folly REQUIRED)
 
 #build_external_project(flashlight lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flashlight-0.3.2.tar.gz -DCMAKE_BUILD_TYPE=Release )
 #find_package(flashlight REQUIRED)

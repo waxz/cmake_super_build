@@ -420,29 +420,7 @@ add_executable(function_overload_test function_overload_test.cpp)
 
 #target_link_directories(ifm3d_test PUBLIC  ${ifm3d_ROOT}/lib )
 
-if(NOT TARGET CycloneDDS-CXX::ddscxx)
-    find_package(CycloneDDS-CXX REQUIRED)
-endif()
-
-idlcxx_generate(TARGET helloworlddata FILES dds/HelloWorldData.idl WARNINGS no-implicit-extensibility)
-
-add_executable(ddscxxHelloworldPublisher dds/publisher.cpp)
-add_executable(ddscxxHelloworldSubscriber dds/subscriber.cpp)
-# Link both executables to idl data type library and ddscxx.
-target_link_libraries(ddscxxHelloworldPublisher CycloneDDS-CXX::ddscxx helloworlddata)
-target_link_libraries(ddscxxHelloworldSubscriber CycloneDDS-CXX::ddscxx helloworlddata)
-
-# Disable the static analyzer in GCC to avoid crashing the GNU C++ compiler
-# on Azure Pipelines
-if(DEFINED ENV{SYSTEM_TEAMFOUNDATIONSERVERURI})
-    if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND ANALYZER STREQUAL "on")
-        target_compile_options(ddscxxHelloworldPublisher PRIVATE -fno-analyzer)
-        target_compile_options(ddscxxHelloworldSubscriber PRIVATE -fno-analyzer)
-    endif()
-endif()
-
-set_property(TARGET ddscxxHelloworldPublisher PROPERTY CXX_STANDARD ${cyclonedds_cpp_std_to_use})
-set_property(TARGET ddscxxHelloworldSubscriber PROPERTY CXX_STANDARD ${cyclonedds_cpp_std_to_use})
+add_subdirectory(dds)
 
 add_executable(eigen_test eigen_test.cpp)
 target_include_directories(eigen_test PUBLIC ${EIGEN3_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
@@ -680,15 +658,30 @@ add_executable(absl_test absl_test.cpp )
 target_include_directories( absl_test PUBLIC
         ${CMAKE_SOURCE_DIR}/include
 #        ${CMAKE_SOURCE_DIR}/include/fakeit/single_header/catch
+        ${FRUIT_INCLUDE_DIR}
         )
 
 target_link_libraries(absl_test PUBLIC
         libcatch2
         doctest::doctest
         nanobench::nanobench
-        absl::strings  absl::str_format absl::log absl::log_internal_check_impl absl::log_internal_check_op absl::statusor)
+        absl::strings  absl::str_format
+        absl::log
+#        absl::log_internal_check_impl
+        absl::log_internal_check_op
+        absl::statusor
+        absl::debugging
+        absl::random_random
+        absl::any
+
+        ${FRUIT_LIBRARY}
+)
+
+
+
 #https://abseil.io/docs/cpp/platforms/compilerflags#gcc-flags
 SET_GCC_FLAGS(absl_test)
+set_asan(absl_test)
 
 add_executable(transform_test  transform_test.cpp)
 target_include_directories( transform_test PUBLIC ${CMAKE_SOURCE_DIR}/include ${EIGEN3_INCLUDE_DIRS})

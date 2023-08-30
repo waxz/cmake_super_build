@@ -1,0 +1,9 @@
+module RoundTripModule
+{
+  @final
+  struct DataType
+  {
+    @key long userID;
+    sequence<octet> payload;
+  };
+};

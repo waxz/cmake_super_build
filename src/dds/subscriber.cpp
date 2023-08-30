@@ -46,6 +46,7 @@ int main() {
          * solutions, albeit somewhat more elaborate ones. */
         std::cout << "=== [Subscriber] Wait for message." << std::endl;
         bool poll = true;
+        int recv_cnt = 0;
         while (poll) {
             /* For this example, the reader will return a set of messages (aka
              * Samples). There are other ways of getting samples from reader.
@@ -77,6 +78,8 @@ int main() {
                         std::cout << "    Message : \"" << msg.message() << "\"" << std::endl;
 
                         /* Only 1 message is expected in this example. */
+                        recv_cnt++;
+                        poll = recv_cnt < 5;
                         poll = false;
                     }
                 }
