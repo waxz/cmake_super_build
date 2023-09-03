@@ -39,20 +39,26 @@ set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 #iceoryx-2.0.3.zip
 #https://man7.org/tlpi/code/faq.html#sys-acl.h-missing
 #sudo apt-get install libacl1-dev
-build_external_project_command(iceoryx lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/iceoryx-2.0.3.zip  "cmake -Bbuild -Hiceoryx_meta -DBUILD_DOC=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/force_iceoryx/install" "cmake --build build" " cmake --build build --target install" )
+build_external_project_command(iceoryx lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/iceoryx-2.0.3.zip  "cmake -Bbuild -Hiceoryx_meta -DBUILD_DOC=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/force_iceoryx/install -DCMAKE_BUILD_TYPE=RelWithDebInfo" "cmake --build build" " cmake --build build --target install" )
 set(iceoryx_binding_c_ROOT ${iceoryx_ROOT})
 find_package(iceoryx_binding_c REQUIRED)
 
 #https://github.com/eclipse-cyclonedds/cyclonedds/releases/tag/0.10.4
 #cyclonedds-0.10.2.zip
-build_external_project(CycloneDDS lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-0.10.4.tar.gz -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT} -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
+build_external_project(CycloneDDS lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-0.10.4.tar.gz -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT} -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_SHM=YES)
 find_package(CycloneDDS REQUIRED)
 
 # https://github.com/eclipse-cyclonedds/cyclonedds-cxx/releases/tag/0.10.4
 #cyclonedds-cxx-0.10.2.zip
 #
-build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.4.tar.gz -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=Release -DENABLE_SHM=YES)
+build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.4.tar.gz -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_SHM=YES)
 find_package(CycloneDDS-CXX REQUIRED)
+
+build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install" "make -j6" " make install" )
+set(tinycc_COMPILER_DIR ${tinycc_ROOT}/lib/tcc)
+set(tinycc_LIBTCC_INCLUDE_DIR ${tinycc_ROOT}/include)
+set(tinycc_TCCLIB_INCLUDE_DIR ${tinycc_ROOT}/lib/tcc/include)
+set(tinycc_LIB ${tinycc_ROOT}/lib/libtcc.a)
 
 
 # Eigen3
