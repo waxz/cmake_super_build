@@ -54,12 +54,26 @@ find_package(CycloneDDS REQUIRED)
 build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.4.tar.gz -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_SHM=YES)
 find_package(CycloneDDS-CXX REQUIRED)
 
-build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install" "make -j6" " make install" )
+build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob-20230917.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install --with-libgcc" "make -j6" " make install" )
 set(tinycc_COMPILER_DIR ${tinycc_ROOT}/lib/tcc)
 set(tinycc_LIBTCC_INCLUDE_DIR ${tinycc_ROOT}/include)
 set(tinycc_TCCLIB_INCLUDE_DIR ${tinycc_ROOT}/lib/tcc/include)
 set(tinycc_LIB ${tinycc_ROOT}/lib/libtcc.a)
 
+
+#strliteral-master.zip
+build_external_project_command(strliteral lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/strliteral-master.zip "mkdir -p ${CMAKE_BINARY_DIR}/force_strliteral/install/bin" "make" "cp ./strliteral ${CMAKE_BINARY_DIR}/force_strliteral/install/bin" )
+set(strliteral_exe ${strliteral_ROOT}/bin/strliteral)
+macro(strliteral_build in out)
+    message("strliteral_build strliteral_exe: " ${strliteral_exe})
+    message("strliteral_build WORKING_DIRECTORY: " ${CMAKE_CURRENT_BINARY_DIR})
+    message("strliteral_build in: " ${in})
+    message("strliteral_build out: " ${out})
+
+    execute_process(COMMAND ${strliteral_exe} ${in} ${out}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+endmacro()
 
 # Eigen3
 build_external_project(Eigen3 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen-3.4.0.zip  -DCMAKE_BUILD_TYPE=Release )

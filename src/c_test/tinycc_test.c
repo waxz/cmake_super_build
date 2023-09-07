@@ -85,13 +85,11 @@ TCCState* create_tcc(){
 static int
 compile_program(TCCState* tcc, script_t* script)
 {
-
     if (!tcc)
     {
         printf("[TCC:ERR] Failed to create tcc context!\n");
         return -1;
     }
-
 
     tcc_set_error_func(tcc, 0x0, tcc_error);
     tcc_set_options(tcc, "-g");
@@ -105,10 +103,6 @@ compile_program(TCCState* tcc, script_t* script)
         tcc_delete(tcc);
         return -1;
     }
-
-
-
-
     return 0;
 }
 
@@ -154,8 +148,7 @@ void change_point(Point *p,float a){p->x = a;}
 
 int test_1(){
 
-    Point p;
-    change_point(&p,0.1f);
+
 
 
     printf("PATH : %s\n", getenv("PATH"));
@@ -221,6 +214,13 @@ int test_1(){
             tcc_add_symbol(tcc, "add", add);
             tcc_add_symbol(tcc, "num", &num);
             tcc_add_symbol(tcc, "test_c", test_c);
+
+            Point p1;
+            change_point(&p1,0.1f);
+            tcc_add_symbol(tcc, "p1", &p1);
+
+            Point* p2 = (Point*) tcc_get_symbol(tcc,"p1");
+            printf("tcc result: p2->x = %f\n",p2->x);
 
         }
         relocate_program(tcc,&script);
