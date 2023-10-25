@@ -45,13 +45,13 @@ find_package(iceoryx_binding_c REQUIRED)
 
 #https://github.com/eclipse-cyclonedds/cyclonedds/releases/tag/0.10.4
 #cyclonedds-0.10.2.zip
-build_external_project(CycloneDDS lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-0.10.4.tar.gz -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT} -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_SHM=YES)
+build_external_project(CycloneDDS lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-0.10.4.tar.gz -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT} -DCMAKE_BUILD_TYPE=Debug -DENABLE_SHM=YES)
 find_package(CycloneDDS REQUIRED)
 
 # https://github.com/eclipse-cyclonedds/cyclonedds-cxx/releases/tag/0.10.4
 #cyclonedds-cxx-0.10.2.zip
 #
-build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.4.tar.gz -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_SHM=YES)
+build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.4.tar.gz -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=Debug -DENABLE_SHM=YES)
 find_package(CycloneDDS-CXX REQUIRED)
 
 build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob-20230917.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install --with-libgcc" "make -j6" " make install" )
@@ -212,8 +212,7 @@ find_package(Matplot++ REQUIRED)
 #find_package(range-v3 REQUIRED)
 
 
-build_external_project(tinyxml2 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinyxml2-9.0.0.tar.gz  -DCMAKE_BUILD_TYPE=Release  )
-find_package(tinyxml2 REQUIRED)
+
 
 #include(FetchContent)
 #
@@ -364,14 +363,51 @@ message(STATUS "breakpad_client_library ${breakpad_client_library}")
 message(STATUS "breakpad_library ${breakpad_library}")
 
 
+build_external_project(tinyxml2 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinyxml2-9.0.0.tar.gz  -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF )
+find_package(tinyxml2 REQUIRED)
 
-set(test_fast_dds OFF)
+
+# https://github.com/ToruNiina/toml11/releases
+# toml11-3.7.1.tar.gz
+build_external_project(toml11 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/toml11-3.7.1.tar.gz  -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF )
+find_package(toml11 REQUIRED)
+
+#https://github.com/rttrorg/rttr/releases/tag/v0.9.6
+#rttr-0.9.6-src.tar.gz
+#build_external_project(rttr lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/rttr-0.9.6-src.tar.gz  -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF )
+#find_package(rttr REQUIRED)
+
+set(test_fast_dds ON)
 if(test_fast_dds)
-    #third_party/Fast-DDS-2.9.1.zip
-    build_external_project(foonathan_memory lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/foonathan_memory_vendor-1.3.0.zip  -DCMAKE_BUILD_TYPE=Release  -DBUILD_SHARED_LIBS=ON)
+
+    #https://fast-dds.docs.eprosima.com/en/latest/installation/sources/sources_linux.html#cmake-installation
+
+    # C++ API
+    # https://github.com/eProsima/foonathan_memory_vendor/releases
+    # https://github.com/eProsima/Fast-CDR/releases
+    # https://github.com/eProsima/Fast-DDS/releases
+
+
+    # fast-dds-gen
+    # https://fast-dds.docs.eprosima.com/en/latest/installation/sources/sources_linux.html#fast-dds-gen-installation
+    #Fast DDS-Gen supports Java versions from 11 to 19.
+    #The Fast-DDS-Gen folder contains the following packages:
+    #
+    #    share/fastddsgen, where the generated Java application is.
+    #
+    #    scripts, containing some user friendly scripts.
+    # To make these scripts accessible from any shell session and directory, add the scripts folder path to the PATH environment variable.
+
+    # DDS on microcontrollers
+    # https://github.com/eProsima/Micro-XRCE-DDS
+
+
+    #foonathan_memory_vendor-1.3.1.tar.gz
+    build_external_project(foonathan_memory lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/foonathan_memory_vendor-1.3.1.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_SHARED_LIBS=OFF)
     find_package(foonathan_memory REQUIRED)
 
-    build_external_project(fastcdr lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-CDR-1.0.26.zip  -DCMAKE_BUILD_TYPE=Release )
+    #Fast-CDR-1.0.27.zip
+    build_external_project(fastcdr lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-CDR-1.0.27.zip  -DCMAKE_BUILD_TYPE=Release )
     #message(1fastcdf_ROOT ${fastcdf_ROOT})
 
     # fastcdr-config.cmake
@@ -381,7 +417,8 @@ if(test_fast_dds)
 
 
     #fastrtps-config.cmake
-    build_external_project(fastrtps lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-DDS-2.9.1.zip  -DCMAKE_BUILD_TYPE=Release -Dfoonathan_memory_ROOT=${foonathan_memory_ROOT} -Dfastcdr_ROOT=${fastcdr_ROOT} -DFASTDDS_STATIC=OFF)
+    # Fast-DDS-2.11.2.tar.gz
+    build_external_project(fastrtps lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-DDS-2.11.2.tar.gz  -DCMAKE_BUILD_TYPE=Release -Dfoonathan_memory_ROOT=${foonathan_memory_ROOT} -Dfastcdr_ROOT=${fastcdr_ROOT} -DTinyXML2_ROOT=${tinyxml2_ROOT} -DBUILD_SHARED_LIBS=OFF)
     find_package(fastrtps REQUIRED)
 endif ()
 
@@ -446,6 +483,12 @@ find_package(nanobench REQUIRED)
 #doctest-2.4.11.tar.gz
 build_external_project(doctest lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/doctest-2.4.11.tar.gz -DCMAKE_BUILD_TYPE=Release)
 find_package(doctest REQUIRED)
+
+
+#sockpp-0.8.1.tar.gz
+build_external_project(sockpp lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sockpp-0.8.1.tar.gz -DCMAKE_BUILD_TYPE=Release -DSOCKPP_BUILD_EXAMPLES=OFF -DSOCKPP_BUILD_SHARED=OFF -DSOCKPP_BUILD_STATIC=ON)
+find_package(sockpp REQUIRED)
+
 
 include(cmake/set_ros.cmake)
 

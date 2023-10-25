@@ -420,7 +420,6 @@ add_executable(function_overload_test function_overload_test.cpp)
 
 #target_link_directories(ifm3d_test PUBLIC  ${ifm3d_ROOT}/lib )
 
-add_subdirectory(dds)
 
 add_executable(eigen_test eigen_test.cpp)
 target_include_directories(eigen_test PUBLIC ${EIGEN3_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include  ${CMAKE_SOURCE_DIR}/third_party/nlohmann )
@@ -581,7 +580,6 @@ target_include_directories( task_schedual_test PUBLIC
         ${CMAKE_SOURCE_DIR}/third_party/coroutine-master
         ${CMAKE_SOURCE_DIR}/third_party/stackless_coroutine-master
         )
-add_subdirectory(c_test)
 
 add_executable(endian_align_test endian_align_test.cpp)
 target_include_directories( endian_align_test PUBLIC
@@ -689,4 +687,8 @@ target_link_libraries(transform_test PUBLIC libcatch2 ) #range-v3::range-v3
 set_omp(transform_test)
 
 
+add_subdirectory(c_test)
+add_subdirectory(dds)
 add_subdirectory(timer)
+
+add_subdirectory(network)

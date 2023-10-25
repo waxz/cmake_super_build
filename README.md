@@ -177,3 +177,7 @@ LD_DEBUG=files,libs ldd ./executable
 # python
 - pip install dearpygui -i https://pypi.doubanio.com/simple
 - pip install paho-mqtt -i https://pypi.doubanio.com/simple 
+
+
+# related project
+https://github.com/waxz/libroscpp
