@@ -181,7 +181,9 @@ endif()
 #===============
 
 #abseil-cpp-20220623.1.tar.gz
-build_external_project(absl lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/abseil-cpp-20230125.3.tar.gz -DABSL_BUILD_TESTING=OFF -DABSL_USE_GOOGLETEST_HEAD=ON -DCMAKE_CXX_STANDARD=14  -DABSL_ENABLE_INSTALL=ON -DBUILD_SHARED_LIBS=OFF)
+#build_external_project(absl lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/abseil-cpp-20230125.3.tar.gz -DABSL_BUILD_TESTING=OFF -DABSL_USE_GOOGLETEST_HEAD=ON -DCMAKE_CXX_STANDARD=14  -DABSL_ENABLE_INSTALL=ON -DBUILD_SHARED_LIBS=OFF)
+build_external_project(absl lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/abseil-cpp-20230802.1.tar.gz -DABSL_BUILD_TESTING=OFF -DABSL_USE_GOOGLETEST_HEAD=ON -DCMAKE_CXX_STANDARD=14  -DABSL_ENABLE_INSTALL=ON -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+
 find_package(absl REQUIRED)
 
 
@@ -488,6 +490,24 @@ find_package(doctest REQUIRED)
 #sockpp-0.8.1.tar.gz
 build_external_project(sockpp lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sockpp-0.8.1.tar.gz -DCMAKE_BUILD_TYPE=Release -DSOCKPP_BUILD_EXAMPLES=OFF -DSOCKPP_BUILD_SHARED=OFF -DSOCKPP_BUILD_STATIC=ON)
 find_package(sockpp REQUIRED)
+
+
+#bolt-2.0.tar.gz
+build_external_project(bolt lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bolt-2.0.tar.gz -DCMAKE_BUILD_TYPE=Release -DLIBOMP_USE_ARGOBOTS=off)
+
+add_library(bolt STATIC IMPORTED)
+set_target_properties(bolt PROPERTIES  IMPORTED_LOCATION ${bolt_ROOT}/lib/libomp.so)
+target_include_directories(bolt INTERFACE ${bolt_ROOT}/include)
+target_link_directories(bolt INTERFACE ${bolt_ROOT}/lib)
+
+
+#easy_profiler-2.1.0.tar.gz
+build_external_project(easy_profiler lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/easy_profiler-develop.zip -DCMAKE_BUILD_TYPE=Release -DEASY_PROFILER_NO_SAMPLES=ON )
+find_package(easy_profiler REQUIRED)
+
+#orbit
+#pip install conan==1.60.0
+#./bootstrap-orbit.sh
 
 
 include(cmake/set_ros.cmake)
