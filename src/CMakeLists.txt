@@ -687,8 +687,25 @@ target_link_libraries(transform_test PUBLIC libcatch2 ) #range-v3::range-v3
 set_omp(transform_test)
 
 
+
+add_executable(math_test  math_test.cpp)
+target_include_directories( math_test PUBLIC ${CMAKE_SOURCE_DIR}/include ${EIGEN3_INCLUDE_DIRS})
+
 add_subdirectory(c_test)
 add_subdirectory(dds)
 add_subdirectory(timer)
 
 add_subdirectory(network)
+
+add_subdirectory(smart_ptr)
+
+add_subdirectory(thread_openmp_tbb)
+
+add_subdirectory(simulate)
+
+add_subdirectory(std)
+
+add_subdirectory(profiler_test)
+
+add_subdirectory(tcc)
+add_subdirectory(simd)

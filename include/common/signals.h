@@ -14,21 +14,27 @@ extern "C" {
 #endif
 
 
-/// \param my_handler\n
-/// C++ usage:\n
-///std::atomic_bool program_run(true);\n
-///auto my_handler = common::fnptr<void(int)>([&](int sig){ std::cout << "get sig " << sig;program_run = false;});\n
-///common::set_signal_handler(my_handler);\n
-/// C usage:\n
-///static bool program_run = true;\n
-///void signal_handler(int sig)\n
-///{\n
-///    printf("get signal %i\n",sig);\n
-///    program_run = false;\n
-///}\n
 
 
+/* C++
+    std::atomic_bool program_run(true);
+    auto my_handler = common::fnptr<void(int)>([&](int sig){ std::cout << "get sig " << sig;program_run = false;});
+    set_signal_handler(my_handler);
+*/
 
+/* C
+
+static bool program_run = true;
+
+void signal_handler(int sig) {
+    printf("get signal %i\n", sig);
+    program_run = false;
+}
+
+ int main{
+   set_signal_handler(signal_handler);
+ }
+ */
 void set_signal_handler(void (*my_handler)(int)){
 
     struct sigaction sigIntHandler;
