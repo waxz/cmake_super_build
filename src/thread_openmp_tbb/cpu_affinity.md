@@ -1,39 +1,28 @@
-# cpu arch
+# set affinity in shell 
+- https://stackoverflow.com/questions/13407813/shell-scripting-using-grep-to-split-a-string
+- https://www.baeldung.com/linux/grep-exclude-ps-results
+- https://www.baeldung.com/linux/trim-whitespace-bash-variable
+- https://stackoverflow.com/questions/2159860/viewing-full-output-of-ps-command
+- https://stackoverflow.com/questions/34669239/how-to-pass-command-with-parameters-to-xargs
+- 
+
+### use taskset
 ```shell
-lscpu
-```
-```txt
-Architecture:                    x86_64
-CPU op-mode(s):                  32-bit, 64-bit
-Byte Order:                      Little Endian
-Address sizes:                   48 bits physical, 48 bits virtual
-CPU(s):                          16
-On-line CPU(s) list:             0-15
-Thread(s) per core:              2
-Core(s) per socket:              8
-Socket(s):                       1
-NUMA node(s):                    1
-Vendor ID:                       AuthenticAMD
-CPU family:                      23
-Model:                           96
-Model name:                      AMD Ryzen 7 4800H with Radeon Graphics
-Stepping:                        1
-Frequency boost:                 enabled
-CPU MHz:                         1423.189
-CPU max MHz:                     2900.0000
-CPU min MHz:                     1400.0000
-BogoMIPS:                        5789.29
-Virtualization:                  AMD-V
-L1d cache:                       256 KiB
-L1i cache:                       256 KiB
-L2 cache:                        4 MiB
-L3 cache:                        8 MiB
-NUMA node0 CPU(s):               0-1
+taskset -cpa 0,1 <tid>
 ```
 
+```shell
+ps -A -o tid,cmd  | grep -v grep | grep python | tr -s '[:blank:]' 
 
-# Cgroup v2
-[在Ubuntu 20.04 LTS激活Cgroup v2 — Cloud Atlas beta 文档](https://cloud-atlas.readthedocs.io/zh-cn/latest/linux/ubuntu_linux/cgroup/enable_cgroup_v2_ubuntu_20.04.html)
+```
+
+```shell
+ps -A -o tid,cmd  | grep -v grep | grep _test | awk '{print $1}' | xargs -n1 -I {} /bin/bash -c ' echo taskset {}; taskset -cpa 0-2 {} ' 
+```
+
+### use Cgroup v2
+- [在Ubuntu 20.04 LTS激活Cgroup v2 — Cloud Atlas beta 文档](https://cloud-atlas.readthedocs.io/zh-cn/latest/linux/ubuntu_linux/cgroup/enable_cgroup_v2_ubuntu_20.04.html)
+- https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/managing_monitoring_and_updating_the_kernel/using-cgroups-v2-to-control-distribution-of-cpu-time-for-applications_managing-monitoring-and-updating-the-kernel#doc-wrapper
 
 # performance problem
 - cache miss
