@@ -1,5 +1,28 @@
 module ThroughputModule
 {
+
+
+    struct LaserScanType{
+
+        unsigned long long time;
+        string frame_id;
+        sequence<float> ranges;
+        sequence<float> intensities;
+        float range_min;
+        float range_max;
+        float angle_min;
+        float angle_max;
+        float angle_resolution;
+};
+
+    struct VectorType{
+        unsigned long long time;
+        string frame_id;
+        sequence<octet> message;
+    };
+
+
+
   @final
   struct DataType_Base
   {

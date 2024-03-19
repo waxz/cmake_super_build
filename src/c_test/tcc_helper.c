@@ -9,6 +9,7 @@
 #include "tcc_helper.h"
 
 #include "cjson_helper.h"
+#include "tinyalloc/tinyalloc.h"
 
 
 //===================
@@ -29,6 +30,7 @@ TCCState *tcch_create_tcc() {
 
     printf("GCC version %i.%i.%i\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
     char gcc_include_path[100];
+    //                         /usr/lib/gcc/x86_64-linux-gnu/9/include/stdint-gcc.h
     sprintf(gcc_include_path, "/usr/lib/gcc/x86_64-linux-gnu/%i/include", __GNUC__);
     printf("gcc_include_path: %s\n", gcc_include_path);
 
@@ -44,11 +46,11 @@ TCCState *tcch_create_tcc() {
         tcc_set_lib_path(tcc, lib_path);
 
         ///usr/lib/gcc/x86_64-linux-gnu/9/include/stdint-gcc.h:60: error: ';' expected (got "int_least8_t")
-        //tcc_add_include_path(tcc, gcc_include_path);
+        tcc_add_include_path(tcc, gcc_include_path);
 
         tcc_add_include_path(tcc, include_path);
         tcc_set_error_func(tcc, 0x0, tcc_error);
-        tcc_set_options(tcc, "-g -std=c11 -pedantic-errors -Wall -m64 -bench -I/usr/include");
+        tcc_set_options(tcc, "-g -std=c11 -Wall -m64 -bench -I/usr/include");
         tcc_set_output_type(tcc, TCC_OUTPUT_MEMORY);
 
         {
@@ -121,9 +123,18 @@ TCCState *tcch_create_tcc() {
             tcc_add_symbol(tcc,"test_pointer", test_pointer);
 
         }
-
-
-
+        {
+            // add tiny alloc
+            tcc_add_symbol(tcc,"ta_init", ta_init);
+            tcc_add_symbol(tcc,"ta_alloc", ta_alloc);
+            tcc_add_symbol(tcc,"ta_calloc", ta_calloc);
+            tcc_add_symbol(tcc,"ta_free", ta_free);
+            tcc_add_symbol(tcc,"ta_realloc", ta_realloc);
+            tcc_add_symbol(tcc,"ta_num_free", ta_num_free);
+            tcc_add_symbol(tcc,"ta_num_used", ta_num_used);
+            tcc_add_symbol(tcc,"ta_num_fresh", ta_num_fresh);
+            tcc_add_symbol(tcc,"ta_check", ta_check);
+        }
 
         printf("[TCC:INFO] tcc config done!\n");
 
@@ -133,22 +144,32 @@ TCCState *tcch_create_tcc() {
     return tcc;
 }
 
-script_t tcch_create_script() {
-    script_t script;
+tcc_script_t tcch_create_script() {
+    tcc_script_t script;
     script.tcc = tcch_create_tcc();
+    script.program = NULL;
+    script.is_relocated = false;
     return script;
 }
 
-int tcch_compile_program(script_t *script, const char* imp) {
+int tcch_compile_program(tcc_script_t *script, const char* imp) {
+
     if (!script->tcc) {
         printf("[TCC:ERR] Failed to create tcc context!\n");
         return -1;
     }
+    if(script->string_code == NULL){
+        printf("[TCC:ERR]: tcch_compile_program string_code is NULL\n");
+        return -1;
+
+    }
+
+    script->is_relocated = false;
 
     size_t len = strlen(script->string_code);
 
 
-    char* full_code = script->string_code;
+    const char* full_code = script->string_code;
     bool add_forward_declaration = false;
     if(imp != NULL){
 
@@ -181,8 +202,7 @@ int tcch_compile_program(script_t *script, const char* imp) {
 
     if (ret < 0) {
         printf("[TCC:ERR] Failed to add tcc file!\n");
-        tcc_delete(script->tcc);
-        script->tcc = NULL;
+        tcch_delete_script(script);
         return -1;
     }
     printf("[TCC:INFO] Success to add tcc file!\n");
@@ -193,17 +213,19 @@ int tcch_compile_program(script_t *script, const char* imp) {
     return 0;
 }
 
-int tcch_relocate_program(script_t *script) {
+int tcch_relocate_program(tcc_script_t *script) {
     if (!script->tcc) {
         printf("[TCC:ERR] Failed to create tcc context!\n");
         return -1;
     }
     // tcc_relocate called with NULL returns the size that's necessary for the added files.
+    if(script->program){
+        free(script->program);
+    }
     script->program = calloc(1, tcc_relocate(script->tcc, NULL));
     if (!script->program) {
         printf("[TCC:ERR] Failed to allocate memory for the program!\n");
-        tcc_delete(script->tcc);
-        script->tcc = NULL;
+        tcch_delete_script(script);
 
         return -1;
     }
@@ -213,18 +235,28 @@ int tcch_relocate_program(script_t *script) {
     int ret = tcc_relocate(script->tcc, script->program);
     if (ret < 0) {
         printf("[TCC:ERR] Failed to allocate memory for the program!\n");
-        tcc_delete(script->tcc);
-        script->tcc = NULL;
+        tcch_delete_script(script);
 
         return -1;
     }
-
+    script->is_relocated = true;
     return 0;
 
 }
 
 /// run after tcch_compile_program(&script); tcch_relocate_program(&script);
-void *tcch_get_symbol(script_t *script, const char *name) {
+void *tcch_get_symbol(tcc_script_t *script, const char *name) {
+
+    if (!script->tcc) {
+        printf("[TCC:ERR] Failed to create tcc context!\n");
+        return 0;
+    }
+    if (!script->is_relocated) {
+        printf("[TCC:ERR] TCC is not relocated!\n");
+        return 0;
+    }
+
+
     void *ptr = tcc_get_symbol(script->tcc, name);
     if (!ptr) {
         printf("[TCC:ERR] Failed to get symbol [%s]!\n", name);
@@ -233,7 +265,7 @@ void *tcch_get_symbol(script_t *script, const char *name) {
     return ptr;
 }
 
-int tcch_add_symbol(script_t *script, const char *name, void *ptr) {
+int tcch_add_symbol(tcc_script_t *script, const char *name, void *ptr) {
     int rt = tcc_add_symbol(script->tcc, name, ptr);
     if (!ptr) {
         printf("[TCC:ERR] Failed to add symbol [%s], ptr [%p]!\n", name, ptr);
@@ -242,13 +274,16 @@ int tcch_add_symbol(script_t *script, const char *name, void *ptr) {
 }
 
 
-void tcch_delete_script(script_t *script) {
+void tcch_delete_script(tcc_script_t *script) {
 
     if (script->tcc) {
         printf("[TCC:INFO] tcc delete done!");
         tcc_delete(script->tcc);
+        if(script->program){
+            free(script->program);
+            script->program = NULL;
+        }
         script->tcc = NULL;
-
     }
 
 }

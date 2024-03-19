@@ -31,10 +31,10 @@ namespace message{
 
     public:
 
-        long open(char *arg, int argc, char **argv) override;
+        long open(char *arg, int argc, const char **argv) override;
         long start(char *arg) override;
-        long recv_message(char *channel, size_t max_num, double timeout, const std::function<void (void *)> &callback) override;
-        long send_message(char *channel, void *data, size_t max_num, double timeout) override;
+        long recv_message(const char *channel, size_t max_num, double timeout, const std::function<void (void *)> &callback) override;
+        long send_message(const char *channel, void *data, size_t max_num, double timeout) override;
 
         bool is_running() override;
 
@@ -45,7 +45,7 @@ namespace message{
 
 
         template<typename T>
-        long add_channel( char *arg);
+        long add_channel(const char *arg);
 
     };
 }

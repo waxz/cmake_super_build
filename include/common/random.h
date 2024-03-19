@@ -8,6 +8,7 @@
 #include <random>
 #include <algorithm>
 #include <memory>
+#include <cassert>
 
 namespace common{
     inline std::mt19937& rng(std::seed_seq seed_sequence = {})  {

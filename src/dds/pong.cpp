@@ -17,6 +17,7 @@
 
 #include "common/signals.h"
 #include "common/clock_time.h"
+#include "common/functions.h"
 
 using namespace org::eclipse::cyclonedds;
 
@@ -24,7 +25,7 @@ int main(int argc, char** argv){
 
     std::atomic_bool program_run(true);
     auto my_handler = common::fnptr<void(int)>([&](int sig){ std::cout << "get sig " << sig;program_run = false;});
-    common::set_signal_handler(my_handler);
+     set_signal_handler(my_handler);
 
 
 
@@ -36,14 +37,14 @@ int main(int argc, char** argv){
     /* First, a domain participant is needed.
  * Create one on the default domain. */
     dds::domain::DomainParticipant participant= dds::domain::DomainParticipant(
-            0,
+            0xFFFFFFFF,
             dds::domain::DomainParticipant::default_participant_qos(),
             nullptr,
-            dds::core::status::StatusMask::none(),
-            shm_config);
+            dds::core::status::StatusMask::none()
+            //, shm_config
+            );
 
-
-    using MSG_TYPE = ThroughputModule::DataType_1024;
+    using MSG_TYPE = ThroughputModule::DataType_1048576;
 
     /* To subscribe to something, a topic is needed. */
     dds::topic::Topic<MSG_TYPE> topic(participant, "RoundTripModule_Msg");
@@ -61,12 +62,16 @@ int main(int argc, char** argv){
     /* Now, the writer can be created to publish a HelloWorld message. */
     dds::pub::DataWriter<MSG_TYPE> writer(publisher, topic);
 
-    std::cout << "=== [Ping] Waiting for subscriber." << std::endl;
-    std::cout << "=== [Ping] writer.publication_matched_status().current_count() = " << writer.publication_matched_status().current_count() <<  std::endl;
+    auto p = writer.listener();
+    std::cout << "=== [Pong] p: " << p << std::endl;
 
-    while (program_run && writer.publication_matched_status().current_count() < 1) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    }
+    std::cout << "=== [Pong] Waiting for subscriber." << std::endl;
+    std::cout << "=== [Pong] writer.publication_matched_status().current_count() = " << writer.publication_matched_status().current_count() <<  std::endl;
+
+//    while (program_run && writer.publication_matched_status().current_count() < 1) {
+//        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+//    }
+    std::cout << "=== [Pong] start loop" <<  std::endl;
 
     /* Create a message to write. */
 
@@ -74,7 +79,8 @@ int main(int argc, char** argv){
 
 
     MSG_TYPE pub_data ;
-    pub_data.payloadsize(1000);
+
+    pub_data.payloadsize(1048576 - sizeof (ThroughputModule::DataType_Base));
     const size_t payload_size = pub_data.payloadsize();
 
     // received buffer
@@ -87,15 +93,13 @@ int main(int argc, char** argv){
     while (program_run){
 
 
-        pub_data.payload()[0] = 100;
-        writer.write(pub_data);
-        continue;
+
 
         /* Write the message. */
 //        std::cout << "=== [Ping] Write sample." << std::endl;
 
         {
-            size_t instances_cnt = 2;
+            size_t instances_cnt = 1;
             // if writer supports loaning
             if (writer.delegate()->is_loan_supported()) {
                 for (int32_t i = 0; i < instances_cnt; i++) {
@@ -113,6 +117,11 @@ int main(int argc, char** argv){
             }
         }
 
+//        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+//        pub_data.payload()[0] = 100;
+//        writer.write(pub_data);
+        continue;
         //wait respond
         /* Try taking samples from the reader. */
         recv_samples = reader.take();

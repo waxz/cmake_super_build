@@ -1,0 +1,154 @@
+# This is a TOML document.
+
+[general]
+version = 1
+
+
+[dds.config]
+
+[dds.channel.channel_1]
+channel_type = "read"
+topic_name = "hello"
+topic_type = "ThroughputModule::DataType_1024"
+share = false
+bind = {}
+
+code = """
+#include <tinyalloc/tinyalloc.h>
+#include <stdio.h>
+#include <stdint.h>//uint64_t,uint32_t,uint8_t
+
+#include <stdbool.h>
+#include <stddef.h>
+
+
+float* dynamic_array_pointer = NULL;
+
+typedef struct{
+    uint64_t m_count;
+    uint32_t m_payloadsize;
+    uint8_t m_payload[1048564];
+} DataType_1048576;
+typedef struct{
+    size_t count;
+    float weight;
+    float size[3];
+} BOX;
+BOX box_read;
+
+void fn(void* vp){
+
+
+
+    if(dynamic_array_pointer ==NULL){
+        printf("ta_calloc dynamic_array_pointer\\n");
+        dynamic_array_pointer = ta_alloc(100);
+        printf("ta_calloc dynamic_array_pointer done: %p\\n",dynamic_array_pointer);
+        BOX* p_box_1 = ta_alloc(100);
+
+
+    }
+
+    DataType_1048576* p = vp;
+    box_read.count = p->m_count;
+    //printf("hello world");
+}
+"""
+function = "fn"
+
+[dds.channel.channel_2]
+channel_type = "write"
+topic_name = "hello"
+topic_type = "ThroughputModule::DataType_1024"
+share = false
+bind = {}
+code = """
+#include <stdio.h>
+#include <stdint.h>//uint64_t,uint32_t,uint8_t
+
+typedef struct{
+    uint64_t m_count;
+    uint32_t m_payloadsize;
+    uint8_t m_payload[1048564];
+} DataType_1048576;
+
+typedef struct{
+    size_t count;
+    float weight;
+    float size[3];
+} BOX;
+BOX box_write;
+void fn(void* vp){
+DataType_1048576* p = vp;
+ p->m_count = box_write.count;
+//printf("hello world");
+}
+"""
+function = "fn"
+
+
+[mqtt.config]
+server = "127.0.0.1"
+port = 1883
+
+[mqtt.channel.channel_1]
+channel_type = "pub"
+topic_name = "hello"
+topic_type = "Array1024"
+bind = {}
+code = """
+#include <stdio.h>
+void fn(void* p){
+printf("hello world");
+}
+"""
+function = "fn"
+
+[mqtt.channel.channel_2]
+channel_type = "pub"
+topic_name = "hello"
+topic_type = "Array1024"
+bind = {}
+embeded_code = '''
+#include <stdio.h>
+extern Point p;
+
+void fn(){
+printf("hello world");
+}
+'''
+
+
+# http://wiki.ros.org/Remapping%20Arguments
+# config parameter will be passed to ros init function
+[ros.config]
+__name = "ros_helper_test"
+
+[ros.channel.scan_pub]
+channel_type = "pub"
+topic_name = "scan"
+topic_type = "LaserScan"
+qos_queue_size = 10
+
+[ros.channel.scan_sub]
+channel_type = "sub"
+topic_name = "scan"
+topic_type = "LaserScan"
+qos_queue_size = 10
+
+[ros.channel.tf_pub]
+channel_type = "pub"
+topic_name = "tf"
+topic_type = "tf"
+parent_frame = "map"
+child_frame = "base"
+
+[ros.channel.tf_sub]
+channel_type = "sub"
+topic_name = "tf"
+topic_type = "tf"
+parent_frame = "map"
+child_frame = "base1"
+
+
+

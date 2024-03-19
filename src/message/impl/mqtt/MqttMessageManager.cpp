@@ -23,7 +23,7 @@ namespace message{
         std::function<int(void*, int, double)> func;
     };
 
-    long MqttMessageManager::open(char *arg, int argc, char **argv) {
+    long MqttMessageManager::open(char *arg, int argc, const char **argv) {
 
         node_handler.set<message::MqttClient>(arg, true);
         auto& client = node_handler.ref<message::MqttClient>(); // = std::make_shared<message::MqttClient>(arg, true);
@@ -109,7 +109,7 @@ namespace message{
 
 
     template<typename T>
-    long MqttMessageManager::add_channel(char *arg) {
+    long MqttMessageManager::add_channel(const char *arg) {
 
         auto& client = node_handler.ref<message::MqttClient>(); // = std::make_shared<message::MqttClient>(arg, true);
 
@@ -283,7 +283,7 @@ namespace message{
         return 0;
     }
 
-    long MqttMessageManager::recv_message(char *channel, size_t max_num, double timeout,
+    long MqttMessageManager::recv_message(const char *channel, size_t max_num, double timeout,
                                           const std::function<void(void *)> &callback) {
         auto& client = node_handler.ref<message::MqttClient>(); // = std::make_shared<message::MqttClient>(arg, true);
 
@@ -307,7 +307,7 @@ namespace message{
         return 0;
     }
 
-    long MqttMessageManager::send_message(char *channel, void *data, size_t max_num, double timeout) {
+    long MqttMessageManager::send_message(const char *channel, void *data, size_t max_num, double timeout) {
         auto& client = node_handler.ref<message::MqttClient>(); // = std::make_shared<message::MqttClient>(arg, true);
 
         char * channel_str[] = {"SUB","PUB","TFL","TFB","PAR","PAW"};
@@ -344,7 +344,8 @@ namespace message{
     }
 
 
-    template long MqttMessageManager::add_channel<std::string>(char *);
-    template long MqttMessageManager::add_channel<common_message::Twist>(char *);
+    template long MqttMessageManager::add_channel<std::string>(const char *);
+    template long MqttMessageManager::add_channel<common_message::Twist>(const char *);
+    template long MqttMessageManager::add_channel<common_message::Path>(const char *);
 
 }

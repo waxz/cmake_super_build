@@ -21,10 +21,10 @@ namespace message{
         common::wild_ptr node_handler;
 
     public:
-        long open(char*arg, int argc, char** argv) override;
+        long open(char*arg, int argc,const char** argv) override;
         long start(char *arg) override;
-        long send_message(char *channel, void *data, size_t max_num, double timeout) override;
-        long recv_message(char *channel, size_t max_num, double timeout, const std::function<void (void *)> &callback) override;
+        long send_message(const char *channel, void *data, size_t max_num, double timeout) override;
+        long recv_message(const char *channel, size_t max_num, double timeout, const std::function<void (void *)> &callback) override;
 
         bool is_running() override;
         void stop() override;
@@ -35,10 +35,10 @@ namespace message{
 
 
         template<typename T>
-        long add_channel( char *arg);
+        long add_channel( const char *arg);
 
-        long recv_tf(common_message::TransformStamped & data, float timeout );
-        long send_tf(common_message::TransformStamped & data);
+        long recv_tf(common_message::TransformStamped & data, float timeout = 0.0 );
+        long send_tf(const common_message::TransformStamped & data);
 
     };
 

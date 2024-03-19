@@ -149,10 +149,24 @@ add_executable(ros_init_node ros_init_node.cpp)
 add_ros(ros_init_node roscpp)
 ```
 
+### implemented libraries
+- [precise timer](include/common/suspend.h) 
+- [task scheduler based on precise timer](include/common/task.h)
+- [rigidbody transformation](src/transform)
+- [unified message layer for ros and mqtt](src/message)
+- [socket client with reconnect capacity](src/network)
+- [embed tiny c compiler wrapper as script engine](src/c_test/tcc_helper.c)
+- [fastdds wrapper](src/dds)
+- [normal estimation and point-to-line icp for 2d pointcloud](src/icp)
+
+
+# other related project
+- [libros](https://github.com/waxz/libroscpp): compile roscpp client from source,  add simple C interface for rust ffi binding
+- [rust_practice](https://github.com/waxz/rust_practice) : rust code demo, practice for robot application
 
 
 
-### libraries
+### thirdparty libraries
 - https://github.com/oneapi-src/oneTBB
 - https://github.com/ceres-solver/ceres-solver
 - https://github.com/PointCloudLibrary/pcl
@@ -167,18 +181,5 @@ add_ros(ros_init_node roscpp)
 - https://github.com/openresty/luajit2
 - https://www.open-mpi.org/software/hwloc
 
-### ldd
-https://stackoverflow.com/questions/58997230/cmake-project-fails-to-find-shared-library
-```sh
-readelf -a  ./executable | grep -e NEEDED -e PATH
-LD_DEBUG=files,libs ldd ./executable
-```
-
-# python
-- pip install dearpygui -i https://pypi.doubanio.com/simple
-- pip install paho-mqtt -i https://pypi.doubanio.com/simple 
 
 
-# other related project
-- [libros](https://github.com/waxz/libroscpp): compile roscpp client from source,  add simple C interface for rust ffi binding 
-- [rust_practice](https://github.com/waxz/rust_practice) : rust code demo, practice for robot application

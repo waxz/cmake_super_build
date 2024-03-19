@@ -20,7 +20,7 @@ namespace message{
         /// \param argv
         /// \return : status: can be status or pointer address
 
-        virtual long open(char*arg, int argc, char** argv)= 0;
+        virtual long open(char*arg, int argc, const char** argv)= 0;
 
 
         virtual long start(char*arg)= 0;
@@ -31,9 +31,9 @@ namespace message{
         /// \details: all data store in map<string, wild_ptr<>>, use topic string as key, contains device handler and data buffer queue, and other data
 //    virtual long add_channel(char* args) = 0;
 
-        virtual long recv_message(char* channel, size_t max_num, double timeout, const std::function<void(void*)>& callback) = 0;
+        virtual long recv_message(const char* channel, size_t max_num, double timeout, const std::function<void(void*)>& callback) = 0;
 
-        virtual long send_message(char* channel, void* data, size_t max_num, double timeout) = 0;
+        virtual long send_message(const char* channel, void* data, size_t max_num, double timeout) = 0;
 
         virtual bool is_running() = 0;
 
