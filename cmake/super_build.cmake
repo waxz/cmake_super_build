@@ -89,51 +89,6 @@ function (build_external_project_cmake target prefix url) #FOLLOWING ARGUMENTS a
     #            )
 endfunction()
 
-function (build_external_project_make target prefix url) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
-    include(ProcessorCount)
-    ProcessorCount(N)
-    math(EXPR USE_CORE_NUM "${N} / 2 " OUTPUT_FORMAT DECIMAL)
-
-    set(trigger_build_dir ${CMAKE_BINARY_DIR}/force_${target})
-
-    #mktemp dir in build tree
-    file(MAKE_DIRECTORY ${trigger_build_dir} ${trigger_build_dir}/build)
-
-    #generate false dependency project
-    set(CMAKE_LIST_CONTENT "
-        cmake_minimum_required(VERSION 3.0)
-        project(${target}_build)
-        include(ExternalProject)
-        #make -w generic
-        ExternalProject_add(${target}
-            PREFIX ${prefix}/${target}
-            URL ${url}
-    CONFIGURE_COMMAND "make clean"
-    BUILD_COMMAND  make  linux MYLIBS="-lrt -ldl -lreadline"
-    BUILD_IN_SOURCE TRUE
-    INSTALL_COMMAND make INSTALL_TOP=${trigger_build_dir}/install install
-            )
-
-        add_custom_target(trigger_${target})
-        add_dependencies(trigger_${target} ${target})
-    ")
-
-    file(WRITE ${trigger_build_dir}/CMakeLists.txt "${CMAKE_LIST_CONTENT}")
-
-
-    execute_process(COMMAND ${CMAKE_COMMAND} -G${CMAKE_GENERATOR} ..
-            WORKING_DIRECTORY ${trigger_build_dir}/build
-            )
-    execute_process(COMMAND ${CMAKE_COMMAND} --build . -j${USE_CORE_NUM}
-            WORKING_DIRECTORY ${trigger_build_dir}/build
-            )
-
-    set(${target}_ROOT ${trigger_build_dir}/install PARENT_SCOPE)
-
-    #    execute_process(COMMAND ${CMAKE_COMMAND} --install ./build --prefix ${trigger_build_dir}/install
-    #            WORKING_DIRECTORY ${trigger_build_dir}
-    #            )
-endfunction()
 
 function (build_external_project_command target prefix url configure_command build_command install_command) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
     include(ProcessorCount)

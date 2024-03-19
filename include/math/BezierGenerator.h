@@ -24,10 +24,14 @@ namespace math{
     inline bool buildBezier(float PA[2] ,float PB[2],float PC[2],float PD[2], float step, std::vector<std::array<float,2>> & path){
 
 
+        float simple_len =
+                   sqrt((PA[0] -PB[0])*(PA[0] -PB[0]) +(PA[1] -PB[1])*(PA[1] -PB[1]))
+                +  sqrt((PC[0] -PB[0])*(PC[0] -PB[0]) +(PC[1] -PB[1])*(PC[1] -PB[1]))
+                +  sqrt((PC[0] -PD[0])*(PC[0] -PD[0]) +(PC[1] -PD[1])*(PC[1] -PD[1]));
         step = std::max(std::min(step, 0.05f), 0.01f);
-        size_t t_num = 1.0f/step;
+        size_t t_num = simple_len/step;
         step = 1.0f/t_num;
-        path.resize(t_num);
+        path.resize(t_num + 1);
         float t = 0.0;
 
         float PAB[2];
@@ -60,6 +64,9 @@ namespace math{
             path[i][1] =  (1-t) *PABC[1] + t*PBCD[1];
             t += step;
         }
+        path[t_num][0] = PD[0];
+        path[t_num][1] = PD[1];
+
         return true;
     }
 }

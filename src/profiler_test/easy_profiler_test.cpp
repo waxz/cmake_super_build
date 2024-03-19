@@ -7,6 +7,10 @@
 #include <cstdlib>
 #include <math.h>
 
+#include "common/signals.h"
+#include "common/clock_time.h"
+#include "common/functions.h"
+
 #include <easy/profiler.h>
 #include <easy/arbitrary_value.h>
 #include <easy/reader.h>
@@ -54,9 +58,16 @@ struct Point{
 };
 
 int main() {
+
+    std::atomic_bool program_run(true);
+    auto my_handler = common::fnptr<void(int)>([&](int sig){ std::cout << "get sig " << sig;program_run = false;});
+    set_signal_handler(my_handler);
+
+
+
     EASY_PROFILER_ENABLE;
     EASY_MAIN_THREAD;
-    profiler::startListen();
+//    profiler::startListen();
 //    EASY_NONSCOPED_BLOCK("Frame", true, 5., profiler::ON, -15.f, profiler::colors::White);
     EASY_NONSCOPED_BLOCK("loop")
     localSleep();
@@ -80,16 +91,40 @@ int main() {
 
     };
 
-    std::thread t1 = std::thread([&func_1]{
 
+    auto go=[&]{
+        for(int i = 0 ; i < 1000;i++){
+
+            std::cout << i << ",";
+        }
+        std::cout  << "\n";
+
+    };
+
+//    std::ios::sync_with_stdio(false);
+
+    std::thread t1 = std::thread([&func_1,&program_run,&go]{
         Point p;
-        for (int i = 0; i < 100; i++) {
-            int v[] = {1 * i, 2 * i, 3 * i};
-            EASY_VALUE("thread update i", i);
-            foo();
-            func_1();
+        while (program_run) {
 
-            p.print();
+            {
+                common::Time t1 = common::FromUnixNow();
+
+                auto t_1 = std::chrono::system_clock::now();
+
+
+                {
+                    EASY_BLOCK("cout 1");
+                    go();
+                }
+                auto t_2 = std::chrono::system_clock::now();
+                auto delay = std::chrono::duration_cast<std::chrono::microseconds>(t_2 - t_1);
+                std::cout<< "delay: " << delay.count() <<"\n";
+
+                std::cout << "motion_planner.go use time: " << common::ToMicroSeconds(common::FromUnixNow() - t1) << " us\n";
+
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
     });

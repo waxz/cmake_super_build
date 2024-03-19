@@ -8,10 +8,27 @@
 #include <cmath>
 #include <type_traits>
 
-#define angle_normalise_zero(angle) std::abs(angle) < M_PI ? (angle) : ( angle + ((angle) > 0.0 ? -M_PI*2: M_PI*2) )
-#define angle_normalise(angle, angle_mean)  ((std::abs(angle - angle_mean ) < M_PI )? (angle) : ( angle + ((angle - angle_mean) > 0.0 ? -M_PI*2.0: M_PI*2.0) ))
+//https://stackoverflow.com/questions/2320986/easy-way-to-keeping-angles-between-179-and-180-degrees
+
+#define angle_normalise_zero(angle) std::abs(angle) < M_PIf32 ? (angle) : ( angle + ((angle) > 0.0f ? -M_PIf32*2.0f: M_PIf32*2.0f) )
+#define angle_normalise(angle, angle_mean)  ((std::abs(angle - angle_mean ) < M_PIf32 )? (angle) : ( angle + ((angle - angle_mean) > 0.0f ? -M_PIf32*2.0f: M_PIf32*2.0f) ))
+
+
+inline float angle_normal(float angle){
+    float normalizedAngle = angle - (ceil((angle + M_PI)/(2*M_PI))-1)*2*M_PI;  // (-Pi;Pi]:
+
+    return normalizedAngle;
+}
+
 
 namespace math{
+//    https://stackoverflow.com/questions/14369673/round-double-to-3-points-decimal
+    inline double round_to(double value, double precision = 1.0)
+    {
+        return std::round(value / precision) * precision;
+    }
+
+
     //https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
     //Actually implements signum (-1, 0, or 1). Implementations here using copysign only return -1 or 1, which is not signum
     /*

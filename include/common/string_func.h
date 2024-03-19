@@ -99,6 +99,15 @@ inline void split_str(const char *st, char *delim, int (*func)(int, char *)) {
     free(dup);
 }
 
+//https://stackoverflow.com/questions/10876930/should-one-never-use-static-inline-function
+//https://gist.github.com/htfy96/50308afc11678d2e3766a36aa60d5f75
+static inline char* str_concat(const char* s1, const char* s2){
+
+    char* dst_str = (char *) malloc(1 + strlen(s1)+ strlen(s2) );
+    strcpy(dst_str, s1);
+    strcat(dst_str, s2);
+    return dst_str;
+}
 
 #ifdef __cplusplus
 }

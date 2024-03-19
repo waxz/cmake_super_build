@@ -250,6 +250,24 @@ function(print_whitelisted_properties)
     message ("CMAKE_WHITELISTED_PROPERTY_LIST = ${CMAKE_WHITELISTED_PROPERTY_LIST}")
 endfunction(print_whitelisted_properties)
 
+function(set_test tgt)
+    target_include_directories( ${tgt} PUBLIC
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/include/fakeit/single_header
+            ${FRUIT_INCLUDE_DIR}
+    )
+
+    target_link_libraries(${tgt} PUBLIC
+            libcatch2
+            doctest::doctest
+            nanobench::nanobench
+            ${FRUIT_LIBRARY}
+    )
+    #https://abseil.io/docs/cpp/platforms/compilerflags#gcc-flags
+    SET_GCC_FLAGS(${tgt})
+    set_asan(${tgt})
+endfunction()
+
 function(print_target_properties tgt)
     if(NOT TARGET ${tgt})
         message("There is no target named '${tgt}'")

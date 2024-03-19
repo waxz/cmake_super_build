@@ -179,5 +179,6 @@ LD_DEBUG=files,libs ldd ./executable
 - pip install paho-mqtt -i https://pypi.doubanio.com/simple 
 
 
-# related project
-https://github.com/waxz/libroscpp
+# other related project
+- [libros](https://github.com/waxz/libroscpp): compile roscpp client from source,  add simple C interface for rust ffi binding 
+- [rust_practice](https://github.com/waxz/rust_practice) : rust code demo, practice for robot application

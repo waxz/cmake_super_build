@@ -61,8 +61,72 @@ int main(int argc, char** argv){
 #ifdef _OPENMP
     std::cout << "use _OPENMP" <<std::endl;
 
+    std::cout << "device num: " << omp_get_num_devices() << std::endl;
+
 #endif
 
+    omp_set_dynamic(0);     // Explicitly disable dynamic teams
+    omp_set_num_threads(4); // Use 4 threads for all consecutive parallel regions
+    std::cout << "omp_get_max_threads() " << omp_get_max_threads() <<std::endl;
+
+    std::cout << "omp_get_num_threads() " << omp_get_num_threads() <<std::endl;
+
+
+    {
+
+#pragma omp parallel
+{
+    int ID = omp_get_thread_num();
+    std::cout << "hello " << ID << std::endl;
+    std::cout << "world " << ID << std::endl;
+
+}
+
+
+        std::cout << "Exit region " << __LINE__   << std::endl;
+
+#pragma omp parallel num_threads(5)
+        {
+            int ID = omp_get_thread_num();
+            std::cout << "hello " << ID << std::endl;
+            std::cout << "world " << ID << std::endl;
+
+        }
+
+
+        std::cout << "Exit region " << __LINE__   << std::endl;
+
+
+    }
+
+
+
+
+#pragma omp parallel proc_bind(spread) num_threads(16)
+    {
+#pragma omp single nowait
+        printf("number of threads = %d\n"  ,omp_get_num_threads());
+        int huh = 0;
+        int M = 5;
+        int N = 5;
+        int j = 0;
+
+#pragma omp for schedule(monotonic:dynamic,5) collapse(2)
+        for(int i=0;i<N;i++)
+            for (  j=0;j<M;j++){
+                printf("omp_get_thread_num = %d\n"  ,omp_get_thread_num());
+
+            }
+    }
+
+
+    const int N = 10;
+
+    float a[N] = {0.0};
+    float b[N] = {0.0};
+    float c[N] = {0.0};
+
+    return 0;
 
 
 
@@ -99,11 +163,7 @@ int main(int argc, char** argv){
 
     return 0;
 
-    omp_set_dynamic(0);     // Explicitly disable dynamic teams
-    omp_set_num_threads(4); // Use 4 threads for all consecutive parallel regions
-    std::cout << "omp_get_max_threads() " << omp_get_max_threads() <<std::endl;
 
-    std::cout << "omp_get_num_threads() " << omp_get_num_threads() <<std::endl;
 
 #pragma omp parallel
     {

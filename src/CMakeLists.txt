@@ -709,3 +709,7 @@ add_subdirectory(profiler_test)
 
 add_subdirectory(tcc)
 add_subdirectory(simd)
+
+add_subdirectory(boost_test)
+
+add_subdirectory(ceres_test)

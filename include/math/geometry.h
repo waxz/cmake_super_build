@@ -5,6 +5,7 @@
 #ifndef CMAKE_SUPER_BUILD_GEOMETRY_H
 #define CMAKE_SUPER_BUILD_GEOMETRY_H
 
+#include <cmath>
 
 namespace math{
     //https://gist.github.com/TimSC/47203a0f5f15293d2099507ba5da44e6#file-linelineintersect-cpp
@@ -98,10 +99,19 @@ namespace math{
         qz = sin(yaw * 0.5f);
         qw = cos(yaw * 0.5f);
 
-        qx = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - cos(roll / 2) * sin(pitch / 2) * sin(yaw / 2);
-        qy = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * cos(pitch / 2) * sin(yaw / 2);
-        qz = cos(roll / 2) * cos(pitch / 2) * sin(yaw / 2) - sin(roll / 2) * sin(pitch / 2) * cos(yaw / 2);
-        qw = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * sin(pitch / 2) * sin(yaw / 2);
+        double sin_roll_2 = sin(roll / 2);
+        double cos_pitch_2 = cos(pitch / 2);
+        double cos_roll_2 = cos(roll / 2);
+        double sin_yaw_2 = sin(yaw / 2);
+        double cos_yaw_2 = cos(yaw / 2);
+        double sin_pitch_2 = sin(pitch / 2);
+
+
+        
+        qx = sin_roll_2 * cos_pitch_2 * cos_yaw_2 - cos_roll_2 * sin_pitch_2 * sin_yaw_2;
+        qy = cos_roll_2 * sin_pitch_2 * cos_yaw_2 + sin_roll_2 * cos_pitch_2 * sin_yaw_2;
+        qz = cos_roll_2 * cos_pitch_2 * sin_yaw_2 - sin_roll_2 * sin_pitch_2 * cos_yaw_2;
+        qw = cos_roll_2 * cos_pitch_2 * cos_yaw_2 + sin_roll_2 * sin_pitch_2 * sin_yaw_2;
 
     }
     inline void yaw_to_quaternion(float yaw, float &qx, float &qy, float &qz, float &qw) {
@@ -113,10 +123,17 @@ namespace math{
         qz = sin(yaw * 0.5f);
         qw = cos(yaw * 0.5f);
 
-        qx = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - cos(roll / 2) * sin(pitch / 2) * sin(yaw / 2);
-        qy = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * cos(pitch / 2) * sin(yaw / 2);
-        qz = cos(roll / 2) * cos(pitch / 2) * sin(yaw / 2) - sin(roll / 2) * sin(pitch / 2) * cos(yaw / 2);
-        qw = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * sin(pitch / 2) * sin(yaw / 2);
+        float sin_roll_2 = sin(roll / 2);
+        float cos_pitch_2 = cos(pitch / 2);
+        float cos_roll_2 = cos(roll / 2);
+        float sin_yaw_2 = sin(yaw / 2);
+        float cos_yaw_2 = cos(yaw / 2);
+        float sin_pitch_2 = sin(pitch / 2);
+
+        qx = sin_roll_2 * cos_pitch_2 * cos_yaw_2 - cos_roll_2 * sin_pitch_2 * sin_yaw_2;
+        qy = cos_roll_2 * sin_pitch_2 * cos_yaw_2 + sin_roll_2 * cos_pitch_2 * sin_yaw_2;
+        qz = cos_roll_2 * cos_pitch_2 * sin_yaw_2 - sin_roll_2 * sin_pitch_2 * cos_yaw_2;
+        qw = cos_roll_2 * cos_pitch_2 * cos_yaw_2 + sin_roll_2 * sin_pitch_2 * sin_yaw_2;
 
     }
 }

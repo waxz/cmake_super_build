@@ -5,10 +5,18 @@
 #include "ceres/ceres.h"
 #include "ceres/cubic_interpolation.h"
 
+//NumericDiffMethodType
 using ceres::CENTRAL;
+using ceres::FORWARD;
+using ceres::RIDDERS;
+
+
 using ceres::CostFunction;
+using ceres::LossFunction;
+
 using ceres::NumericDiffCostFunction;
 using ceres::AutoDiffCostFunction;
+
 using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
@@ -79,12 +87,18 @@ int main(){
     Problem problem;
     // Set up the only cost function (also known as residual). This uses
     // numeric differentiation to obtain the derivative (jacobian).
-//    template <typename CostFunctor,
-//            NumericDiffMethodType kMethod = CENTRAL,
-//            int kNumResiduals = 0,  // Number of residuals, or ceres::DYNAMIC
-//            int... Ns>              // Parameters dimensions for each block.
-//
 
+/*
+template <typename CostFunctor,
+          NumericDiffMethodType kMethod = CENTRAL,
+          int kNumResiduals = 0,  // Number of residuals, or ceres::DYNAMIC
+          int... Ns>              // Parameters dimensions for each block.
+ */
+/*
+template <typename CostFunctor,
+          int kNumResiduals,  // Number of residuals, or ceres::DYNAMIC.
+          int... Ns>          // Number of parameters in each parameter block.
+ */
 
 
 

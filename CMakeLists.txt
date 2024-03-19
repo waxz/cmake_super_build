@@ -54,7 +54,7 @@ find_package(CycloneDDS REQUIRED)
 build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.4.tar.gz -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=Debug -DENABLE_SHM=YES)
 find_package(CycloneDDS-CXX REQUIRED)
 
-build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob-20230917.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install --with-libgcc" "make -j6" " make install" )
+build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob_2023_1220.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install --enable-static --debug --extra-cflags='-std=c11 -Wpedantic -fsanitize=address,undefined -g' " "make -j6" " make install" )
 set(tinycc_COMPILER_DIR ${tinycc_ROOT}/lib/tcc)
 set(tinycc_LIBTCC_INCLUDE_DIR ${tinycc_ROOT}/include)
 set(tinycc_TCCLIB_INCLUDE_DIR ${tinycc_ROOT}/lib/tcc/include)
@@ -83,8 +83,8 @@ set(Eigen3_ROOT ${Eigen3_ROOT}/share/eigen3/cmake)
 find_package(Eigen3 3.4.0 REQUIRED HINTS ${Eigen3_ROOT})
 message(new eigen: EIGEN3_INCLUDE_DIRS : ${EIGEN3_INCLUDE_DIRS} )
 
-
-build_external_project(Ceres lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver-2.1.0.tar.gz  -DEigen3_ROOT=${Eigen3_ROOT} -DCMAKE_BUILD_TYPE=Release -DMINIGLOG=ON -DGFLAGS=OFF -DSUITESPARSE=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCUMENTATION=OFF)
+# ceres-solver-2.2.0.tar.gz
+build_external_project(Ceres lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver-2.2.0.tar.gz  -DEigen3_ROOT=${Eigen3_ROOT} -DCMAKE_BUILD_TYPE=Release -DMINIGLOG=ON -DGFLAGS=OFF -DSUITESPARSE=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCUMENTATION=OFF)
 find_package(Ceres  REQUIRED)
 message(Ceres_ROOT : ${Ceres_ROOT} ,CERES_LIBRARIES : ${CERES_LIBRARIES} )
 #find_opencv(/home/waxz/dev/docker/docker_dev/share/opencv/install 4.6.0)
@@ -312,8 +312,8 @@ build_external_project(Taskflow lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/task
 find_package(Taskflow REQUIRED)
 
 
-
-build_external_project(autodiff lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/autodiff-0.6.12.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DAUTODIFF_BUILD_TESTS=OFF -DAUTODIFF_BUILD_PYTHON=OFF -DAUTODIFF_BUILD_EXAMPLES=OFF -DAUTODIFF_BUILD_DOCS=OFF)
+#autodiff-1.0.3.tar.gz
+build_external_project(autodiff lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/autodiff-1.0.3.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DAUTODIFF_BUILD_TESTS=OFF -DAUTODIFF_BUILD_PYTHON=OFF -DAUTODIFF_BUILD_EXAMPLES=OFF -DAUTODIFF_BUILD_DOCS=OFF)
 find_package(autodiff REQUIRED)
 if (BUILD_OPTIM)
     build_external_project_command(optim lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/optim.zip "EIGEN_INCLUDE_PATH=${EIGEN3_INCLUDE_DIRS} ./configure -i ./install -l eigen -p" "make && mkdir -p ./install/lib" "make install"  -DCMAKE_BUILD_TYPE=Release  -DAUTODIFF_BUILD_TESTS=OFF -DAUTODIFF_BUILD_PYTHON=OFF -DAUTODIFF_BUILD_EXAMPLES=OFF -DAUTODIFF_BUILD_DOCS=OFF)
@@ -493,16 +493,16 @@ find_package(sockpp REQUIRED)
 
 
 #bolt-2.0.tar.gz
-build_external_project(bolt lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bolt-2.0.tar.gz -DCMAKE_BUILD_TYPE=Release -DLIBOMP_USE_ARGOBOTS=off)
-
-add_library(bolt STATIC IMPORTED)
-set_target_properties(bolt PROPERTIES  IMPORTED_LOCATION ${bolt_ROOT}/lib/libomp.so)
-target_include_directories(bolt INTERFACE ${bolt_ROOT}/include)
-target_link_directories(bolt INTERFACE ${bolt_ROOT}/lib)
+#build_external_project(bolt lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bolt-2.0.tar.gz -DCMAKE_BUILD_TYPE=Release -DLIBOMP_USE_ARGOBOTS=off)
+#
+#add_library(bolt STATIC IMPORTED)
+#set_target_properties(bolt PROPERTIES  IMPORTED_LOCATION ${bolt_ROOT}/lib/libomp.so)
+#target_include_directories(bolt INTERFACE ${bolt_ROOT}/include)
+#target_link_directories(bolt INTERFACE ${bolt_ROOT}/lib)
 
 
 #easy_profiler-2.1.0.tar.gz
-build_external_project(easy_profiler lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/easy_profiler-develop.zip -DCMAKE_BUILD_TYPE=Release -DEASY_PROFILER_NO_SAMPLES=ON )
+build_external_project(easy_profiler lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/easy_profiler-develop.zip -DCMAKE_BUILD_TYPE=Release -DEASY_PROFILER_NO_SAMPLES=ON -DBUILD_SHARED_LIBS=OFF )
 find_package(easy_profiler REQUIRED)
 
 #orbit
