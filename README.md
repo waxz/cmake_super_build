@@ -155,7 +155,7 @@ add_ros(ros_init_node roscpp)
 - [rigidbody transformation](src/transform)
 - [unified message layer for ros and mqtt](src/message)
 - [socket client with reconnect capacity](src/network)
-- [embed tiny c compiler wrapper as script engine](src/c_test/tcc_helper.c)
+- [embed tiny c compiler wrapper as script engine](src/tcc)
 - [fastdds wrapper](src/dds)
 - [normal estimation and point-to-line icp for 2d pointcloud](src/icp)
 

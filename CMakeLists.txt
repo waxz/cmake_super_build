@@ -54,7 +54,11 @@ find_package(CycloneDDS REQUIRED)
 build_external_project(CycloneDDS-CXX lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cyclonedds-cxx-0.10.4.tar.gz -DCycloneDDS_ROOT=${CycloneDDS_ROOT}  -Diceoryx_binding_c_ROOT=${iceoryx_binding_c_ROOT}  -DCMAKE_BUILD_TYPE=Debug -DENABLE_SHM=YES)
 find_package(CycloneDDS-CXX REQUIRED)
 
-build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob_2023_1220.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install --enable-static --debug --extra-cflags='-std=c11 -Wpedantic -fsanitize=address,undefined -g' " "make -j6" " make install" )
+#https://github.com/TinyCC/tinycc
+# --with-libgcc
+build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob-20240330.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install  --enable-static" "make -j6" " make install" )
+#build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob_2023_1220.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install --enable-static --debug --extra-cflags='-std=c11 -Wpedantic -fsanitize=address,undefined -g' " "make -j6" " make install" )
+
 set(tinycc_COMPILER_DIR ${tinycc_ROOT}/lib/tcc)
 set(tinycc_LIBTCC_INCLUDE_DIR ${tinycc_ROOT}/include)
 set(tinycc_TCCLIB_INCLUDE_DIR ${tinycc_ROOT}/lib/tcc/include)
