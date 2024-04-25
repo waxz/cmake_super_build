@@ -1,0 +1,13 @@
+
+
+add_library( message_center_types_tinyalloc STATIC message_center_types_tinyalloc.c)
+set_pic( message_center_types_tinyalloc )
+target_include_directories(message_center_types_tinyalloc PUBLIC ${CMAKE_SOURCE_DIR}/include )
+target_link_libraries(message_center_types_tinyalloc PUBLIC tinyalloc )
+add_executable( message_center_types_tinyalloc_test message_center_types_tinyalloc_test.c )
+target_link_libraries(message_center_types_tinyalloc_test PUBLIC message_center_types_tinyalloc )
+set_asan(message_center_types_tinyalloc_test)
+
+
+add_subdirectory(fastdds)
+add_subdirectory(ros1)

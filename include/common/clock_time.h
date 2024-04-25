@@ -155,7 +155,7 @@ namespace common {
 
     struct UniversalTimeScaleClock {
         using rep = int64;
-        using period = std::ratio<1, 10000000>; // 1e-7 s = 1e-1us = 100ns
+        using period = std::ratio<1, 1000000000>; // 1e-7 s = 1e-1us = 100ns
         using duration = std::chrono::duration<rep, period>;
         using time_point = std::chrono::time_point<UniversalTimeScaleClock>;
         static constexpr bool is_steady = true;
@@ -195,6 +195,7 @@ namespace common {
 
 // Creates a time from a Universal Time Scale.
     inline Time FromUniversal(int64 ticks) { return Time(Duration(ticks)); }
+
 
 // Outputs the Universal Time Scale timestamp for a given Time.
 //将c++的time_point对象转为TUC时间,单位是us
@@ -237,7 +238,7 @@ namespace common {
     {
         int64_t uts_timestamp = ToUniversal(time);
 //        int64_t ns_since_unix_epoch = (uts_timestamp - kUtsEpochOffsetFromUnixEpochInSeconds *10000000ll) * 100ll;
-        int64_t ns_since_unix_epoch = (uts_timestamp ) * 100ll;
+        int64_t ns_since_unix_epoch = (uts_timestamp );// * 100ll;
 
         target_time.fromNSec(ns_since_unix_epoch);
     }
@@ -245,7 +246,8 @@ namespace common {
     Time FromRos(const TimeType& time)
     {
 //        auto integral_duration = (time.sec + common::kUtsEpochOffsetFromUnixEpochInSeconds) * 10000000ll  + (time.nsec + 50) / 100;
-        auto integral_duration = (time.sec ) * 10000000ll  + (time.nsec + 50) / 100;
+//        auto integral_duration = (time.sec ) * 10000000ll  + (time.nsec + 50) / 100;
+        auto integral_duration = time.toNSec();
 
         return FromUniversal(integral_duration);
     }

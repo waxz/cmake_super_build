@@ -32,7 +32,9 @@ set(CPACK_DEBIAN_PACKAGE_VERSION ${PACKAGE_VERSION})
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 #set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6), libc6 (<< 3)")
 
-
+#https://blog.csdn.net/gpf0845531213/article/details/97662417
+#https://zhuanlan.zhihu.com/p/82804123
+#set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # https://cyclonedds.io/
 # https://github.com/eclipse-iceoryx/iceoryx/releases/tag/v2.0.3
@@ -56,13 +58,13 @@ find_package(CycloneDDS-CXX REQUIRED)
 
 #https://github.com/TinyCC/tinycc
 # --with-libgcc
-build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob-20240330.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install  --enable-static" "make -j6" " make install" )
+build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob-20240330.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install  --disable-static" "make -j6" " make install" )
 #build_external_project_command(tinycc lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinycc-mob_2023_1220.zip "./configure --prefix=${CMAKE_BINARY_DIR}/force_tinycc/install --enable-static --debug --extra-cflags='-std=c11 -Wpedantic -fsanitize=address,undefined -g' " "make -j6" " make install" )
 
 set(tinycc_COMPILER_DIR ${tinycc_ROOT}/lib/tcc)
 set(tinycc_LIBTCC_INCLUDE_DIR ${tinycc_ROOT}/include)
 set(tinycc_TCCLIB_INCLUDE_DIR ${tinycc_ROOT}/lib/tcc/include)
-set(tinycc_LIB ${tinycc_ROOT}/lib/libtcc.a)
+set(tinycc_LIB ${tinycc_ROOT}/lib/libtcc.so)
 
 
 #strliteral-master.zip
@@ -369,7 +371,7 @@ message(STATUS "breakpad_client_library ${breakpad_client_library}")
 message(STATUS "breakpad_library ${breakpad_library}")
 
 
-build_external_project(tinyxml2 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinyxml2-9.0.0.tar.gz  -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF )
+build_external_project(tinyxml2 lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/tinyxml2-9.0.0.tar.gz  -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
 find_package(tinyxml2 REQUIRED)
 
 
@@ -385,6 +387,14 @@ find_package(toml11 REQUIRED)
 
 set(test_fast_dds ON)
 if(test_fast_dds)
+    #https://fast-dds.docs.eprosima.com/en/latest/notes/versions.html#dependencies-compatibilities-library-dependencies
+    # version
+    #Fast DDS  v2.14.0
+    #Fast CDR  v2.2.0
+    #Foonathan Memory Vendor v1.3.1
+    #Asio v1.18.1
+    #TinyXML2 v6.0.0
+    #OpenSSL v3.1.1
 
     #https://fast-dds.docs.eprosima.com/en/latest/installation/sources/sources_linux.html#cmake-installation
 
@@ -409,11 +419,13 @@ if(test_fast_dds)
 
 
     #foonathan_memory_vendor-1.3.1.tar.gz
-    build_external_project(foonathan_memory lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/foonathan_memory_vendor-1.3.1.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_SHARED_LIBS=OFF)
+    build_external_project(foonathan_memory lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/foonathan_memory_vendor-1.3.1.tar.gz  -DCMAKE_BUILD_TYPE=Release  -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
     find_package(foonathan_memory REQUIRED)
 
-    #Fast-CDR-1.0.27.zip
-    build_external_project(fastcdr lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-CDR-1.0.27.zip  -DCMAKE_BUILD_TYPE=Release )
+    #Fast-CDR-2.2.0.tar.gz
+    #cmake_minimum_required(VERSION 3.16)
+    build_external_project(fastcdr lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-CDR-2.2.0.tar.gz  -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+    set(fastcdr_LIB ${fastcdr_ROOT}/lib/libfastcdr.so)
     #message(1fastcdf_ROOT ${fastcdf_ROOT})
 
     # fastcdr-config.cmake
@@ -423,8 +435,9 @@ if(test_fast_dds)
 
 
     #fastrtps-config.cmake
+    #cmake_minimum_required(VERSION 3.16)
     # Fast-DDS-2.11.2.tar.gz
-    build_external_project(fastrtps lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-DDS-2.11.2.tar.gz  -DCMAKE_BUILD_TYPE=Release -Dfoonathan_memory_ROOT=${foonathan_memory_ROOT} -Dfastcdr_ROOT=${fastcdr_ROOT} -DTinyXML2_ROOT=${tinyxml2_ROOT} -DBUILD_SHARED_LIBS=OFF)
+    build_external_project(fastrtps lib ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Fast-DDS-2.14.0.tar.gz  -DCMAKE_BUILD_TYPE=Release -Dfoonathan_memory_ROOT=${foonathan_memory_ROOT} -Dfastcdr_ROOT=${fastcdr_ROOT} -DTinyXML2_ROOT=${tinyxml2_ROOT} -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
     find_package(fastrtps REQUIRED)
 endif ()
 

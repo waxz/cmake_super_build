@@ -14,6 +14,14 @@
 
 namespace common{
 
+    struct JThread{
+        std::thread t_;
+        explicit JThread(std::thread && t): t_(std::move(t)){};
+        ~ JThread(){
+            if(t_.joinable()) t_.join();
+        }
+    };
+
 
     /*
 
@@ -40,20 +48,22 @@ namespace common{
 
     struct TaskManager{
         struct Task{
+            std::string name;
+            bool valid = true;
+
             //  lower Task.prio value means higher priority.
             int prio = 10;
             int slot = 0;
-            bool valid = true;
             common::Time time;
             long delay_us = 100;
             long run_time_us = 0;
             long max_run_time_us = 0;
-            std::string name;
             long run_counter = 0;
 
 
             std::function<bool()> func;
-            Task(const char* name_, const std::function<bool()>& func_,long delay_us_ = 100,int prio_ = 10, int slot_ = 0 ):name(name_), prio(prio_),valid(true), time(common::FromUnixNow()),delay_us(delay_us_),func(func_),slot(slot_){
+            Task(const char* name_, const std::function<bool()>& func_,long delay_us_ = 100,int prio_ = 10, int slot_ = 0 )
+            :name(name_),valid(true), prio(prio_), slot(slot_),time(common::FromUnixNow()),delay_us(delay_us_),func(func_){
             }
             Task(const Task& rhv){
                 name = rhv.name;
@@ -62,18 +72,15 @@ namespace common{
                 slot = rhv.slot;
                 time = rhv.time;
                 delay_us = rhv.delay_us;
-                func = rhv.func;
                 run_time_us = rhv.run_time_us;
                 max_run_time_us = rhv.max_run_time_us;
                 run_counter = rhv.run_counter;
+                func = rhv.func;
 
             }
 
         };
 
-        void set_tick(long delay_us){
-
-        }
         common::LoopHelper loop_helper;
 
         std::vector<Task> task_queue;
@@ -82,14 +89,16 @@ namespace common{
 
         std::vector<int> task_counter;
         uint16 max_prio=10;
+        float sleeper_ms = 10.0;
         size_t m_tic = 0;
 
-        TaskManager(uint16 max_prio_):task_counter(max_prio_ + 1,0),max_prio(max_prio_){
+        explicit TaskManager(uint16 max_prio_):task_counter(max_prio_ + 1,0),max_prio(max_prio_){
 
-            std::cout<<"task_counter.size() = " << task_counter.size() << "\n";
+//            std::cout<<"task_counter.size() = " << task_counter.size() << "\n";
         }
 
         void set_loop(float fps, long accuracy){
+            sleeper_ms = 1000.0f/fps;
             loop_helper.set_fps(fps);
             loop_helper.set_accuracy(accuracy);
         }
@@ -98,8 +107,10 @@ namespace common{
          return true, keep running at given rate
          return false, run once
          */
-        void add_task(const char* name,  const std::function<bool()>& func, uint16 prio , long  delay_us){
+        void add_task(const char* name,  const std::function<bool()>& func, float ms){
 
+            uint16 prio = (ms /  sleeper_ms) ;
+            long delay_us = (ms * 1000.0);
 
             prio = std::max(uint16(0), std::min(prio,max_prio));
 
@@ -127,7 +138,7 @@ namespace common{
 
         }
 
-        bool call(){
+        bool run(){
             loop_helper.start();
             common::Time now = common::FromUnixNow();
             bool need_remove = false;

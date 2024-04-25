@@ -40,7 +40,7 @@ target_include_directories(ceres_simple_solve PUBLIC  ${CMAKE_SOURCE_DIR}/includ
 install(TARGETS ceres_simple_solve DESTINATION bin)
 
 #find_package(Boost 1.58 REQUIRED COMPONENTS system filesystem thread program_options chrono)
-
+set(BUILD_ROS OFF)
 
 if(BUILD_ROS)
     add_subdirectory(message/impl/ros)
@@ -676,7 +676,6 @@ target_link_libraries(absl_test PUBLIC
 )
 
 
-
 #https://abseil.io/docs/cpp/platforms/compilerflags#gcc-flags
 SET_GCC_FLAGS(absl_test)
 set_asan(absl_test)
@@ -690,6 +689,9 @@ set_omp(transform_test)
 
 add_executable(math_test  math_test.cpp)
 target_include_directories( math_test PUBLIC ${CMAKE_SOURCE_DIR}/include ${EIGEN3_INCLUDE_DIRS})
+
+add_library(tinyalloc SHARED  ${CMAKE_SOURCE_DIR}/include/tinyalloc/tinyalloc.c)
+
 
 add_subdirectory(c_test)
 add_subdirectory(dds)
@@ -713,3 +715,8 @@ add_subdirectory(simd)
 add_subdirectory(boost_test)
 
 add_subdirectory(ceres_test)
+
+add_subdirectory(message_center)
+add_subdirectory(fastdds)
+add_subdirectory(absl_test)
+add_subdirectory(toml_test)
