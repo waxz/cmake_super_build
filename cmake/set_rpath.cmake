@@ -20,6 +20,7 @@ endif("${isSystemDir}" STREQUAL "-1")
 # really worked
 # for secondary dependency
 # every target should add this macro
+#https://stackoverflow.com/questions/74290411/how-to-set-rpath-with-gcc
 macro(set_rpath)
     message(STATUS "Configuring rpath for target(s) ${ARGV0}")
     set_target_properties(${ARGV0} PROPERTIES

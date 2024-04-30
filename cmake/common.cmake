@@ -41,6 +41,48 @@ set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--as-needed ${CMAKE_SHARED_LINKER_FLAGS}")
 
 #https://stackoverflow.com/questions/48754619/what-are-cmake-build-type-debug-release-relwithdebinfo-and-minsizerel
 
+function(print_all_env)
+    message(STATUS "CMake Environment Variables:")
+    get_cmake_property(_variableNames VARIABLES)
+    foreach(_variableName ${_variableNames})
+        message(STATUS "${_variableName}=${${_variableName}}")
+    endforeach()
+    message(STATUS "End of CMake Environment Variables")
+
+endfunction()
+
+# Define a function to copy files matching a pattern from source to destination directory
+function(copy_files_with_pattern SOURCE_DIR PATTERN DEST_DIR OUTPUT_VARIABLE)
+    file(GLOB FILES "${SOURCE_DIR}/${PATTERN}")
+    message("copy_files_with_pattern FILES: ${FILES}")
+    message("copy_files_with_pattern PATTERN: ${PATTERN}")
+    message("copy_files_with_pattern DEST_DIR: ${DEST_DIR}")
+
+    message("copy_files_with_pattern OUTPUT_VARIABLE: ${OUTPUT_VARIABLE} : ${${OUTPUT_VARIABLE}}")
+
+    foreach(FILE ${FILES})
+        get_filename_component(FILENAME ${FILE} NAME)
+        set(DEST_PATH "${DEST_DIR}/${FILENAME}")
+        add_custom_command(
+                OUTPUT "${DEST_PATH}"
+                COMMAND ${CMAKE_COMMAND} -E copy "${FILE}" "${DEST_PATH}"
+                DEPENDS "${FILE}"
+                COMMENT "Copying ${FILENAME} to ${DEST_DIR}"
+        )
+        list(APPEND ${OUTPUT_VARIABLE} "${DEST_PATH}")
+    endforeach()
+    set(${OUTPUT_VARIABLE} "${${OUTPUT_VARIABLE}}" PARENT_SCOPE)
+    message("copy_files_with_pattern output: ${OUTPUT_VARIABLE} : ${${OUTPUT_VARIABLE}}")
+endfunction()
+
+
+#PIC
+
+function(set_pic target)
+    set_target_properties(${target} PROPERTIES
+            POSITION_INDEPENDENT_CODE 1
+    )
+endfunction()
 
 list(APPEND ABSL_GCC_FLAGS
         "-Wall"
@@ -93,6 +135,11 @@ function (SET_GCC_FLAGS target)
 
 endfunction()
 
+#https://stackoverflow.com/questions/48754619/what-are-cmake-build-type-debug-release-relwithdebinfo-and-minsizerel
+#https://stackoverflow.com/questions/78322480/improve-g-compiler-flags-for-debug-and-release
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wformat=2 -Wconversion -Wtrampolines -Wshadow ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer  -fstack-protector -fstack-protector-strong  -fstack-protector-all -fstack-protector-explicit  -fsplit-stack")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mshstk  -Wstack-usage=1000000 -fstack-usage -Walloca ")
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall -Wextra -pedantic")
@@ -101,38 +148,53 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
 
     #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--whole-archive  -Wl,--no-whole-archive")
     #  -ffp-contract=fast -flto
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -O3 -march=native -ftree-vectorize -fopt-info-vec-optimized -ffp-contract=fast -flto")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -O3 -march=native -ftree-vectorize -fopt-info-vec-optimized -ffp-contract=fast -flto")
 
-endif ()
-
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall -Wextra -pedantic")
-    #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-generate -fprofile-use")
-
-
-    #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--whole-archive  -Wl,--no-whole-archive")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -O3 -march=native -ftree-vectorize -fopt-info-vec-optimized ")
 
 endif ()
+
+#if (CMAKE_BUILD_TYPE MATCHES Debug)
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall -Wextra -pedantic")
+#    #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-generate -fprofile-use")
+#
+#
+#    #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--whole-archive  -Wl,--no-whole-archive")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -O3 -march=native -ftree-vectorize -fopt-info-vec-optimized ")
+#
+#endif ()
 if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
     #-Wall -Wextra -pedantic
     #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -Ofast  -ffast-math -ftree-vectorize   -march=native -funsafe-loop-optimizations -mavx -mfma")
     #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -Wall -Wextra   -Ofast   ")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -Wall -Wextra   -march=native   -O2 -g -DNDEBUG  -Ofast -funsafe-loop-optimizations ")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -Wall -Wextra   -march=native   -O3 -g -DNDEBUG  -Ofast -funsafe-loop-optimizations ")
+#
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -ftree-vectorize  -ffast-math -fopt-info-vec-optimized  -opt-report=5 ")
+#
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -pthread  -mstackrealign  -march=native")
+#
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall -Wextra -pedantic")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall -Wextra -pedantic  -Wno-unknown-pragmas -Wno-sign-compare -Woverloaded-virtual -Wwrite-strings -Wno-unused")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -ftree-vectorize  -ffast-math -fopt-info-vec-optimized  -opt-report=5 ")
+    #origin
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -O3 -g -march=native -ftree-vectorize -fopt-info-vec-optimized -ffp-contract=fast -flto")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -pthread -fprofile-arcs -mstackrealign  -march=native")
+    #==============new
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -Og -D_GLIBCXX_DEBUG -D_GLIBCXX_ASSERTIONS ")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g  -ffast-math -march=native")
+
+    #https://developers.redhat.com/articles/2022/06/02/use-compiler-flags-stack-protection-gcc-and-clang#
+
 
 
 endif ()
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall -Wextra -pedantic -Wno-dev -Wno-unknown-pragmas -Wno-sign-compare -Woverloaded-virtual -Wwrite-strings -Wno-unused")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall -Wextra -pedantic   -Wno-unknown-pragmas -Wno-sign-compare -Woverloaded-virtual -Wwrite-strings -Wno-unused")
 #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -O0 -o -ggdb  -ggdb3 -fprofile-arcs -mstackrealign  -march=native  ")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread  -g -O0 ")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -mstackrealign  -march=native  -fstack-protector")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 ")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -mstackrealign  -march=native  -fstack-protector")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -fno-optimize-sibling-calls -fno-omit-frame-pointer -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -fno-optimize-sibling-calls -fno-omit-frame-pointer -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined   -fsanitize=address -fsanitize=leak -fsanitize=leak ")
     #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address  -fsanitize=leak")
@@ -140,16 +202,21 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
 endif ()
 
 function(set_asan target)
+#    set(ENV{ASAN_OPTIONS} "strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:symbolize=1")
+
     # Treat all warnings as errors
     #    target_compile_options(${target} PRIVATE "-Werror")
     target_compile_options(${target} PUBLIC "-fsanitize=undefined")
-    target_compile_options(${target} PUBLIC "-fno-builtin-malloc")
-    target_compile_options(${target} PUBLIC "-fno-builtin-calloc")
-    target_compile_options(${target} PUBLIC "-fno-builtin-realloc")
-    target_compile_options(${target} PUBLIC "-fno-builtin-free")
+#    target_compile_options(${target} PUBLIC "-fno-builtin-malloc")
+#    target_compile_options(${target} PUBLIC "-fno-builtin-calloc")
+#    target_compile_options(${target} PUBLIC "-fno-builtin-realloc")
+#    target_compile_options(${target} PUBLIC "-fno-builtin-free")
 
 
 #    target_compile_options(${target} PUBLIC "-fsanitize-address-use-after-scope")
+
+#
+    target_compile_options(${target} PUBLIC "-fsanitize-recover=address")
 
     target_compile_options(${target} PUBLIC "-fsanitize=address")
     target_compile_options(${target} PUBLIC "-fno-optimize-sibling-calls")
@@ -159,7 +226,7 @@ function(set_asan target)
     target_compile_options(${target} PUBLIC "-fno-omit-frame-pointer")
 
     target_compile_options(${target} PUBLIC "-fstack-protector")
-    target_compile_options(${target} PUBLIC  "-fuse-ld=gold")
+#    target_compile_options(${target} PUBLIC  "-fuse-ld=gold")
 
 #    target_compile_options(${target} PUBLIC -fsanitize-coverage=trace-pc-guard -fsanitize=address,undefined,leak -fuse-ld=gold)
 
