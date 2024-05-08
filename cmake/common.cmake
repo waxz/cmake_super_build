@@ -137,19 +137,30 @@ endfunction()
 
 #https://stackoverflow.com/questions/48754619/what-are-cmake-build-type-debug-release-relwithdebinfo-and-minsizerel
 #https://stackoverflow.com/questions/78322480/improve-g-compiler-flags-for-debug-and-release
+#https://developers.redhat.com/articles/2022/06/02/use-compiler-flags-stack-protection-gcc-and-clang#control_flow_integrity
+# -fsplit-stack may cause crash
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wformat=2 -Wconversion -Wtrampolines -Wshadow ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer  -fstack-protector -fstack-protector-strong  -fstack-protector-all -fstack-protector-explicit  -fsplit-stack")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mshstk  -Wstack-usage=1000000 -fstack-usage -Walloca ")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer  -fstack-protector -fstack-protector-strong  -fstack-protector-all -fstack-protector-explicit  -fsplit-stack")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer  -fstack-protector -fstack-protector-strong  -fstack-protector-all -fstack-protector-explicit")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mshstk -Walloca ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wstack-usage=1000000 -fstack-usage")
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall -Wextra -pedantic")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall -Wextra -pedantic")
     #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-generate -fprofile-use")
 
 
     #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--whole-archive  -Wl,--no-whole-archive")
     #  -ffp-contract=fast -flto
 #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -O3 -march=native -ftree-vectorize -fopt-info-vec-optimized -ffp-contract=fast -flto")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -O3 -march=native -ftree-vectorize -fopt-info-vec-optimized -ffp-contract=fast -flto")
+
+# release
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -O3 -march=native -ftree-vectorize -fopt-info-vec-optimized")
+
+    # debug
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g  -ffast-math -march=native")
 
 
 endif ()
@@ -201,12 +212,19 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     #set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address  -fsanitize=leak")
 endif ()
 
+# ASAN_OPTIONS=abort_on_error=1:debug=1:strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:symbolize=1:detect_leaks=0
 function(set_asan target)
 #    set(ENV{ASAN_OPTIONS} "strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:symbolize=1")
 
     # Treat all warnings as errors
     #    target_compile_options(${target} PRIVATE "-Werror")
+
     target_compile_options(${target} PUBLIC "-fsanitize=undefined")
+    target_compile_options(${target} PUBLIC "-fsanitize=address")
+    target_compile_options(${target} PUBLIC "-fsanitize=leak")
+
+
+
 #    target_compile_options(${target} PUBLIC "-fno-builtin-malloc")
 #    target_compile_options(${target} PUBLIC "-fno-builtin-calloc")
 #    target_compile_options(${target} PUBLIC "-fno-builtin-realloc")
@@ -216,16 +234,14 @@ function(set_asan target)
 #    target_compile_options(${target} PUBLIC "-fsanitize-address-use-after-scope")
 
 #
-    target_compile_options(${target} PUBLIC "-fsanitize-recover=address")
+#    target_compile_options(${target} PUBLIC "-fsanitize-recover=address")
 
-    target_compile_options(${target} PUBLIC "-fsanitize=address")
-    target_compile_options(${target} PUBLIC "-fno-optimize-sibling-calls")
+#    target_compile_options(${target} PUBLIC "-fno-optimize-sibling-calls")
 
 
-    target_compile_options(${target} PUBLIC "-fsanitize=leak")
-    target_compile_options(${target} PUBLIC "-fno-omit-frame-pointer")
+#    target_compile_options(${target} PUBLIC "-fno-omit-frame-pointer")
 
-    target_compile_options(${target} PUBLIC "-fstack-protector")
+#    target_compile_options(${target} PUBLIC "-fstack-protector")
 #    target_compile_options(${target} PUBLIC  "-fuse-ld=gold")
 
 #    target_compile_options(${target} PUBLIC -fsanitize-coverage=trace-pc-guard -fsanitize=address,undefined,leak -fuse-ld=gold)
