@@ -1,0 +1,12 @@
+[person]
+name ="tom"
+age = 23
+hobbies = ["swim","run"]
+attributes = {ver = "0.2"}
+house = {address = "lake road", rooms = 101}
+houses_vec = [{address = "lake road", rooms = 101},{address = "lake road", rooms = 102}]
+houses_map = {a = {address = "lake road", rooms = 101}, b = {address = "lake road", rooms = 101}}
+[rocket]
+x = 1
+y = 2.45
+name = "m72"

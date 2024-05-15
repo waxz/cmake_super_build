@@ -39,7 +39,7 @@ void* tcc_build(){
         tcc_add_include_path(tcc, gcc_include_path);
 
         {
-            {
+            if(TCC_HOME != NULL) {
                 char lib_path[500];
                 sprintf(lib_path, "%s/lib/tcc", TCC_HOME);
                 char include_path[500];

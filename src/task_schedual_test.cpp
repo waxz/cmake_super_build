@@ -73,11 +73,71 @@ int main(int argc, char** argv){
     set_signal_handler(my_handler);
 
     {
-        for(float angle = -16.14; angle < 6.14; angle+=0.1){
-            std::cout << "angle: "<< angle << ", angle_normal" <<  angle_normal(angle) << "\n";
+        const char fmt[] = R"(task_id: "%s"
+param: "%s")";
+
+        char buffer[200] = {0};
+        sprintf(buffer,fmt,"pick_1","default");
+        std::cout << "buffer: --\n" << buffer << "\n--\n";
+
+
+
+
+        return 0;
+    }
+
+
+    {
+
+        int64_t nano_epoch = 1712393215714294030;
+
+        common::Time t1 = common::FromUniversal(nano_epoch);
+        std::cout << "t1.stamp : " << t1 << std::endl;
+        std::string o;
+        common::formatTimestamp(t1,o);
+
+        std::cout << "t1 o = " << o << std::endl;
+
+        common::Time t2 = common::FromUnixNow();
+        std::cout << "t2.stamp : " << t2 << std::endl;
+        common::formatTimestamp(t2,o);
+
+        std::cout << "t2 o = " << o << std::endl;
+
+        auto d1 = t2 - t1;
+        auto d2 = t1 - t2;
+        auto t3 = t1 + d1;
+        common::formatTimestamp(t3,o);
+
+        std::cout << "t3 o = " << o << std::endl;
+
+        std::cout <<"d1:" << common::ToMillSeconds(d1) << ", d2:" << common::ToMillSeconds(d2) << std::endl;
+
+
+        std::chrono::nanoseconds dur(nano_epoch);
+
+        std::chrono::time_point<std::chrono::system_clock> dt(dur);
+
+        auto timestamp = std::chrono::time_point_cast<std::chrono::nanoseconds>(dt);
+
+        {
+            std::time_t time = std::chrono::system_clock::to_time_t(
+                    std::chrono::time_point_cast<std::chrono::nanoseconds>(
+                            std::chrono::system_clock::time_point{std::chrono::nanoseconds { nano_epoch}} ) );
+
+            std::chrono::microseconds u_s = std::chrono::duration_cast<std::chrono::microseconds>(
+                    timestamp.time_since_epoch() - std::chrono::duration_cast<std::chrono::seconds>(
+                            timestamp.time_since_epoch()));
+            std::chrono::nanoseconds n_s = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    timestamp.time_since_epoch() - std::chrono::duration_cast<std::chrono::seconds>(
+                            timestamp.time_since_epoch()));
+            std::cout << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S")
+              << ":" << std::setw(6) << std::setfill('0') << u_s.count()<<" us, " << n_s.count() << " ns\n";
         }
 
+
     }
+
 
 
 
@@ -141,7 +201,7 @@ int main(int argc, char** argv){
 
 
                 return true;
-            }, i, j);
+            }, i * 10.0);
         }
 
     }
@@ -154,7 +214,7 @@ int main(int argc, char** argv){
         std::string ss = s.str();
         std::cout << ss << std::endl;
         return true;
-    }, 30, 1 * 1000 * 1000);
+    }, 30.0);
 
 
     while (program_run){
@@ -321,19 +381,19 @@ int main(int argc, char** argv){
 
 
                 return cnt < 30;
-            }, 10000, 1);
+            }, 100.0);
         }
 //        channel.push(cnt);
 //        sub_1.notify(cnt);
         return true;
-    }, 5000, 1);
+    }, 500.0);
 
     manager.add_task("task2",[&] {
         std::cout << "run 2 ";
         formatTimestamp(common::FromUnixNow(), time_str_2);
         std::cout << "now = " << time_str_2 << std::endl;
         return true;
-    }, 20000, 2);
+    }, 200.0);
 
 
     common::Suspend suspend;
@@ -344,7 +404,7 @@ int main(int argc, char** argv){
         manager.add_task("temptask1",[] {
             std::cout << "run temp 1 ";
             return true;
-        }, 100 * 1000, 1);
+        }, 100.0);
     }
     {
         auto f_2 = []{
@@ -352,7 +412,7 @@ int main(int argc, char** argv){
             return true;
         };
 
-        manager.add_task("f2",f_2, 100 * 1000, 1);
+        manager.add_task("f2",f_2, 100.0);
     }
 
     while (program_run){

@@ -1,4 +1,4 @@
-add_library(tcc_builder tcc_builder.c)
+add_library(tcc_builder SHARED tcc_builder.c)
 target_include_directories(tcc_builder PUBLIC ${tinycc_LIBTCC_INCLUDE_DIR}  )
 target_link_libraries(tcc_builder PUBLIC ${tinycc_LIB} dl pthread m rt ${tinycc_LIB})
 target_include_directories(tcc_builder PUBLIC   ${CMAKE_SOURCE_DIR}/include )

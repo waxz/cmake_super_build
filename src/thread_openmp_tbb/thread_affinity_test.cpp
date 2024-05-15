@@ -13,6 +13,9 @@
 
 #include <pthread.h>
 
+#define COMPILER_BARRIER() asm volatile("" ::: "memory")
+#define RELEASE_FENCE() asm volatile("lwsync" ::: "memory")
+
 
 typedef std::lock_guard<std::mutex> TGuard;
 
@@ -21,6 +24,14 @@ bool g_program_run = true;
 
 int g_int_array[1000] = {0};
 
+
+void set_value(){
+    int a = 0;
+    a = 1;
+    a+=1;
+    std::atomic_signal_fence(std::memory_order_acq_rel);
+
+}
 
 void runner(int idx) {
     int pinCore = idx % totalCores;
@@ -40,6 +51,14 @@ void runner(int idx) {
     while (g_program_run) {
         std::cout << "#" << idx << " Running: CPU " << sched_getcpu() << std::endl;
         sleep(1);
+
+        int a = 1;
+        a = 2;
+
+        COMPILER_BARRIER();
+
+        a+=1;
+        printf("a = %i\n", a);
     }
 }
 
